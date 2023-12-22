@@ -50,7 +50,11 @@ struct ClassInfo {
     std::unordered_map<std::string, TokenType> members; // Map to store class members (for simplicity, only types are stored)
 };
 
-const std::unordered_set<std::string> keywords = {  "using", "return", "public", "private", "protected", "virtual", "void", "const", "override", "int", "float", "char", "double", "long",  "new", "delete"};
+const std::unordered_set<std::string> keywords =
+    {  "using", "return", "public", "private", "protected", "virtual",
+    "void", "const", "override", "int", "float", "char", "double",
+    "long",  "new", "delete", "if", "for", "else", "while"};
+
 std::unordered_map<std::string, SymbolEntry> symbolTable;
 std::unordered_map<std::string, ClassInfo> classTable;
 
@@ -338,16 +342,24 @@ enum class NodeType {
     INCLUDE_DIRECTIVE,
     NAMESPACE,
     VARIABLE_DECLARATION,
+    LOCAL_VARIABLE_DECLARATION,
     PARAMETER,
     ASSIGNMENT,
     INHERITANCE,
     CONSTRUCTOR,
     RETURN_STATEMENT,
-
+    BLOCK,
+    IF_STATEMENT,
+    ELSE_STATEMENT,
+    FOR_LOOP,
+    POINTER,
+    REFERENCE,
+    
     // Modifiers
     ConstModifier,
     OverrideModifier,
     FinalModifier,
+    ProtectedModifier,
 };
 
 struct ASTNode {
@@ -365,6 +377,9 @@ struct ASTNode {
 
 class Parser {
 private:
+    //So.. this is wrong ;)
+    bool isInClass;
+    
     std::vector<Token> tokens;
     size_t currentTokenIndex;
 
@@ -374,24 +389,36 @@ public:
     ASTNode* parseCode() {
         ASTNode* programAST = new ASTNode(NodeType::PROGRAM, "Program");
 
-        while (currentTokenIndex < tokens.size()) {
+        while (currentTokenIndex < tokens.size() - 1) {
             ASTNode* node = nullptr;
+            
+            //Token t = tokens
             
             if (match(TokenType::PREPROCESSOR_DIRECTIVE)) {
                 node = parseIncludeDirective();
-            } else if(match(TokenType::NAMESPACE)) {
+            } else if(match(TokenType::NAMESPACE)) { //TODO; Not detecting namespace.
                 node = parseNameSpace();
             } else if (match(TokenType::CLASS)) {
+                isInClass = true;
+                
                 node = parseClassDeclaration();
             } else {
+                // Try parsing a function
+                node = parseMember();
+
+                if(node) {
+                    currentTokenIndex++;
+                    //isInClass = false;*/
+                }
+                
                 //std::cout << "didnt find; " << tokens[currentTokenIndex].type << std::endl;
                 // Handle other constructs here (variable declarations, functions, etc.)
                 // For instance, parseVariableDeclaration, parseFunction, etc.
                 // Use similar logic to create respective AST nodes for different constructs
                 // ...
-
+                
                 // Skip unknown or unsupported constructs
-                currentTokenIndex++;
+                //currentTokenIndex++;
             }
 
             if (node) {
@@ -403,8 +430,9 @@ public:
     }
 
 private:
+    //TODO; I think it needs to be - 1?
     bool match(TokenType expected) {
-        return tokens[currentTokenIndex].type == expected;
+        return currentTokenIndex < tokens.size() && tokens[currentTokenIndex].type == expected;
     }
 
     bool match(TokenType expected, std::string value) {
@@ -421,7 +449,7 @@ private:
     
     Token consumeToken() {
         // Check if there are more tokens available to consume
-        if (currentTokenIndex < tokens.size()) {
+        if (currentTokenIndex < tokens.size() - 1) {
             return tokens[currentTokenIndex++];
         }
         
@@ -549,10 +577,13 @@ private:
                         
                         if (match(TokenType::RIGHT_BRACE)) { // }
                             consumeToken(); // Consume '}' for class body end
+                            
+                            isInClass = false;
+                            
                             return classNode;
                         }
                         
-                        std::cout << "Error; seems to be missing a '}' somewhere.. Gl finding it buddy" << std::endl;
+                        std::cout << "Error; seems to be missing a '}' somewhere.. Gl finding it buddy; " << currentTokenIndex << std::endl;
                     }
                 }
             }
@@ -599,9 +630,11 @@ private:
             }
         }
         
+        Token tdsa = tokens[currentTokenIndex];
+        
         return classBodyNode;
     }
-
+    
     /**
      * \brief
      * Currently supports;\n
@@ -645,7 +678,7 @@ private:
         consumeToken(); // Consume ')'
         
         Token tt = tokens[currentTokenIndex];
-
+        
         // Circle(double r) -> this : radius(r) {}
         if(match(TokenType::COLON)) {
             consumeToken(); // Consume ':'
@@ -736,12 +769,13 @@ private:
 
     // Function parameters
     ASTNode* parseMemberFunction(const std::string& returnType, const std::string& functionName) {
-        ASTNode* memberFunction = new ASTNode(NodeType::MEMBER_FUNCTION, returnType + " " + functionName);
+        ASTNode* memberFunction = new ASTNode(NodeType::MEMBER_FUNCTION, "Function: " + functionName);
+        memberFunction->children.push_back(new ASTNode(NodeType::RETURN_STATEMENT, "ReturnType: " + returnType));
         
         // Parse function parameters
         if (match(TokenType::LEFT_PAREN)) {
             consumeToken(); // Consume '('
-
+            
             // Parse parameters (if any)
             std::vector<std::string> parameters;
             
@@ -817,11 +851,13 @@ private:
                 std::string type = tokens[currentTokenIndex].value;
                 
                 if(match(TokenType::KEYWORD, "const")) {
-                    memberFunction->children.push_back(new ASTNode(NodeType::ConstModifier, type));
+                    memberFunction->children.push_back(new ASTNode(NodeType::ConstModifier, type + ": true"));
                 } else if(match(TokenType::KEYWORD, "override")) {
-                    memberFunction->children.push_back(new ASTNode(NodeType::OverrideModifier, type));
+                    memberFunction->children.push_back(new ASTNode(NodeType::OverrideModifier, type + ": true"));
                 } else if(match(TokenType::KEYWORD, "final")) {
-                    memberFunction->children.push_back(new ASTNode(NodeType::FinalModifier, type));
+                    memberFunction->children.push_back(new ASTNode(NodeType::FinalModifier, type + ": true"));
+                } else if(match(TokenType::KEYWORD, "protected")) {
+                    memberFunction->children.push_back(new ASTNode(NodeType::ProtectedModifier, type + ": true"));
                 } else {
                     std::cout << "Unknown modifier..; " << type << std::endl;
                 }
@@ -855,7 +891,7 @@ private:
         
         Token t = tokens[currentTokenIndex];
         
-        while (!match(TokenType::RIGHT_BRACE)) {
+        while (currentTokenIndex < tokens.size() && !match(TokenType::RIGHT_BRACE)) { // '}'
             Token d = tokens[currentTokenIndex];
             
             ASTNode* statement = parseStatement(); // Parse individual statements within the function body
@@ -869,7 +905,7 @@ private:
             }
         }
         
-        if(match(TokenType::RIGHT_BRACE))
+        if(match(TokenType::RIGHT_BRACE) && isInClass)
             consumeToken(); // Consume '}'
         
         return functionBodyNode;
@@ -877,13 +913,49 @@ private:
     
     // Handling operators
     ASTNode* parseStatement() {
-        if(match(TokenType::LEFT_BRACE))
+        if (match(TokenType::LEFT_BRACE)) {
             consumeToken(); // Consume '{'
+            
+            Token t = tokens[currentTokenIndex];
+            
+            // Here, parse multiple statements within the block and create an AST node for the block
+            ASTNode* blockNode = new ASTNode(NodeType::BLOCK, "Block");
+            while (!match(TokenType::RIGHT_BRACE)) {
+                Token f = tokens[currentTokenIndex];
+                
+                ASTNode* statement = parseStatement(); // Recursively parse individual statements
+                
+                if (statement) {
+                    blockNode->children.push_back(statement);
+                } else {
+                    // Handle error or unrecognized statement
+                    // Skip token or perform error recovery logic
+                    currentTokenIndex++;
+                }
+                
+                // Function ended?
+                if(match(TokenType::RIGHT_BRACE)) {
+                    return blockNode;
+                }
+            }
+
+            Token dd = tokens[currentTokenIndex];
+            
+            if(currentTokenIndex < tokens.size() - 1 && match(TokenType::RIGHT_BRACE)) { // '}'
+                Token dsd = tokens[currentTokenIndex];
+                consumeToken(); // Consume '}' at the end of the block
+            }
+            
+            return blockNode;
+        }
         
         Token f = tokens[currentTokenIndex];
+
+        if(match(TokenType::RIGHT_BRACE)) // '}'
+            return new ASTNode(NodeType::FUNCTION_BODY, "EmptyFunctionBody");
         
         // Simulated parsing of statements - handle expressions or assignments for demonstration
-
+        
         // Handle return statement:
         if((tokens[currentTokenIndex].value == "return" && match(TokenType::KEYWORD))) {
             consumeToken(); // Consume 'return'
@@ -901,13 +973,87 @@ private:
             return assignmentNode;
         }
         
+        // Handle conditional statements (if, else if, else)
+        if (match(TokenType::KEYWORD)) {
+            if (tokens[currentTokenIndex].value == "if") {
+                // Handle 'if' statement
+                // Parse the condition, then the body of the 'if' statement
+                // Create AST nodes accordingly
+                // For demonstration, assume a simple 'if' statement without 'else' or 'else if'
+                consumeToken(); // Consume 'if'
+
+                ASTNode* conditionNode = parseCondition(); // Parse the condition expression
+                ASTNode* ifBodyNode = parseStatement();    // Parse the body of 'if'
+
+                // Create an 'if' statement node and attach the condition and body
+                ASTNode* ifStatementNode = new ASTNode(NodeType::IF_STATEMENT, "if");
+                ifStatementNode->children.push_back(conditionNode);
+                ifStatementNode->children.push_back(ifBodyNode);
+
+                return ifStatementNode;
+            }
+            // ... Handle 'else if' and 'else' similarly
+        }
+        
+        // Handle loops (for, while, do-while)
+        if (match(TokenType::KEYWORD)) {
+            if (tokens[currentTokenIndex].value == "for") {
+                // Handle 'for' loop statement
+                // Parse the loop structure and body, create AST nodes accordingly
+                // For demonstration, assume a simple 'for' loop without initialization, condition, or increment
+                consumeToken(); // Consume 'for'
+
+                ASTNode* forBodyNode = parseStatement(); // Parse the body of the 'for' loop
+
+                // Create a 'for' loop node and attach the body
+                ASTNode* forLoopNode = new ASTNode(NodeType::FOR_LOOP, "for");
+                forLoopNode->children.push_back(forBodyNode);
+
+                return forLoopNode;
+            } else if(tokens[currentTokenIndex].value == "while") {
+                
+            } else if(tokens[currentTokenIndex].value == "do-while") {
+                //fuck you.
+            } else {
+                //std::cout << "BRO WTF IS " << tokens[currentTokenIndex].value << std::endl;
+            }
+        }
+
+        //TODO; Cant remember y i did this ;-;
+        bool isVariable = false;
+
+        int curIndex = currentTokenIndex;
+        
+        while(curIndex < tokens.size() && tokens[curIndex].type != TokenType::SEMICOLON) {
+            Token t = tokens[curIndex];
+
+            if (tokens[curIndex].type == TokenType::OPERATOR && tokens[curIndex].value == "=") {
+                isVariable = true;
+                std::cout << "Found variable at; " << curIndex << std::endl;
+                
+                break;
+            }
+            
+            curIndex++;
+        }
+        
         if (match(TokenType::IDENTIFIER)) {
             std::string variableName = tokens[currentTokenIndex].value;
             consumeToken(); // Consume variable name token
             
             Token d = tokens[currentTokenIndex];
             
-            //TODO; Not skipping '}' at the end of the function fixerd?
+            ASTNode* variableNode = new ASTNode(NodeType::LOCAL_VARIABLE_DECLARATION, variableName);
+            
+            // Check if it's a pointer/reference
+            if(match(TokenType::POINTER) || match(TokenType::REFERENCE)) {
+                consumeToken(); // Consume pointer
+
+                std::string to = tokens[currentTokenIndex].value;
+                
+                variableNode->children.push_back(new ASTNode(NodeType::POINTER, "PointerType: " + variableName));
+            }
+            
             if (match(TokenType::OPERATOR) && tokens[currentTokenIndex].value == "=") {
                 consumeToken(); // Consume '=' token
                 ASTNode* expressionNode = expression(); // Parse expression on the right-hand side of assignment
@@ -920,9 +1066,12 @@ private:
             }
         }
         
-        // Handle other types of statements (conditional, loops, etc.) as per language grammar
-        
         // If no valid statement found, return nullptr or handle error
+        return nullptr;
+    }
+
+    ASTNode* parseCondition() {
+        std::cout << "if statement isn't there buddy\n";
         return nullptr;
     }
     
@@ -934,7 +1083,7 @@ private:
             std::string op = tokens[currentTokenIndex++].value;
             
             ASTNode* right = term();
-            ASTNode* newOpNode = new ASTNode(NodeType::OPERATOR, op);
+            ASTNode* newOpNode = new ASTNode(NodeType::OPERATOR, "OPERATOR: " + op);
             newOpNode->children.push_back(left);
             newOpNode->children.push_back(right);
             left = newOpNode;
@@ -952,7 +1101,7 @@ private:
             std::string op = tokens[currentTokenIndex++].value;
             
             ASTNode* right = factor();
-            ASTNode* newOpNode = new ASTNode(NodeType::OPERATOR, op);
+            ASTNode* newOpNode = new ASTNode(NodeType::OPERATOR, "OPERATOR: " + op);
             newOpNode->children.push_back(left);
             newOpNode->children.push_back(right);
             left = newOpNode;
@@ -965,6 +1114,7 @@ private:
         Token currentToken = tokens[currentTokenIndex++];
         
         if (currentToken.type == TokenType::INTEGER_LITERAL ||
+            currentToken.type == TokenType::FLOATING_POINT_LITERAL ||
             currentToken.type == TokenType::IDENTIFIER ||
             currentToken.type == TokenType::KEYWORD) {
             
@@ -1008,6 +1158,8 @@ int main() {
             return 0;
         }
     )";
+
+    //TODO; having classes within classes...
     
     std::string complexCode = R"(
         #include <iostream>
@@ -1028,18 +1180,17 @@ int main() {
 
             void draw() const override {
                 int i = 1 + 2 * 4;
-                cout << "Drawing Circle" << endl;
             }
-
+            
             double area() const override {
                 return 3.14159 * radius * radius;
             }
         };
-
+        
         void test() {
             
         }
-
+        
         int main() {
             Shape* shape = new Circle(5.0);
             shape->draw();
@@ -1050,7 +1201,18 @@ int main() {
         }
     )";
     
-    std::string input = "3 + 4 * 2 - 6 / 3";
+    std::string input = "3.145 + 4";
+    
+    std::string test = R"(
+        int main() {
+            Shape* shape = new Circle(5.0);
+            shape->draw();
+            cout << "Area: " << shape->area() << endl;
+            delete shape;
+            
+            return 0;
+        }
+    )";
     
     std::vector<Token> tokens = lexer(complexCode);
     
