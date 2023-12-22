@@ -393,6 +393,11 @@ public:
             ASTNode* node = nullptr;
             
             //Token t = tokens
+
+            if(currentTokenIndex >= 88)
+            {
+                std::cout << "finally\n";
+            }
             
             if (match(TokenType::PREPROCESSOR_DIRECTIVE)) {
                 node = parseIncludeDirective();
@@ -405,7 +410,7 @@ public:
             } else {
                 // Try parsing a function
                 node = parseMember();
-
+                
                 if(node) {
                     currentTokenIndex++;
                     //isInClass = false;*/
@@ -913,6 +918,8 @@ private:
     
     // Handling operators
     ASTNode* parseStatement() {
+        Token fz = tokens[currentTokenIndex];
+        
         if (match(TokenType::LEFT_BRACE)) {
             consumeToken(); // Consume '{'
             
@@ -938,6 +945,9 @@ private:
                     return blockNode;
                 }
             }
+            
+            if(match(TokenType::RIGHT_BRACE))
+                return blockNode;
 
             Token dd = tokens[currentTokenIndex];
             
