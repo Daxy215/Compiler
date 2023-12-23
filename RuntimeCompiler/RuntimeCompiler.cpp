@@ -474,16 +474,6 @@ private:
             // Create an AST node representing the include directive
             ASTNode* includeNode = new ASTNode(NodeType::INCLUDE_DIRECTIVE, includeValue);
             
-            // Simulate token consumption for demonstration
-            //TODO; ?? wtf is this
-            while (currentTokenIndex < tokens.size() && tokens[currentTokenIndex].type != TokenType::SEMICOLON) {
-                currentTokenIndex++;
-            }
-            
-            if (currentTokenIndex < tokens.size() && tokens[currentTokenIndex].type == TokenType::SEMICOLON) {
-                currentTokenIndex++; // Consume the ';' token
-            }
-            
             return includeNode;
         }
         
@@ -1137,32 +1127,35 @@ private:
         std::vector<std::string> parameters;
         
         Token t = tokens[currentTokenIndex];
-            
+        
         while (!match(TokenType::RIGHT_PAREN)) {
             if (match(TokenType::KEYWORD)) {
                 std::string paramType = tokens[currentTokenIndex].value;
                 consumeToken(); // Consume parameter type token
-                    
+                
                 if (match(TokenType::IDENTIFIER)) {
                     std::string paramName = tokens[currentTokenIndex].value;
                     parameters.push_back(paramType + " " + paramName);
                     consumeToken(); // Consume parameter name token
-                        
+                    
                     if (!match(TokenType::COMMA)) {
                         break; // Last parameter, exit loop
                     }
-                        
+                    
                     consumeToken(); // Consume ',' before the next parameter
                 } else {
                     // Handle syntax errors in parameter declaration
+                    std::cout << "ERROR; Seems to have a syntax error in the parameter declaration at: " << currentTokenIndex << "\n"; 
                     //return nullptr;
                 }
             } else {
                 // Handle syntax errors in parameter declaration
+                std::cout << "ERROR; Seems to have a syntax error in the parameter declaration at: " << currentTokenIndex << "\n"; 
+                
                 //return nullptr;
             }
         }
-
+        
         return parameters;
     }
     
