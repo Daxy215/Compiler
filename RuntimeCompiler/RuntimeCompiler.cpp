@@ -52,8 +52,8 @@ struct ClassInfo {
 
 const std::unordered_set<std::string> keywords =
     {  "using", "return", "public", "private", "protected", "virtual",
-    "void", "const", "override", "int", "float", "char", "double",
-    "long",  "new", "delete", "if", "for", "else", "while"};
+    "final", "void", "const", "override", "int", "float", "char",
+    "double", "long",  "new", "delete", "if", "for", "else", "while"};
 
 std::unordered_map<std::string, SymbolEntry> symbolTable;
 std::unordered_map<std::string, ClassInfo> classTable;
@@ -392,13 +392,6 @@ public:
         while (currentTokenIndex < tokens.size() - 1) {
             ASTNode* node = nullptr;
             
-            //Token t = tokens
-
-            if(currentTokenIndex >= 88)
-            {
-                std::cout << "finally\n";
-            }
-            
             if (match(TokenType::PREPROCESSOR_DIRECTIVE)) {
                 node = parseIncludeDirective();
             } else if(match(TokenType::NAMESPACE)) { //TODO; Not detecting namespace.
@@ -731,12 +724,11 @@ private:
                 std::string memberName = tokens[currentTokenIndex].value;
                 consumeToken(); // Consume member name
                 
-                if (match(TokenType::LEFT_PAREN)) {
+                if (match(TokenType::LEFT_PAREN)) { // '('
                     // Parsing a member function
-                    ASTNode* memberFunction = parseMemberFunction(memberType, memberName);
-                    return memberFunction;
+                    return parseMemberFunction(memberType, memberName);
                 } else {
-                    // Parsing a member variable (simplified for demonstration)
+                    //TODO; global variable..
                     ASTNode* memberVariable = new ASTNode(NodeType::MEMBER_VARIABLE, memberType + " " + memberName);
                     consumeToken(); // Consume the token representing the member variable
                     return memberVariable;
@@ -771,7 +763,7 @@ private:
         // Handle syntax errors or incomplete variable declarations
         return nullptr;
     }
-
+    
     // Function parameters
     ASTNode* parseMemberFunction(const std::string& returnType, const std::string& functionName) {
         ASTNode* memberFunction = new ASTNode(NodeType::MEMBER_FUNCTION, "Function: " + functionName);
@@ -815,7 +807,8 @@ private:
             
             Token c = tokens[currentTokenIndex];
             
-            //This is for; virtual void draw() const = 0;
+            //This is for;
+            //virtual void draw() const = 0;
             //void draw() {}
             /*TODO;
              * Use while loop instead for;
@@ -841,6 +834,7 @@ private:
                         consumeToken(); // Consume ';' token
                         
                         // Indicate a pure virtual function and return without attempting to parse the function body
+                        //TODO; Fix this.. "type" can be more than 1..
                         memberFunction->value = returnType + " " + functionName + "() " + type + " = 0";
                         
                         //No body found:
@@ -945,10 +939,11 @@ private:
                     return blockNode;
                 }
             }
-            
+
+            // Function ended?
             if(match(TokenType::RIGHT_BRACE))
                 return blockNode;
-
+            
             Token dd = tokens[currentTokenIndex];
             
             if(currentTokenIndex < tokens.size() - 1 && match(TokenType::RIGHT_BRACE)) { // '}'
@@ -960,11 +955,9 @@ private:
         }
         
         Token f = tokens[currentTokenIndex];
-
+        
         if(match(TokenType::RIGHT_BRACE)) // '}'
             return new ASTNode(NodeType::FUNCTION_BODY, "EmptyFunctionBody");
-        
-        // Simulated parsing of statements - handle expressions or assignments for demonstration
         
         // Handle return statement:
         if((tokens[currentTokenIndex].value == "return" && match(TokenType::KEYWORD))) {
@@ -975,9 +968,9 @@ private:
             ASTNode* expressionNode = expression(); // Parse expression on the right-hand side of assignment
             
             // Create an assignment node manually, using type and value accordingly
-            ASTNode* assignmentNode = new ASTNode(NodeType::RETURN_STATEMENT, "return");
+            ASTNode* assignmentNode = new ASTNode(NodeType::RETURN_STATEMENT, "RETURN STATEMENT:");
             assignmentNode->children.push_back(expressionNode); // Attach the expression as a child
-
+            
             Token e = tokens[currentTokenIndex];
             
             return assignmentNode;
@@ -1028,58 +1021,90 @@ private:
                 //std::cout << "BRO WTF IS " << tokens[currentTokenIndex].value << std::endl;
             }
         }
-
+        
         //TODO; Cant remember y i did this ;-;
         bool isVariable = false;
-
+        
         int curIndex = currentTokenIndex;
         
         while(curIndex < tokens.size() && tokens[curIndex].type != TokenType::SEMICOLON) {
             Token t = tokens[curIndex];
-
+            
             if (tokens[curIndex].type == TokenType::OPERATOR && tokens[curIndex].value == "=") {
                 isVariable = true;
-                std::cout << "Found variable at; " << curIndex << std::endl;
+                std::cout << "Found variable at; " << tokens[curIndex-1].value << " - " << curIndex << std::endl;
                 
                 break;
             }
             
             curIndex++;
         }
+
+        if(!isVariable)
+            return nullptr;
+        
+        // As, curIndex is '=', the previous token, should be the name.
+        std::string variableName = tokens[curIndex - 1].value;
+        ASTNode* variableNode = new ASTNode(NodeType::LOCAL_VARIABLE_DECLARATION, "LOCAL VARIABLE: " + variableName);
+        
+        // Add modifiers
+        //TODO; Make this a function instead..
+        //TODO; As the same code, is being used.
+        //No need to check for variable name, hence the - 1.
+        for(size_t i = currentTokenIndex; i < curIndex - 1; i++) { // '{'
+            std::string type = tokens[i].value;
+            
+            //TODO; Virtual
+            if(tokens[i].type == TokenType::KEYWORD && tokens[i].value == "const") {
+                variableNode->children.push_back(new ASTNode(NodeType::ConstModifier, type + ": true"));
+            } else if(tokens[i].type == TokenType::KEYWORD && tokens[i].value == "override") {
+                variableNode->children.push_back(new ASTNode(NodeType::OverrideModifier, type + ": true"));
+            } else if(tokens[i].type == TokenType::KEYWORD && tokens[i].value == "final") {
+                variableNode->children.push_back(new ASTNode(NodeType::FinalModifier, type + ": true"));
+            } else if(tokens[i].type == TokenType::KEYWORD && tokens[i].value == "protected") {
+                variableNode->children.push_back(new ASTNode(NodeType::ProtectedModifier, type + ": true"));
+            } else if(tokens[i].type == TokenType::POINTER || tokens[i].type == TokenType::REFERENCE) {
+                // Check if it's a pointer/reference
+                std::string pointerType = tokens[i].value;
+                
+                NodeType type = NodeType::POINTER;
+                if(tokens[i].type == TokenType::REFERENCE)
+                    type = NodeType::REFERENCE;
+                
+                ASTNode* pointerNode = new ASTNode(type, "POINTER_TYPE: " + pointerType);
+                pointerNode->children.push_back(new ASTNode(NodeType::POINTER, "TO: " + tokens[i-1].value));
+                
+                variableNode->children.push_back(pointerNode);
+            } else {
+                std::cout << "Unknown modifier..; " << type << std::endl;
+            }
+            
+            consumeToken(); // Consume modifier token
+        }
+        
+        Token t = tokens[currentTokenIndex];
         
         if (match(TokenType::IDENTIFIER)) {
-            std::string variableName = tokens[currentTokenIndex].value;
             consumeToken(); // Consume variable name token
             
             Token d = tokens[currentTokenIndex];
-            
-            ASTNode* variableNode = new ASTNode(NodeType::LOCAL_VARIABLE_DECLARATION, variableName);
-            
-            // Check if it's a pointer/reference
-            if(match(TokenType::POINTER) || match(TokenType::REFERENCE)) {
-                consumeToken(); // Consume pointer
-
-                std::string to = tokens[currentTokenIndex].value;
-                
-                variableNode->children.push_back(new ASTNode(NodeType::POINTER, "PointerType: " + variableName));
-            }
             
             if (match(TokenType::OPERATOR) && tokens[currentTokenIndex].value == "=") {
                 consumeToken(); // Consume '=' token
                 ASTNode* expressionNode = expression(); // Parse expression on the right-hand side of assignment
                 
-                // Create an assignment node manually, using type and value accordingly
-                ASTNode* assignmentNode = new ASTNode(NodeType::ASSIGNMENT, variableName);
-                assignmentNode->children.push_back(expressionNode); // Attach the expression as a child
+                variableNode->children.push_back(expressionNode);
                 
-                return assignmentNode;
+                //return assignmentNode;
             }
+            
+            return variableNode;
         }
         
         // If no valid statement found, return nullptr or handle error
         return nullptr;
     }
-
+    
     ASTNode* parseCondition() {
         std::cout << "if statement isn't there buddy\n";
         return nullptr;
@@ -1103,7 +1128,48 @@ private:
     }
     
     ASTNode* term() {
-        ASTNode* left = factor();
+        std::string assignmentType = "";
+        std::vector<std::string> parameters;
+        
+        if(match(TokenType::KEYWORD, "new")) {
+            assignmentType = "new";
+            consumeToken();
+        }
+
+        
+        std::string type = tokens[currentTokenIndex].value;
+        ASTNode* left = new ASTNode(NodeType::ASSIGNMENT, "ASSIGNMENT: " + assignmentType + "; " + type);
+        Token t = tokens[currentTokenIndex];
+        
+        // Points to a class, perhaps?
+        if(match(TokenType::IDENTIFIER)) {
+            consumeToken(); // Consume type
+            
+            if(!match(TokenType::LEFT_PAREN)){
+                std::cout << "BRO this shit sucks.. fix it..\n";
+            }
+            
+            consumeToken(); // Consume '('
+            
+            while(!match(TokenType::RIGHT_PAREN)) { // ')'
+                Token tz = tokens[currentTokenIndex];
+                
+                if(match(TokenType::COMMA)) { //Skip
+                    consumeToken(); // Consume ','
+                    
+                    continue;
+                }
+                
+                parameters.push_back(tokens[currentTokenIndex].value);
+                left->children.push_back(new ASTNode(NodeType::PARAMETER, "PARAMETER: " + tokens[currentTokenIndex].value));
+                
+                consumeToken(); // Consume parameter
+            }
+
+            return left;
+        }
+        
+        left = factor();
         
         while (currentTokenIndex < tokens.size() &&
                (tokens[currentTokenIndex].value == "*" || tokens[currentTokenIndex].value == "/")) {
@@ -1187,9 +1253,9 @@ int main() {
         
         public:
             Circle(double r) : radius(r) {}
-
+            
             void draw() const override {
-                int i = 1 + 2 * 4;
+                final const final int i = 1 + 2 * 4;
             }
             
             double area() const override {
@@ -1202,7 +1268,7 @@ int main() {
         }
         
         int main() {
-            Shape* shape = new Circle(5.0);
+            Shape* shape = new Circle(5.0f);
             shape->draw();
             cout << "Area: " << shape->area() << endl;
             delete shape;
@@ -1215,7 +1281,7 @@ int main() {
     
     std::string test = R"(
         int main() {
-            Shape* shape = new Circle(5.0);
+            Shape* shape = new Circle(5.0, 4, "test");
             shape->draw();
             cout << "Area: " << shape->area() << endl;
             delete shape;
@@ -1223,6 +1289,8 @@ int main() {
             return 0;
         }
     )";
+    
+    //TODO; Can't detect 5.0f, but can detect, 5.0
     
     std::vector<Token> tokens = lexer(complexCode);
     
