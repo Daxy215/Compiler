@@ -358,6 +358,7 @@ enum class NodeType {
     POINTER,
     REFERENCE,
     FUNCTION_CALL,
+    DELETE,
     
     // Modifiers
     ConstModifier,
@@ -978,24 +979,27 @@ private:
                 // Parse the loop structure and body, create AST nodes accordingly
                 // For demonstration, assume a simple 'for' loop without initialization, condition, or increment
                 consumeToken(); // Consume 'for'
-
-                ASTNode* forBodyNode = parseStatement(); // Parse the body of the 'for' loop
-
+                
+                ASTNode* forBodyNode;// = parseStatement(); // Parse the body of the 'for' loop
+                
                 // Create a 'for' loop node and attach the body
                 ASTNode* forLoopNode = new ASTNode(NodeType::FOR_LOOP, "for");
                 forLoopNode->children.push_back(forBodyNode);
-
+                
                 return forLoopNode;
             } else if(tokens[currentTokenIndex].value == "while") {
                 
             } else if(tokens[currentTokenIndex].value == "do-while") {
                 //fuck you.
+            } else if(tokens[currentTokenIndex].value == "delete") {
+                consumeToken(); // Consume 'delete'
+                
+                return new ASTNode(NodeType::DELETE, "DELETE_STATEMENT: " + tokens[currentTokenIndex].value);
             } else {
                 //std::cout << "BRO WTF IS " << tokens[currentTokenIndex].value << std::endl;
             }
         }
         
-        //TODO; Cant remember y i did this ;-;
         bool isVariable = false;
         
         size_t curIndex = currentTokenIndex;
@@ -1012,7 +1016,7 @@ private:
             
             curIndex++;
         }
-
+        
         if(!isVariable)
             return nullptr;
         
@@ -1283,6 +1287,7 @@ int main() {
     )";
 
     //TODO; having classes within classes...
+    //TODO; Well it don't detect namespaces within class/function :)
     
     std::string complexCode = R"(
         #include <iostream>
