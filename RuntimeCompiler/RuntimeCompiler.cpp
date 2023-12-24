@@ -287,50 +287,6 @@ bool checkBalance(std::vector<Token>& tokens) {
     return true;
 }
 
-//??????
-bool performSemanticAnalysis(const std::vector<Token>& tokens) {
-    ClassInfo currentClassInfo; // Temporarily store information of the current class being defined
-    bool insideClassBlock = false;
-    bool expectMemberName = false;
-    
-    for (size_t i = 0; i < tokens.size(); ++i) {
-        const Token& token = tokens[i];
-        
-        if (token.type == TokenType::STRUCT || token.type == TokenType::CLASS) {
-            // Handle class definitions
-            if (i + 1 < tokens.size() && tokens[i + 1].type == TokenType::IDENTIFIER) {
-                currentClassInfo.name = tokens[i + 1].value;
-                classTable[tokens[i + 1].value] = currentClassInfo;
-                i++; // Skip the identifier token
-                insideClassBlock = false;
-            } else {
-                std::cout << "Error: Missing class name after 'struct' or 'class'." << '\n';
-                return false;
-            }
-        } else if (token.type == TokenType::LEFT_BRACE) {
-            // Start of class block
-            insideClassBlock = true;
-            expectMemberName = false;
-        } else if (insideClassBlock) {
-            if (expectMemberName && token.type == TokenType::IDENTIFIER) {
-                // Store member information within the current class
-                currentClassInfo.members[token.value] = TokenType::UNKNOWN; // Or set appropriate member type
-                expectMemberName = false;
-            } else if (token.type == TokenType::KEYWORD) {
-                // Handling member type declarations within the class block
-                expectMemberName = true;
-            } else if (token.type == TokenType::RIGHT_BRACE) {
-                // End of class block
-                insideClassBlock = false;
-            }
-        }
-    }
-    
-    std::cout << "Semantic analysis successful." << '\n';
-    
-    return true;
-}
-
 enum class NodeType {
     PROGRAM,
     CLASS,
@@ -1266,12 +1222,76 @@ void printAST(ASTNode* node, int depth = 0) {
         std::cout << "  "; // Add indentation based on depth for better visualization
     }
 
-    std::cout << "- " << node->value << '\n';
+    std::cout << static_cast<int>(node->type) << " - " << node->value << '\n';
 
     for (ASTNode* child : node->children) {
         printAST(child, depth + 1); // Recursively print child nodes with increased depth
     }
 }
+
+class SymbolTable
+{
+private:
+    std::unordered_map<std::string, NodeType> symbolTable;
+
+public:
+    void addToSymbolTable(const std::string& name, NodeType type) {
+        symbolTable[name] = type;
+    }
+
+    void printSymbolTable() {
+        std::cout << "Symbol Table Contents:" << std::endl;
+        
+        for (const auto& entry : symbolTable) {
+            std::cout << entry.first << " : " << static_cast<int>(entry.second) << std::endl;
+        }
+        
+        std::cout << "End of Symbol Table" << std::endl;
+    }
+    
+    void traverseNodes(ASTNode* node, SymbolTable& symbolTable, std::string currentScope) {
+        if (node->type == NodeType::CLASS) {
+            currentScope = split(node->value);
+        } else if (node->type == NodeType::MEMBER_FUNCTION || node->type == NodeType::VARIABLE_DECLARATION) {
+            std::string scopePrefix = (currentScope != "Global Scope") ? currentScope + "::" : "";
+            symbolTable.addToSymbolTable(split(node->children[0]->value) + " " +
+                split(node->value) + " : " + scopePrefix + split(node->value), node->type);
+        }
+
+        for (auto child : node->children) {
+            traverseNodes(child, symbolTable, currentScope);
+        }
+    }
+
+    std::string split(const std::string &s) {
+        std::vector<std::string> tokens;
+        std::istringstream iss(s);
+        std::string token;
+    
+        while (std::getline(iss, token, ' ')) {
+            tokens.push_back(token);
+        }
+        
+        int size = tokens.size();
+        
+        if(size > 1)
+            return tokens[1];
+        
+        return tokens[tokens.size() - 1];
+    }
+    
+    std::vector<std::string> splitString(const std::string &s, char delimiter) {
+        std::vector<std::string> tokens;
+        std::istringstream iss(s);
+        std::string token;
+    
+        while (std::getline(iss, token, delimiter)) {
+            tokens.push_back(token);
+        }
+    
+        return tokens;
+    }
+};
 
 int main() {
     std::string code = R"(
@@ -1288,11 +1308,15 @@ int main() {
 
     //TODO; having classes within classes...
     //TODO; Well it don't detect namespaces within class/function :)
-    
-    std::string complexCode = R"(
+
+    /*
+    *
         #include <iostream>
         using namespace std;
         
+     */
+    
+    std::string complexCode = R"(
         class Shape {
         public:
             virtual void draw() const = 0;
@@ -1322,7 +1346,6 @@ int main() {
         int main() {
             Shape* shape = new Circle(5.0f);
             shape->draw();
-            cout << "Area: " << shape->area() << endl;
             delete shape;
             
             return 0;
@@ -1369,6 +1392,12 @@ int main() {
     
     std::cout << "Abstract Syntax Tree:" << "\n";
     printAST(root);
+
+    std::cout << "\n\n\n\nSemanticAnalysis\n\n\n";
+
+    SymbolTable semanticAnalysis;
+    semanticAnalysis.traverseNodes(root, semanticAnalysis, "GLOBAL");
+    semanticAnalysis.printSymbolTable();
     
     return 0;
 }
