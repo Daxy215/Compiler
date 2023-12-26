@@ -168,7 +168,7 @@ std::vector<Token> Lexer::generateTokens(std::string code) {
             } else {
                 type = TokenType::IDENTIFIER;
             }
-        
+            
             tokens.push_back({type, currentToken});
             currentToken.clear();
         }

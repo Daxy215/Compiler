@@ -13,6 +13,7 @@ enum class NodeType {
     CLASS_BODY,
     MEMBER_FUNCTION,
     MEMBER_VARIABLE,
+    VARIABLE_TYPE,
     INITIALIZER_VARIABLE,
     PARAMETER_VARIABLE,
     FUNCTION_BODY,
@@ -20,7 +21,6 @@ enum class NodeType {
     EXPRESSION,
     INCLUDE_DIRECTIVE,
     NAMESPACE,
-    VARIABLE_DECLARATION,
     LOCAL_VARIABLE_DECLARATION,
     PARAMETER,
     ASSIGNMENT,
@@ -56,7 +56,8 @@ struct ASTNode {
     DataType dataType;
     std::string value;
     std::vector<ASTNode*> children;
-
+    
+    ASTNode(const std::string& val) : type(NodeType::ConstModifier), value(val) {}
     ASTNode(NodeType t, const std::string& val) : type(t), value(val) {}
     ~ASTNode() {
         for (auto child : children) {
@@ -104,9 +105,7 @@ private:
      * Handles Variables
      * TODO; If empty, add "EmptyBody" tag.
      */
-    ASTNode* parseMember();
-
-    ASTNode* parseVariableDeclaration();
+    ASTNode* parseMember(NodeType memberDeclarationType);
 
     /**
      * Handles function parameters
@@ -116,6 +115,7 @@ private:
     ASTNode* parseStatement();
     ASTNode* parseFunctionCall();
     ASTNode* parseCondition();
+    ASTNode* parseVariable();
     std::vector<std::string> parseParameters();
     
     ASTNode* expression();
