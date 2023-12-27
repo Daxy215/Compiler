@@ -1,4 +1,6 @@
+C:\Users\smsmk\RiderProjects\RuntimeCompiler\RuntimeCompiler\AssemblyGenerator.cpp;C:\Users\smsmk\RiderProjects\RuntimeCompiler\RuntimeCompiler\x64\Debug\AssemblyGenerator.obj
 C:\Users\smsmk\RiderProjects\RuntimeCompiler\RuntimeCompiler\Lexer.cpp;C:\Users\smsmk\RiderProjects\RuntimeCompiler\RuntimeCompiler\x64\Debug\Lexer.obj
 C:\Users\smsmk\RiderProjects\RuntimeCompiler\RuntimeCompiler\Parser.cpp;C:\Users\smsmk\RiderProjects\RuntimeCompiler\RuntimeCompiler\x64\Debug\Parser.obj
 C:\Users\smsmk\RiderProjects\RuntimeCompiler\RuntimeCompiler\RuntimeCompiler.cpp;C:\Users\smsmk\RiderProjects\RuntimeCompiler\RuntimeCompiler\x64\Debug\RuntimeCompiler.obj
 C:\Users\smsmk\RiderProjects\RuntimeCompiler\RuntimeCompiler\SemanticAnalysis.cpp;C:\Users\smsmk\RiderProjects\RuntimeCompiler\RuntimeCompiler\x64\Debug\SemanticAnalysis.obj
+C:\Users\smsmk\RiderProjects\RuntimeCompiler\RuntimeCompiler\TACGenerator.cpp;C:\Users\smsmk\RiderProjects\RuntimeCompiler\RuntimeCompiler\x64\Debug\TACGenerator.obj

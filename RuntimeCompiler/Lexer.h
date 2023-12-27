@@ -45,6 +45,7 @@ public:
     std::vector<Token> generateTokens(std::string code);
 
 private:
+    void pushToken(char c, TokenType type);
     std::string extractNamespaceName(const std::string& input);
     
 private:

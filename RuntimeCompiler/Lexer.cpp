@@ -1,6 +1,12 @@
 #include "Lexer.h"
 
 #include <iostream>
+#include <map>
+
+std::map<std::string, TokenType> multiCharOps =
+    {{"<<", TokenType::OPERATOR},
+    {"::", TokenType::OPERATOR},
+    {"->", TokenType::OPERATOR}};
 
 Lexer::Lexer() {
     
@@ -15,44 +21,33 @@ std::vector<Token> Lexer::generateTokens(std::string code) {
         
         if(!tokens.empty())
             prevToken = tokens.back();
-        
-        if(c == '(') {
-            tokens.push_back({TokenType::LEFT_PAREN, std::string(1, c)});
-            continue;
-        } else if(c == ')') {
-            tokens.push_back({TokenType::RIGHT_PAREN, std::string(1, c)});
-            continue;
-        } else if(c == '{') {
-            tokens.push_back({TokenType::LEFT_BRACE, std::string(1, c)});
-            continue;
-        } else if(c == '}') {
-            tokens.push_back({TokenType::RIGHT_BRACE, std::string(1, c)});
-            continue;
-        } else if(c == ';') {
-            tokens.push_back({TokenType::SEMICOLON, std::string(1, c)});
-            continue;
-        } else if(c == ',') {
-            tokens.push_back({TokenType::COMMA, std::string(1, c)});
-            continue;
-        } else if(c == '<' && i + 1 < code.size() && code[i + 1] == '<') {
-            tokens.push_back({TokenType::OPERATOR, "<<"});
-            i++;
-            continue;
-        } else if(c == ':' && i + 1 < code.size() && code[i + 1] == ':') {
-            tokens.push_back({TokenType::OPERATOR, "::"});
-            i++;
-            continue;
-        } else if(c == '-' && i + 1 < code.size() && code[i + 1] == '>') {
-            tokens.push_back({TokenType::OPERATOR, "->"});
-            i++;
-            continue;
-        } else if(c == ':') {
-            tokens.push_back({TokenType::COLON, std::string(1, c)});
-            continue;
-        } else if (c == '+' || c == '-' || c == '/' || c == '=') {
-            tokens.push_back({TokenType::OPERATOR, std::string(1, c)});
-            continue;
-        } else if(c == '*' || c == '&') {
+
+        switch(c) {
+        case '(':
+            pushToken(c, TokenType::LEFT_PAREN);
+            break;
+        case ')':
+            pushToken(c, TokenType::RIGHT_PAREN);
+            break;
+        case '{':
+            pushToken(c, TokenType::LEFT_BRACE);
+            break;
+        case '}':
+            pushToken(c, TokenType::RIGHT_BRACE);
+            break;
+        case ';':
+            pushToken(c, TokenType::SEMICOLON);
+            break;
+        case ',':
+            pushToken(c, TokenType::COMMA);
+            break;
+        case ':':
+            pushToken(c, TokenType::COLON);
+            break;
+        case '+': case '-': case '/': case '=':
+            pushToken(c, TokenType::OPERATOR);
+            break;
+        case '*': case '&':
             if (prevToken.type == TokenType::OPERATOR || prevToken.type == TokenType::REFERENCE ||
                 prevToken.type == TokenType::POINTER || prevToken.type == TokenType::STRUCT ||
                 prevToken.type == TokenType::CLASS || prevToken.type == TokenType::IDENTIFIER) {
@@ -61,22 +56,19 @@ std::vector<Token> Lexer::generateTokens(std::string code) {
                     tokens.push_back({TokenType::POINTER, std::string(1, c)});
                 else if(c == '&')
                     tokens.push_back({TokenType::REFERENCE, std::string(1, c)});
-            } else {
-                tokens.push_back({TokenType::OPERATOR, std::string(1, c)});
-            }
-            
-            continue;
-        }/* else if (c == '&') {
-            if (prevToken.type == TokenType::OPERATOR || prevToken.type == TokenType::REFERENCE ||
-                prevToken.type == TokenType::POINTER || prevToken.type == TokenType::STRUCT ||
-                prevToken.type == TokenType::CLASS || prevToken.type == TokenType::IDENTIFIER) {
-                    tokens.push_back({TokenType::REFERENCE, std::string(1, c)}); // Unary reference
                 } else {
                     tokens.push_back({TokenType::OPERATOR, std::string(1, c)});
                 }
-    
-            continue;
-        }*/ else if (std::isdigit(c) || c == '.') {
+            
+            break;
+        default:
+            if (i + 1 < code.size() && multiCharOps.count(std::string(1, c) + code[i + 1])) {
+                pushToken(c, multiCharOps[std::string(1, c) + code[i + 1]]);
+                i++;
+            }
+        }
+        
+        if (std::isdigit(c) || c == '.') {
             std::string literal;
             bool hasDecimal = false;
     
@@ -181,6 +173,10 @@ std::vector<Token> Lexer::generateTokens(std::string code) {
     return tokens;
 }
 
+void Lexer::pushToken(char c, TokenType type) {
+    tokens.push_back({type, std::string(1, c)});
+}
+
 std::string Lexer::extractNamespaceName(const std::string& input) {
     const std::string usingNamespacePrefix = "namespace ";
     const size_t prefixLength = usingNamespacePrefix.length();
@@ -191,18 +187,20 @@ std::string Lexer::extractNamespaceName(const std::string& input) {
         // Remove any leading/trailing whitespace
         namespaceName.erase(
             namespaceName.begin(),
-            std::find_if(namespaceName.begin(), namespaceName.end(), [](unsigned char ch) {
+            std::find_if(namespaceName.begin(), namespaceName.end(), [](unsigned char ch)
+            {
                 return !std::isspace(ch);
             })
         );
-        
+
         namespaceName.erase(
-            std::find_if(namespaceName.rbegin(), namespaceName.rend(), [](unsigned char ch) {
+            std::find_if(namespaceName.rbegin(), namespaceName.rend(), [](unsigned char ch)
+            {
                 return !std::isspace(ch);
             }).base(),
             namespaceName.end()
         );
-
+        
         return namespaceName;
     }
 

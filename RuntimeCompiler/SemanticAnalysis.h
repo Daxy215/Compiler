@@ -39,8 +39,9 @@ class SemanticAnalysis {
     };
 
 public:
-    SemanticAnalysis(ASTNode* node);
-
+    SemanticAnalysis();
+    
+    void generateSymbolTable(ASTNode* node);
 private:
     void traverseNodes(ASTNode* node, std::string currentScope);
     void performSemanticChecks();

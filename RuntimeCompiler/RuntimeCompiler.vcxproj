@@ -154,15 +154,19 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="AssemblyGenerator.cpp" />
     <ClCompile Include="Lexer.cpp" />
     <ClCompile Include="Parser.cpp" />
     <ClCompile Include="RuntimeCompiler.cpp" />
     <ClCompile Include="SemanticAnalysis.cpp" />
+    <ClCompile Include="TACGenerator.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="AssemblyGenerator.h" />
     <ClInclude Include="Lexer.h" />
     <ClInclude Include="Parser.h" />
     <ClInclude Include="SemanticAnalysis.h" />
+    <ClInclude Include="TACGenerator.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

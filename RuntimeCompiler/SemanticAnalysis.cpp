@@ -1,6 +1,10 @@
 #include "SemanticAnalysis.h"
 
-SemanticAnalysis::SemanticAnalysis(ASTNode* node) {
+SemanticAnalysis::SemanticAnalysis() {
+    
+}
+
+void SemanticAnalysis::generateSymbolTable(ASTNode* node) {
     traverseNodes(node, "GLOBAL");
     performSemanticChecks();
     printSymbolTable();
