@@ -42,13 +42,14 @@ bool checkBalance(std::vector<Token>& tokens, TokenType left, TokenType right) {
     return true;
 }
 
-//TODO; Check for [] and <>
 bool checkCodeBalance(std::vector<Token>& tokens) {
     if(checkBalance(tokens, TokenType::LEFT_BRACE, TokenType::RIGHT_BRACE)
-        && checkBalance(tokens, TokenType::LEFT_PAREN, TokenType::RIGHT_PAREN)) {
+        && checkBalance(tokens, TokenType::LEFT_PAREN, TokenType::RIGHT_PAREN)
+        && checkBalance(tokens, TokenType::LEFT_SQUARE_BRACE, TokenType::RIGHT_SQUARE_BRACE)
+        && checkBalance(tokens, TokenType::LEFT_ANGLE_BRACKET, TokenType::RIGHT_ANGLE_BRACKET)) {
         return true;
     }
-
+    
     return false;
 }
 
@@ -93,7 +94,7 @@ int main() {
             Circle(double r) : radius(r) {}
             
             void draw() const override {
-                final const int i = 1 + 2 * 4;
+                const int i = 1 + 2 * 4;
             }
             
             double area() const override {
@@ -109,10 +110,6 @@ int main() {
             
         }
         
-        void test() {
-            
-        }
-        
         int main() {
             int i = 0;
             int i = 0;
@@ -125,13 +122,40 @@ int main() {
     )";
     
     std::string testCode = "int i = 5 + 3 * 2;";
+
+    std::string test1 = R"(
+        class Test {
+            public:
+            int test = 4;
+        };
+    )";
+    
+    std::string test2 = R"(
+        void foo(int a, int b) {
+            return a + b;
+        }
+    )";
+    
+    std::string test3 = R"(
+        void test() {
+            for(int i = 0; i < 10; i++) {
+                if(i > 5) {
+                    break;
+                }
+            }
+        }
+    )";
     
     Lexer* lexer = new Lexer();
-    std::vector<Token> tokens = lexer->generateTokens(complexCode);
+    std::vector<Token> tokens = lexer->generateTokens(test3);
+
+    std::cout << "Generated tokens: \n\n";
     
     for (const auto& token : tokens) {
         std::cout << "Token Type: " << static_cast<int>(token.type) << ", Value: " << token.value << "\n";
     }
+
+    std::cout << "\n";
     
     // TODO; Check make this a class.. Perhaps inside lexer
     if(checkCodeBalance(tokens)) {
@@ -145,7 +169,7 @@ int main() {
     Parser* parser = new Parser(tokens);
     ASTNode* root = parser->parseCode();
     
-    std::cout << "Abstract Syntax Tree:" << "\n";
+    std::cout << "\n\nAbstract Syntax Tree:" << "\n";
     parser->printAST(root);
     
     std::cout << "\n\n\nSemanticAnalysis\n\n\n";
@@ -154,15 +178,16 @@ int main() {
     SemanticAnalysis* semanticAnalysis = new SemanticAnalysis();
     semanticAnalysis->generateSymbolTable(root);
 
+    TACGenerator* tac = new TACGenerator();
+    int c = 0;
+    tac->generateTAC(root,c);
+
+    for(std::string f : tac->tac)
+        std::cout << f << std::endl;
+
     return 0;
     
     // Sample AST representing an arithmetic expression: 5 + 3 * 2
-    root = root->children[0]->children[1];
-    TACGenerator* tac = new TACGenerator();
-    tac->generateTAC(root);
-    
-    for(std::string f : tac->tac)
-        std::cout << f << std::endl;
     
     AssemblyGenerator* assemblyGenerator = new AssemblyGenerator();
     assemblyGenerator->generateAssembly("generated_code.asm", tac->tac);

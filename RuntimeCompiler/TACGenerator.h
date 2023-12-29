@@ -5,15 +5,15 @@
 
 class TACGenerator {
 public:
-    void generateTAC(ASTNode* node);
+    void generateTAC(ASTNode* nodel, int& tempCounter);
 
 private:
     std::string getTemp() {
-        return "t" + std::to_string(tempCount++);
+        return "t" + std::to_string(tempCounter++);
     }
     
 private:
-    int tempCount = 0;
+    int tempCounter = 0;
     
 public:
     std::vector<std::string> tac;

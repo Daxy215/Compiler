@@ -1,7 +1,52 @@
 #include "TACGenerator.h"
 
-void TACGenerator::generateTAC(ASTNode* node) {
-    if (node) {
+using namespace std;
+
+void TACGenerator::generateTAC(ASTNode* node, int& tempCounter) {
+    switch(node->type) {
+    case NodeType::OPERATOR:
+        if(node->value == "+" || node->value == "-" || node->value == "*" || node->value == "/") {
+            // Generate TAC for addition
+            /*
+            generateTAC(node->children[0], tempCounter);
+            generateTAC(node->children[1], tempCounter);
+            cout << "t" << ++tempCounter << " = " << "t" << tempCounter - 2 << " " << node->value << " " << "t" << tempCounter - 1 << endl;
+        */
+            
+            std::string leftOperand = "t" + std::to_string(tempCounter++);
+            generateTAC(node->children[0], tempCounter);
+            std::string rightOperand = "t" + std::to_string(tempCounter++);
+            generateTAC(node->children[1], tempCounter);
+            
+            // Generate TAC for addition
+            tac.push_back(leftOperand + " = " + node->children[0]->value);
+            tac.push_back(rightOperand + " = " + node->children[1]->value);
+            tac.push_back("t" + std::to_string(tempCounter) + " = " + leftOperand + " + " + rightOperand);
+            tempCounter++;
+            
+            node->value = "t" + std::to_string(tempCounter - 1);
+        }
+        
+        break;
+    case NodeType::ASSIGNMENT:
+        if(node->children.size() != 2) {
+            cout << "Error: Assignment node expects exactly two children" << endl;
+            break;
+        }
+        
+        // Generate TAC for addition
+        generateTAC(node->children[0], tempCounter);
+        generateTAC(node->children[1], tempCounter);
+        cout << "t" << ++tempCounter << " = " << "t" << tempCounter - 2 << endl;
+        break;
+    default:
+        for(auto child : node->children) {
+            generateTAC(child, tempCounter);
+        }
+        break;
+    }
+    
+    /*if (node) {
         if (node->value == "+") {
             std::string leftOperand = getTemp();
             generateTAC(node->children[0]);
@@ -31,5 +76,5 @@ void TACGenerator::generateTAC(ASTNode* node) {
             // Leaf node - variable or constant
             node->value = node->value; // Set the value of leaf node
         }
-    }
+    }*/
 }

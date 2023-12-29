@@ -4,13 +4,36 @@
 #include <map>
 
 std::map<std::string, TokenType> multiCharOps =
-    {{"<<", TokenType::OPERATOR},
+    {{"<<", TokenType::OPERATOR}, // Can also be a bit shift operator
+    {">>", TokenType::OPERATOR}, // Can also be a bit shift operator
     {"::", TokenType::OPERATOR},
-    {"->", TokenType::OPERATOR}};
-
-Lexer::Lexer() {
-    
-}
+    {"->", TokenType::OPERATOR},
+    {"++", TokenType::INCREMENT},
+    {"--", TokenType::DECREMENT},
+    {"&&", TokenType::LOGICAL_AND},
+    {"||", TokenType::LOGICAL_OR},
+    {"==", TokenType::EQUAL},
+    {"!=", TokenType::NOT_EQUAL},
+    {"<=", TokenType::LESS_THAN_EQUAL},
+    {">=", TokenType::GREATER_THAN_EQUAL},
+    {"<<=", TokenType::LEFT_SHIFT_ASSIGN},
+    {">>=", TokenType::RIGHT_SHIFT_ASSIGN},
+    {"->*", TokenType::POINTER_MEMBER_ACCESS},
+    {"::*", TokenType::SCOPE_POINTER_MEMBER_ACCESS},
+    {"...", TokenType::ELLIPSIS},
+    {"//", TokenType::SINGLE_LINE_COMMENT},
+    {"/*", TokenType::MULTI_LINE_COMMENT_START},
+    {"*/", TokenType::MULTI_LINE_COMMENT_END},
+    {"%=", TokenType::MODULUS_ASSIGN},
+    {"^=", TokenType::BITWISE_XOR_ASSIGN},
+    {"|=", TokenType::BITWISE_OR_ASSIGN},
+    {"&=", TokenType::BITWISE_AND_ASSIGN},
+    {"^=", TokenType::BITWISE_XOR},
+    {"&=", TokenType::BITWISE_AND},
+    {"|=", TokenType::BITWISE_OR},
+    {"%=", TokenType::MODULUS},
+    {"~=", TokenType::BITWISE_NOT},
+    };
 
 std::vector<Token> Lexer::generateTokens(std::string code) {
     for(size_t i = 0; i < code.size(); ++i) {
@@ -21,7 +44,16 @@ std::vector<Token> Lexer::generateTokens(std::string code) {
         
         if(!tokens.empty())
             prevToken = tokens.back();
-
+        
+        if (i + 1 < code.size() && multiCharOps.count(std::string(1, c) + code[i + 1])) {
+            std::string type = std::string(1, c) + code[i + 1];
+            
+            tokens.push_back({multiCharOps[type], type});
+            i++;
+            
+            continue;
+        }
+        
         switch(c) {
         case '(':
             pushToken(c, TokenType::LEFT_PAREN);
@@ -34,6 +66,18 @@ std::vector<Token> Lexer::generateTokens(std::string code) {
             break;
         case '}':
             pushToken(c, TokenType::RIGHT_BRACE);
+            break;
+        case '[':
+            pushToken(c, TokenType::LEFT_SQUARE_BRACE);
+            break;
+        case ']':
+            pushToken(c, TokenType::RIGHT_SQUARE_BRACE);
+            break;
+        case '<':
+            pushToken(c, TokenType::LEFT_ANGLE_BRACKET);
+            break;
+        case '>':
+            pushToken(c, TokenType::RIGHT_ANGLE_BRACKET);
             break;
         case ';':
             pushToken(c, TokenType::SEMICOLON);
@@ -62,10 +106,9 @@ std::vector<Token> Lexer::generateTokens(std::string code) {
             
             break;
         default:
-            if (i + 1 < code.size() && multiCharOps.count(std::string(1, c) + code[i + 1])) {
-                pushToken(c, multiCharOps[std::string(1, c) + code[i + 1]]);
-                i++;
-            }
+            std::cout << "Error: Unknown token: " << c << "\n";
+            
+            break;
         }
         
         if (std::isdigit(c) || c == '.') {
@@ -127,6 +170,8 @@ std::vector<Token> Lexer::generateTokens(std::string code) {
         if (!currentToken.empty()) {
             TokenType type;
             
+            // TODO; Use a map instead.
+            
             if (keywords.find(currentToken) != keywords.end()) {
                 type = TokenType::KEYWORD;
             } else if(currentToken == "include") {
@@ -155,8 +200,16 @@ std::vector<Token> Lexer::generateTokens(std::string code) {
                 type = TokenType::STRUCT;
             } else if (currentToken == "class") {
                 type = TokenType::CLASS;
+            } else if(currentToken == "for") {
+                type = TokenType::FOR_LOOP;
+            } else if(currentToken == "if") {
+                type = TokenType::IF_STATEMENT;
             } else if(currentToken == "return") {
-                type = TokenType::RETURN;
+                type = TokenType::RETURN_STATEMENT;
+            } else if(currentToken == "break") {
+                type = TokenType::BREAK_STATEMENT;
+            } else if(currentToken == "continue") {
+                type = TokenType::CONTINUE_STATEMENT;
             } else {
                 type = TokenType::IDENTIFIER;
             }

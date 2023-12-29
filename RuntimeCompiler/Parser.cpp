@@ -284,6 +284,7 @@ ASTNode* Parser::parseMember(NodeType memberDeclarationType) {
                 
                 if (match(TokenType::OPERATOR) && tokens[currentTokenIndex].value == "=") {
                     consumeToken(); // Consume '=' token
+                    
                     ASTNode* expressionNode = expression(); // Parse expression on the right-hand side of assignment
                     
                     memberVariable->children.push_back(expressionNode);
@@ -313,7 +314,7 @@ ASTNode* Parser::parseMemberFunction(const std::string& returnType, const std::s
             consumeToken(); // Consume '('
             
             // Parse parameters (if any)
-            std::vector<std::string> parameters = parseParameters();
+            std::vector<std::string> parameters = parseFunctionParameters();
             
             consumeToken(); // Consume ')'
             
@@ -384,8 +385,14 @@ ASTNode* Parser::parseMemberFunction(const std::string& returnType, const std::s
             
             if (functionBody) {
                 // Add parameters to the member function node
-                for (const auto& param : parameters) {
-                    ASTNode* parameterNode = new ASTNode(NodeType::PARAMETER, param);
+                
+                for (int i = 0; !parameters.empty() && i < parameters.size() - 1; i+=2) {
+                    std::string paramName = parameters[i];
+                    std::string paramType = parameters[i + 1];
+                    
+                    ASTNode* parameterNode = new ASTNode(NodeType::PARAMETER, paramName);
+                    parameterNode->children.push_back(new ASTNode(NodeType::VARIABLE_TYPE, paramType));
+                    
                     memberFunction->children.push_back(parameterNode);
                 }
 
@@ -422,14 +429,25 @@ ASTNode* Parser::parseFunctionBody() {
     return functionBodyNode;
 }
 
-ASTNode* Parser::parseStatement()
-{
+ASTNode* Parser::parseStatement() {
     Token fz = tokens[currentTokenIndex];
 
     if (match(TokenType::LEFT_BRACE)) {
         consumeToken(); // Consume '{'
         
         Token t = tokens[currentTokenIndex];
+
+        // Warning.. junky code..
+        if(match(TokenType::BREAK_STATEMENT)) {
+            consumeToken(); // Consume statement
+            return new ASTNode(NodeType::BREAK_STATEMENT, "Break statement");
+        } else if(match(TokenType::CONTINUE_STATEMENT)) {
+            consumeToken(); // Consume statement
+            return new ASTNode(NodeType::CONTINUE_STATEMENT, "Continue statement");
+        } else if(match(TokenType::RETURN_STATEMENT)) {
+            consumeToken(); // Consume statement
+            return new ASTNode(NodeType::RETURN_STATEMENT, "Return statement");
+        }
         
         // Here, parse multiple statements within the block and create an AST node for the block
         ASTNode* blockNode = new ASTNode(NodeType::BLOCK, "Block");
@@ -499,57 +517,90 @@ ASTNode* Parser::parseStatement()
         return assignmentNode;
     }
     
-    /*
-    // Handle conditional statements (if, else if, else)
-    if (match(TokenType::KEYWORD)) {
-        if (tokens[currentTokenIndex].value == "if") {
-            // Handle 'if' statement
-            // Parse the condition, then the body of the 'if' statement
-            // Create AST nodes accordingly
-            // For demonstration, assume a simple 'if' statement without 'else' or 'else if'
-            consumeToken(); // Consume 'if'
-            
-            ASTNode* conditionNode = parseCondition(); // Parse the condition expression
-            ASTNode* ifBodyNode = parseStatement();    // Parse the body of 'if'
-            
-            // Create an 'if' statement node and attach the condition and body
-            ASTNode* ifStatementNode = new ASTNode(NodeType::IF_STATEMENT, "if");
-            ifStatementNode->children.push_back(conditionNode);
-            ifStatementNode->children.push_back(ifBodyNode);
-            
-            return ifStatementNode;
-        }
-        // ... Handle 'else if' and 'else' similarly
-    }
-    
     // Handle loops (for, while, do-while)
-    if (match(TokenType::KEYWORD)) {
-        if (tokens[currentTokenIndex].value == "for") {
-            // Handle 'for' loop statement
-            // Parse the loop structure and body, create AST nodes accordingly
-            // For demonstration, assume a simple 'for' loop without initialization, condition, or increment
-            consumeToken(); // Consume 'for'
+    // if (match(TokenType::KEYWORD)) {
+    //     if (tokens[currentTokenIndex].value == "if") {
+ 
+    //     } else if (tokens[currentTokenIndex].value == "else") {
+    //         
+    //     } else if (tokens[currentTokenIndex].value == "else if") {
+    //         
+    //     } else if(tokens[currentTokenIndex].value == "while") {
+    //         
+    //     } else if(tokens[currentTokenIndex].value == "do-while") {
+    //         // Fuck you.
+    //     } else if(tokens[currentTokenIndex].value == "delete") {
+    //         consumeToken(); // Consume 'delete'
+    //         
+    //         return new ASTNode(NodeType::DELETE, "DELETE_STATEMENT: " + tokens[currentTokenIndex].value);
+    //     } else {
+    //         //std::cout << "BRO WTF IS " << tokens[currentTokenIndex].value << std::endl;
+    //     }
+    // }
+    
+    switch (tokens[currentTokenIndex].type) {
+    case TokenType::FOR_LOOP:
+        // Idk if there are other types of "for loops"
+            if (tokens[currentTokenIndex].value == "for") {
+                /**
+                 * Types of for loops:
+                 * for(int i = 0; i < #; i++) {}
+                 * for(int f : fs) {}
+                 */
+                consumeToken(); // Consume 'for'
             
-            ASTNode* forBodyNode;// = parseStatement(); // Parse the body of the 'for' loop
+                ASTNode* forLoopNode = new ASTNode(NodeType::FOR_LOOP, "ForLoop");
             
-            // Create a 'for' loop node and attach the body
-            ASTNode* forLoopNode = new ASTNode(NodeType::FOR_LOOP, "for");
-            forLoopNode->children.push_back(forBodyNode);
+                Token d = tokens[currentTokenIndex];
             
-            return forLoopNode;
-        } else if(tokens[currentTokenIndex].value == "while") {
+                // Parse initialization
+                consumeToken(); // Consume '('
+                ASTNode* initNode = parseMember(NodeType::MEMBER_VARIABLE); // Assuming you have a function to parse expressions
+                forLoopNode->children.push_back(initNode);
+
+                // Parse condition
+                consumeToken(); // Consume ';'
+                ASTNode* conditionNode = expression(); // Assuming you have a function to parse expressions
+                forLoopNode->children.push_back(conditionNode);
+
+                // Parse iteration
+                consumeToken(); // Consume ';'
+                ASTNode* iterationNode = expression(); // Assuming you have a function to parse expressions
+                forLoopNode->children.push_back(iterationNode);
             
-        } else if(tokens[currentTokenIndex].value == "do-while") {
-            //fuck you.
-        } else if(tokens[currentTokenIndex].value == "delete") {
-            consumeToken(); // Consume 'delete'
+                consumeToken(); // Consume ')'
             
-            return new ASTNode(NodeType::DELETE, "DELETE_STATEMENT: " + tokens[currentTokenIndex].value);
-        } else {
-            //std::cout << "BRO WTF IS " << tokens[currentTokenIndex].value << std::endl;
+                return forLoopNode;
+            }
+        
+        break;
+    case TokenType::IF_STATEMENT:
+        // Handle 'if' statement
+        // Parse the condition, then the body of the 'if' statement
+        // Create AST nodes accordingly
+        // For demonstration, assume a simple 'if' statement without 'else' or 'else if'
+        consumeToken(); // Consume 'if'
+
+        if(!match(TokenType::LEFT_PAREN)) {
+            std::cerr << "Error: Missing '(' after if statement.\n";
+            
+            return nullptr;
         }
+        
+        consumeToken(); // '('
+        
+        Token t = tokens[currentTokenIndex];
+        
+        ASTNode* conditionNode = parseCondition(); // Parse the condition expression
+        ASTNode* ifBodyNode = parseStatement(); // Parse the body of 'if'
+        
+        // Create an 'if' statement node and attach the condition and body
+        ASTNode* ifStatementNode = new ASTNode(NodeType::IF_STATEMENT, "if");
+        ifStatementNode->children.push_back(conditionNode);
+        ifStatementNode->children.push_back(ifBodyNode);
+        
+        return ifStatementNode;
     }
-    */
     
     //TODO; Move all of thise inside 'parseMember'
     bool isVariable = false;
@@ -616,8 +667,8 @@ ASTNode* Parser::parseStatement()
         
         consumeToken(); // Consume modifier token
     }
-
-    int typeIndex = currentTokenIndex;
+    
+    size_t typeIndex = currentTokenIndex;
     
     while (true) {
         if(tokens[typeIndex].type == TokenType::IDENTIFIER
@@ -661,13 +712,13 @@ ASTNode* Parser::parseFunctionCall() {
         
         if (match(TokenType::LEFT_PAREN) || matchNext(TokenType::LEFT_PAREN)) {
             consumeToken(); // Consume '('
-                
+            
             Token z = tokens[currentTokenIndex];
-                
+            
             // Parse function arguments (if any)
             // You might call another function to handle this
-            std::vector<std::string> parameters = parseParameters();
-                
+            std::vector<std::string> parameters = parseFunctionParameters();
+            
             if (match(TokenType::RIGHT_PAREN)) {
                 consumeToken(); // Consume ')'
                 
@@ -677,8 +728,13 @@ ASTNode* Parser::parseFunctionCall() {
                 functionCallNode->children.push_back(new ASTNode(NodeType::FUNCTION_CALL, "METHOD: " + functionName));
                 // Attach argument nodes as children to the function call node
                 
-                for (const auto& param : parameters) {
-                    ASTNode* parameterNode = new ASTNode(NodeType::PARAMETER, param);
+                for (int i = 0; i < parameters.size() - 1; i += 2) {
+                    std::string paramName = parameters[i];
+                    std::string paramType = parameters[i + 1];
+                    
+                    ASTNode* parameterNode = new ASTNode(NodeType::PARAMETER, paramName);
+                    parameterNode->children.push_back(new ASTNode(NodeType::VARIABLE_TYPE, paramType));
+                    
                     functionCallNode->children.push_back(parameterNode);
                 }
                 
@@ -694,15 +750,28 @@ ASTNode* Parser::parseFunctionCall() {
 }
 
 ASTNode* Parser::parseCondition() {
-    std::cout << "if statement isn't there buddy\n";
-    return nullptr;
+    // Parse the condition
+    ASTNode* condition = expression();
+
+    if(match(TokenType::RIGHT_PAREN)) { // ')'
+        consumeToken(); // Consume ')'
+    } else {
+        std::cerr << "Error: Missing ')' after if statement condition.\n";
+    }
+    
+    // Check for '{' symbol
+    if (!match(TokenType::LEFT_BRACE)) {
+        throw std::runtime_error("Expected '{' after 'if' condition");
+    }
+    
+    return condition;
 }
 
 ASTNode* Parser::parseVariable() {
     return nullptr;
 }
 
-std::vector<std::string> Parser::parseParameters() {
+std::vector<std::string> Parser::parseFunctionParameters() {
     std::vector<std::string> parameters;
     
     Token t = tokens[currentTokenIndex];
@@ -714,7 +783,10 @@ std::vector<std::string> Parser::parseParameters() {
             
             if (match(TokenType::IDENTIFIER)) {
                 std::string paramName = tokens[currentTokenIndex].value;
-                parameters.push_back(paramType + " " + paramName);
+                //parameters.push_back(paramType + " " + paramName);
+                parameters.push_back(paramName);
+                parameters.push_back(paramType);
+                
                 consumeToken(); // Consume parameter name token
                 
                 if (!match(TokenType::COMMA)) {
@@ -742,7 +814,11 @@ ASTNode* Parser::expression() {
     ASTNode* left = term();
     
     while (currentTokenIndex < tokens.size() && tokens[currentTokenIndex].type == TokenType::OPERATOR &&
-           (tokens[currentTokenIndex].value == "+" || tokens[currentTokenIndex].value == "-")) {
+           (tokens[currentTokenIndex].value == "+" || tokens[currentTokenIndex].value == "-") ||
+           (tokens[currentTokenIndex].value == "<" || tokens[currentTokenIndex].value == ">") ||
+           (match(TokenType::LESS_THAN_EQUAL) || match(TokenType::GREATER_THAN_EQUAL)) ||
+           (match(TokenType::EQUAL) || match(TokenType::NOT_EQUAL)) ||
+           (match(TokenType::INCREMENT) || match(TokenType::DECREMENT))) {
         std::string op = tokens[currentTokenIndex++].value;
         
         ASTNode* right = term();
@@ -765,16 +841,12 @@ ASTNode* Parser::term() {
     }
     
     std::string type = tokens[currentTokenIndex].value;
-    ASTNode* left = new ASTNode(NodeType::ASSIGNMENT, "ASSIGNMENT: " + assignmentType + "; " + type);
+    ASTNode* left = new ASTNode(NodeType::ASSIGNMENT, assignmentType + "; " + type);
     Token t = tokens[currentTokenIndex];
     
     // Points to a class, perhaps?
-    if(match(TokenType::IDENTIFIER)) {
+    if(match(TokenType::IDENTIFIER) && matchNext(TokenType::LEFT_PAREN)) {
         consumeToken(); // Consume type
-        
-        if(!match(TokenType::LEFT_PAREN)){
-            std::cout << "BRO this shit sucks.. fix it..\n";
-        }
         
         if(match(TokenType::SEMICOLON)) {
             return left;
@@ -782,22 +854,23 @@ ASTNode* Parser::term() {
         
         consumeToken(); // Consume '('
         
-        while(!match(TokenType::RIGHT_PAREN)) { // ')'
+        while (!match(TokenType::RIGHT_PAREN)) { // ')'
             Token tz = tokens[currentTokenIndex];
             
-            if(match(TokenType::COMMA)) { //Skip
+            if (match(TokenType::COMMA)) {
+                //Skip
                 consumeToken(); // Consume ','
                 
                 continue;
             }
             
-            if(match(TokenType::SEMICOLON)) {
+            if (match(TokenType::SEMICOLON)) {
                 return left;
             }
             
             parameters.push_back(tokens[currentTokenIndex].value);
-            left->children.push_back(new ASTNode(NodeType::PARAMETER, "PARAMETER: " + tokens[currentTokenIndex].value));
-            
+            left->children.push_back(new ASTNode(NodeType::PARAMETER, tokens[currentTokenIndex].value));
+        
             consumeToken(); // Consume parameter
         }
         
@@ -833,7 +906,7 @@ ASTNode* Parser::factor() {
     
     std::cout << "huh " << currentToken.value << '\n';
     
-    // Handle parentheses or other factors
+    // TODO; Handle parentheses or other factors
     
     return nullptr;
 }

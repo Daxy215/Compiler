@@ -7,6 +7,7 @@
 #include <vector>
 #include "Lexer.h"
 
+// Please make this tidier.........
 enum class NodeType {
     PROGRAM,
     CLASS,
@@ -26,7 +27,6 @@ enum class NodeType {
     ASSIGNMENT,
     INHERITANCE,
     CONSTRUCTOR,
-    RETURN_STATEMENT,
     BLOCK,
     IF_STATEMENT,
     ELSE_STATEMENT,
@@ -35,6 +35,10 @@ enum class NodeType {
     REFERENCE,
     FUNCTION_CALL,
     DELETE,
+    
+    BREAK_STATEMENT,
+    CONTINUE_STATEMENT,
+    RETURN_STATEMENT,
     
     // Modifiers
     ConstModifier,
@@ -116,7 +120,7 @@ private:
     ASTNode* parseFunctionCall();
     ASTNode* parseCondition();
     ASTNode* parseVariable();
-    std::vector<std::string> parseParameters();
+    std::vector<std::string> parseFunctionParameters();
     
     ASTNode* expression();
     ASTNode* term();

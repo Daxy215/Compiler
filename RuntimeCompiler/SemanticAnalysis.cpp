@@ -25,6 +25,13 @@ void SemanticAnalysis::traverseNodes(ASTNode* node, std::string currentScope) {
         std::string identifier = split(node->value);
         std::string scopePrefix = (currentScope != "Global Scope") ? currentScope + "::" : "";
         std::string fullName = scopePrefix + identifier;
+
+        //TODO; 
+        /*if ((node->type == NodeType::MEMBER_FUNCTION || node->type == NodeType::LOCAL_VARIABLE_DECLARATION)
+       && node->children.size() < 3
+       || node->children.back()->type != NodeType::BRACE) {
+            std::cerr << "Error: Incorrect function declaration" << std::endl;
+       }*/
         
         if (isFunctionOverloaded(identifier, currentScope)) {
             identifier = generateUniqueFunctionName(identifier);
@@ -57,6 +64,12 @@ void SemanticAnalysis::traverseNodes(ASTNode* node, std::string currentScope) {
     for (auto child : node->children) {
         traverseNodes(child, currentScope);
     }
+
+    //TODO;
+    // Check for missing semicolon
+    /*if (node->children.back()->type != NodeType::SEMICOLON) {
+        std::cerr << "Error: Missing semicolon at the end of the statement" << std::endl;
+    }*/
 }
 
 void SemanticAnalysis::performSemanticChecks() {

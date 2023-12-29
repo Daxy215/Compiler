@@ -7,30 +7,90 @@
 #include <unordered_set>
 #include <vector>
 
+//TODO; Handle += or -=.. or *=.. /=.. etc
+
 enum class TokenType {
+    // ???
     IDENTIFIER,
-    PREPROCESSOR_DIRECTIVE,
     KEYWORD,
-    LEFT_PAREN,
-    RIGHT_PAREN,
+
+    // Statements
+    BREAK_STATEMENT,
+    CONTINUE_STATEMENT,
+    RETURN_STATEMENT,
+    
+    // Operations
     OPERATOR,
-    INTEGER_LITERAL,
-    FLOATING_POINT_LITERAL,
-    STRING_LITERAL,
-    STRUCT,
-    CLASS,
+    
+    // Statement types
+    FOR_LOOP,
+    IF_STATEMENT,
+    
+    // Logical operations
+    LOGICAL_AND,
+    LOGICAL_OR,
+    EQUAL,
+    NOT_EQUAL,
+    LESS_THAN_EQUAL,
+    GREATER_THAN_EQUAL,
+    LEFT_SHIFT_ASSIGN,
+    RIGHT_SHIFT_ASSIGN,
+    POINTER_MEMBER_ACCESS,
+    SCOPE_POINTER_MEMBER_ACCESS,
+    ELLIPSIS,
+    SINGLE_LINE_COMMENT,
+    MULTI_LINE_COMMENT_START,
+    MULTI_LINE_COMMENT_END,
+    MODULUS_ASSIGN,
+    BITWISE_XOR_ASSIGN,
+    BITWISE_OR_ASSIGN,
+    BITWISE_AND_ASSIGN,
+    BITWISE_XOR,
+    BITWISE_OR,
+    MODULUS,
+    BITWISE_NOT,
+    BITWISE_AND,
+    
+    // Special cases
+    INCREMENT,
+    DECREMENT,
+    
     POINTER,
     REFERENCE,
-    SEMICOLON,
-    COMMA,
+    
+    // Variable types
+    STRING_LITERAL,
+    INTEGER_LITERAL,
+    FLOATING_POINT_LITERAL,
+
+    // Modifiers??
+    STRUCT,
+    CLASS,
+    
+    // ()
+    LEFT_PAREN,
+    RIGHT_PAREN,
+
+    // {}
     LEFT_BRACE,
     RIGHT_BRACE,
-    NAMESPACE,
-    RETURN,
+
+    // []
+    LEFT_SQUARE_BRACE,
+    RIGHT_SQUARE_BRACE,
+    
+    // <>
+    LEFT_ANGLE_BRACKET,
+    RIGHT_ANGLE_BRACKET,
+    
+    // Something..
+    SEMICOLON,
+    COMMA,
     COLON,
     
-    UNKNOWN,
-    END
+    // Idek
+    NAMESPACE,
+    PREPROCESSOR_DIRECTIVE,
 };
 
 struct Token {
@@ -40,10 +100,9 @@ struct Token {
 
 class Lexer {
 public:
-    Lexer();
+    Lexer() {}
     
     std::vector<Token> generateTokens(std::string code);
-
 private:
     void pushToken(char c, TokenType type);
     std::string extractNamespaceName(const std::string& input);
@@ -54,10 +113,13 @@ private:
     
     std::vector<Token> tokens;
     
+    /**
+     * List of keywords
+     */
     const std::unordered_set<std::string> keywords =
     {  "using", "return", "public", "private", "protected", "virtual",
     "final", "void", "const", "override", "int", "float", "char",
-    "double", "long",  "new", "delete", "if", "for", "else", "while"};
+    "double", "long",  "new", "delete"};
 };
 
 #endif
