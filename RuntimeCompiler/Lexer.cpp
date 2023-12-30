@@ -8,11 +8,15 @@ std::map<std::string, TokenType> multiCharOps =
     {">>", TokenType::OPERATOR}, // Can also be a bit shift operator
     {"::", TokenType::OPERATOR},
     {"->", TokenType::OPERATOR},
-    {"++", TokenType::INCREMENT},
-    {"--", TokenType::DECREMENT},
+    {"++", TokenType::OPERATOR},
+    {"--", TokenType::OPERATOR},
+    {"+=", TokenType::OPERATOR},
+    {"-=", TokenType::OPERATOR},
+    {"*=", TokenType::OPERATOR},
+    {"/=", TokenType::OPERATOR},
     {"&&", TokenType::LOGICAL_AND},
     {"||", TokenType::LOGICAL_OR},
-    {"==", TokenType::EQUAL},
+    {"==", TokenType::EQUAL}, //OPERATOR?
     {"!=", TokenType::NOT_EQUAL},
     {"<=", TokenType::LESS_THAN_EQUAL},
     {">=", TokenType::GREATER_THAN_EQUAL},
@@ -87,6 +91,9 @@ std::vector<Token> Lexer::generateTokens(std::string code) {
             break;
         case ':':
             pushToken(c, TokenType::COLON);
+            break;
+        case '.':
+            pushToken(c, TokenType::DOT);
             break;
         case '+': case '-': case '/': case '=':
             pushToken(c, TokenType::OPERATOR);
@@ -182,6 +189,7 @@ std::vector<Token> Lexer::generateTokens(std::string code) {
                 }
                 
                 if (i < code.size()) {
+                    i++;
                     currentToken += '>'; // Include the '>'
                 } else {
                     std::cerr << "Error: Unclosed include directive\n";

@@ -35,6 +35,7 @@ enum class NodeType {
     REFERENCE,
     FUNCTION_CALL,
     DELETE,
+    COMPOUND_ASSIGNMENT,
     
     BREAK_STATEMENT,
     CONTINUE_STATEMENT,
@@ -119,7 +120,6 @@ private:
     ASTNode* parseStatement();
     ASTNode* parseFunctionCall();
     ASTNode* parseCondition();
-    ASTNode* parseVariable();
     std::vector<std::string> parseFunctionParameters();
     
     ASTNode* expression();

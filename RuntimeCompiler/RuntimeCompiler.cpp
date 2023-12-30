@@ -112,7 +112,6 @@ int main() {
         
         int main() {
             int i = 0;
-            int i = 0;
             Shape* shape = new Circle(5.0);
             shape->draw();
             delete shape;
@@ -137,31 +136,36 @@ int main() {
     )";
     
     std::string test3 = R"(
-        void test() {
+        int getSum() {
+            int sum /= 0 + 5 / 5 * 9;
             for(int i = 0; i < 10; i++) {
                 if(i > 5) {
                     break;
                 }
+                
+                sum += i;
             }
+            
+            return sum;
         }
     )";
     
     Lexer* lexer = new Lexer();
     std::vector<Token> tokens = lexer->generateTokens(test3);
-
+    
     std::cout << "Generated tokens: \n\n";
     
     for (const auto& token : tokens) {
         std::cout << "Token Type: " << static_cast<int>(token.type) << ", Value: " << token.value << "\n";
     }
-
+    
     std::cout << "\n";
     
     // TODO; Check make this a class.. Perhaps inside lexer
     if(checkCodeBalance(tokens)) {
         std::cout << "No balancing problems :D\n";
     } else {
-        std::cout << "In balanced code.\n";
+        std::cout << "Code not balanced\n";
         
         return 1;
     }

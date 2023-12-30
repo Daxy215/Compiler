@@ -53,7 +53,11 @@ enum class TokenType {
     
     // Special cases
     INCREMENT,
+    INCREMENT_EQUAL,
     DECREMENT,
+    DECREMENT_EQUAL,
+    MULTIPLICATION_EQUAL,
+    DIVISION_EQUAL,
     
     POINTER,
     REFERENCE,
@@ -87,6 +91,7 @@ enum class TokenType {
     SEMICOLON,
     COMMA,
     COLON,
+    DOT,
     
     // Idek
     NAMESPACE,
