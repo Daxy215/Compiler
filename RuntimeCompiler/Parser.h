@@ -42,10 +42,18 @@ enum class NodeType {
     RETURN_STATEMENT,
     
     // Modifiers
+    MODIFIERS,
+    
     ConstModifier,
     OverrideModifier,
     FinalModifier,
     ProtectedModifier,
+    VirtualModifier,
+    AbstractModifier,
+
+    // Variable Modifiers
+    ShortModifier,
+    
 };
 
 enum class DataType {
@@ -115,32 +123,33 @@ private:
     /**
      * Handles function parameters
      */
-    ASTNode* parseMemberFunction(const std::string& returnType, const std::string& functionName);
+    ASTNode* parseFunction(const std::string& returnType, const std::string& functionName);
     ASTNode* parseFunctionBody();
     ASTNode* parseStatement();
     ASTNode* parseFunctionCall();
     ASTNode* parseCondition();
+    ASTNode* parseVariable(NodeType memberDeclarationType, const std::string& memberType);
+    ASTNode* parseReference(const std::string& memberType);
     std::vector<std::string> parseFunctionParameters();
     
     ASTNode* expression();
     ASTNode* term();
     ASTNode* factor();
 private: // Helper functions
-    //TODO; I think it needs to be - 1?
     auto match(TokenType type) -> bool {
-        return tokens[currentTokenIndex].type == type;    
+        return currentTokenIndex < tokens.size() - 1 && tokens[currentTokenIndex].type == type;    
     }
     
     auto match(TokenType type, std::string value) -> bool {
-        return tokens[currentTokenIndex].type == type && tokens[currentTokenIndex].value._Equal(value);
+        return currentTokenIndex < tokens.size() - 1 &&  tokens[currentTokenIndex].type == type && tokens[currentTokenIndex].value._Equal(value);
     }
     
     auto matchNext(TokenType type) -> bool {
-        return currentTokenIndex + 1 < tokens.size() && tokens[currentTokenIndex + 1].type == type;
+        return currentTokenIndex + 1 < tokens.size() - 1 && tokens[currentTokenIndex + 1].type == type;
     }
     
     auto matchNext(TokenType type, std::string value) -> bool {
-        return currentTokenIndex + 1 < tokens.size() && tokens[currentTokenIndex + 1].type == type && tokens[currentTokenIndex + 1].value._Equal(value);
+        return currentTokenIndex + 1 < tokens.size() - 1 && tokens[currentTokenIndex + 1].type == type && tokens[currentTokenIndex + 1].value._Equal(value);
     }
     
     Token consumeToken() {
@@ -171,6 +180,7 @@ public:
     }
 private:
     bool isInClass;
+    std::string className;
     
     size_t currentTokenIndex;
     std::vector<Token> tokens;

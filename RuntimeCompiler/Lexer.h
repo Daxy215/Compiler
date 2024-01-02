@@ -52,12 +52,12 @@ enum class TokenType {
     BITWISE_AND,
     
     // Special cases
-    INCREMENT,
+    /*INCREMENT,
     INCREMENT_EQUAL,
     DECREMENT,
     DECREMENT_EQUAL,
     MULTIPLICATION_EQUAL,
-    DIVISION_EQUAL,
+    DIVISION_EQUAL,*/
     
     POINTER,
     REFERENCE,
@@ -84,8 +84,8 @@ enum class TokenType {
     RIGHT_SQUARE_BRACE,
     
     // <>
-    LEFT_ANGLE_BRACKET,
-    RIGHT_ANGLE_BRACKET,
+    LEFT_ANGLE_BRACE,
+    RIGHT_ANGLE_BRACE,
     
     // Something..
     SEMICOLON,
@@ -121,10 +121,11 @@ private:
     /**
      * List of keywords
      */
-    const std::unordered_set<std::string> keywords =
-    {  "using", "return", "public", "private", "protected", "virtual",
-    "final", "void", "const", "override", "int", "float", "char",
-    "double", "long",  "new", "delete"};
+    const std::unordered_set<std::string> keywords = {
+        "return", "public", "private", "protected", "virtual", "final",
+        "void", "const", "override", "int", "float", "char",
+        "double", "long", "new", "delete"
+    };
 };
 
 #endif

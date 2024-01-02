@@ -78,10 +78,10 @@ std::vector<Token> Lexer::generateTokens(std::string code) {
             pushToken(c, TokenType::RIGHT_SQUARE_BRACE);
             break;
         case '<':
-            pushToken(c, TokenType::LEFT_ANGLE_BRACKET);
+            pushToken(c, TokenType::LEFT_ANGLE_BRACE);
             break;
         case '>':
-            pushToken(c, TokenType::RIGHT_ANGLE_BRACKET);
+            pushToken(c, TokenType::RIGHT_ANGLE_BRACE);
             break;
         case ';':
             pushToken(c, TokenType::SEMICOLON);
@@ -196,7 +196,7 @@ std::vector<Token> Lexer::generateTokens(std::string code) {
                     
                     return tokens;
                 }
-            } else if (prevToken.value == "using") {
+            } else if (currentToken == "using") {
                 type = TokenType::NAMESPACE;
                 
                 while (i + 1 < code.size() && code[i + 1] != ';') {
@@ -204,6 +204,7 @@ std::vector<Token> Lexer::generateTokens(std::string code) {
                 }
                 
                 currentToken = extractNamespaceName(currentToken);
+                i++; // Skip ';'
             } else if (currentToken == "struct") {
                 type = TokenType::STRUCT;
             } else if (currentToken == "class") {
@@ -239,7 +240,7 @@ void Lexer::pushToken(char c, TokenType type) {
 }
 
 std::string Lexer::extractNamespaceName(const std::string& input) {
-    const std::string usingNamespacePrefix = "namespace ";
+    const std::string usingNamespacePrefix = "using namespace ";
     const size_t prefixLength = usingNamespacePrefix.length();
     
     if (input.substr(0, prefixLength) == usingNamespacePrefix) {

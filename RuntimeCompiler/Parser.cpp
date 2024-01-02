@@ -1,10 +1,29 @@
 #include "Parser.h"
 
+#include <map>
+
+std::map<std::string, NodeType> modifiersTypes =
+    {
+        // Normal modifiers
+        {"const", NodeType::ConstModifier},
+        {"final", NodeType::FinalModifier},
+        {"protected", NodeType::ProtectedModifier},
+        {"virtual", NodeType::VirtualModifier},
+        {"override", NodeType::OverrideModifier},
+        
+        // Variable modifiers
+    };
+
 ASTNode* Parser::parseCode() {
     ASTNode* programAST = new ASTNode(NodeType::PROGRAM, "Program");
     
     while (currentTokenIndex < tokens.size() - 1) {
         ASTNode* node = nullptr;
+        
+        if(match(TokenType::SEMICOLON))
+            consumeToken();
+        
+        Token toekziao = tokens[currentTokenIndex];
         
         if (match(TokenType::PREPROCESSOR_DIRECTIVE)) {
             node = parseIncludeDirective();
@@ -63,17 +82,7 @@ ASTNode* Parser::parseNameSpace() {
             
         // Create an AST node representing the include directive
         ASTNode* namespaceNode = new ASTNode(NodeType::NAMESPACE, "NAMESPACE: " + namespaceValue);
-            
-        // Simulate token consumption for demonstration
-        //TODO; ??
-        while (currentTokenIndex < tokens.size() && tokens[currentTokenIndex].type != TokenType::SEMICOLON) {
-            currentTokenIndex++;
-        }
-            
-        if (currentTokenIndex < tokens.size() && tokens[currentTokenIndex].type == TokenType::SEMICOLON) {
-            currentTokenIndex++; // Consume the ';' token
-        }
-            
+        
         return namespaceNode;
     }
         
@@ -83,106 +92,120 @@ ASTNode* Parser::parseNameSpace() {
 
 ASTNode* Parser::parseClassDeclaration() {
     if (match(TokenType::CLASS)) {
-            Token t = tokens[currentTokenIndex];
+        Token t = tokens[currentTokenIndex];
+        
+        consumeToken(); // Consume 'class' keyword
+        
+        if (match(TokenType::IDENTIFIER)) {
+            std::string className = tokens[currentTokenIndex].value;
+            consumeToken(); // Consume class name token
             
-            consumeToken(); // Consume 'class' keyword
+            this->className = className;
             
-            if (match(TokenType::IDENTIFIER)) {
-                std::string className = tokens[currentTokenIndex].value;
-                consumeToken(); // Consume class name token
+            ASTNode* classNode = new ASTNode(NodeType::CLASS, className);
+            
+            Token g = tokens[currentTokenIndex];
+            
+            // Check for inheritance
+            if (match(TokenType::COLON)) {
+                consumeToken(); // Consume ':' token
                 
-                ASTNode* classNode = new ASTNode(NodeType::CLASS, className);
+                Token h = tokens[currentTokenIndex];
                 
-                Token g = tokens[currentTokenIndex];
+                /**
+                 * If it has public/private or whatever,
+                 * for example something as:
+                 * class Circle : public Shape
+                 */
+                std::string accessSpecifier = "";
                 
-                // Check for inheritance
-                if (match(TokenType::COLON)) {
-                    consumeToken(); // Consume ':' token
+                if (match(TokenType::KEYWORD)) {
+                    accessSpecifier = tokens[currentTokenIndex].value;
                     
-                    Token h = tokens[currentTokenIndex];
-                    
-                    /**
-                     * If it has public/private or whatever,
-                     * for example something as:
-                     * class Circle : public Shape
-                     */
-                    std::string accessSpecifier = "";
-                    
-                    if(match(TokenType::KEYWORD)) {
-                        accessSpecifier = tokens[currentTokenIndex].value;
-                        
-                        consumeToken(); // Consume access specifier (public/private/protected)
-                    }
-                    
-                    Token f = tokens[currentTokenIndex];
-                    
-                    // Move on normally
-                    if (match(TokenType::IDENTIFIER)) {
-                        std::string baseClassName = tokens[currentTokenIndex].value;
-                        consumeToken(); // Consume base class name token
-                        
-                        // Create an AST node for base class inheritance
-                        ASTNode* inheritanceNode = new ASTNode(NodeType::INHERITANCE,  "Inherits: " + accessSpecifier + " " + baseClassName);
-                        classNode->children.push_back(inheritanceNode);
-                    } else {
-                        // Handle error: Expected an identifier after ':'
-                        std::cout << "Expected an identifier after ':'" << '\n';
-                    }
+                    consumeToken(); // Consume access specifier (public/private/protected)
                 }
                 
-                if (match(TokenType::LEFT_BRACE)) {
-                    consumeToken(); // Consume '{' for class body start
+                Token f = tokens[currentTokenIndex];
+                
+                // Move on normally
+                if (match(TokenType::IDENTIFIER)) {
+                    std::string baseClassName = tokens[currentTokenIndex].value;
+                    consumeToken(); // Consume base class name token
                     
-                    Token ts = tokens[currentTokenIndex];
+                    // Create an AST node for base class inheritance
+                    ASTNode* inheritanceNode = new ASTNode(NodeType::INHERITANCE,
+                                                           "Inherits: " + accessSpecifier + " " + baseClassName);
+                    classNode->children.push_back(inheritanceNode);
+                } else {
+                    // Handle error: Expected an identifier after ':'
+                    std::cout << "Expected an identifier after ':'" << '\n';
+                }
+            }
+            
+            if (match(TokenType::LEFT_BRACE)) {
+                consumeToken(); // Consume '{' for class body start
+                
+                Token ts = tokens[currentTokenIndex];
+                
+                ASTNode* classBody = parseClassBody(className); // Parse the class body
+                
+                if (classBody) {
+                    classNode->children.push_back(classBody);
                     
-                    ASTNode* classBody = parseClassBody(className); // Parse the class body
+                    Token tsz = tokens[currentTokenIndex];
                     
-                    if (classBody) {
-                        classNode->children.push_back(classBody);
+                    if (match(TokenType::RIGHT_BRACE)) { // }
+                        consumeToken(); // Consume '}' for class body end
                         
-                        Token tsz = tokens[currentTokenIndex];
+                        isInClass = false;
                         
-                        if (match(TokenType::RIGHT_BRACE)) { // }
-                            consumeToken(); // Consume '}' for class body end
-                            
-                            isInClass = false;
-                            
-                            return classNode;
-                        }
-                        
-                        std::cout << "Error; seems to be missing a '}' somewhere.. Gl finding it buddy; " << currentTokenIndex << '\n';
+                        return classNode;
                     }
+                    
+                    std::cout << "Error; seems to be missing a '}' somewhere.. Gl finding it buddy; " <<
+                        currentTokenIndex << '\n';
                 }
             }
         }
-        
-        // Handle error or return nullptr for invalid or unexpected tokens
-        return nullptr;
+    }
+
+    // Handle error or return nullptr for invalid or unexpected tokens
+    return nullptr;
 }
 
 ASTNode* Parser::parseClassBody(std::string className) {
     ASTNode* classBodyNode = new ASTNode(NodeType::CLASS_BODY, "ClassBody");
-        
+    
     Token t = tokens[currentTokenIndex];
-        
+    
     while (!match(TokenType::RIGHT_BRACE)) {
+        if(match(TokenType::SEMICOLON))
+            consumeToken(); // Consume ';'
+        
+        if(match(TokenType::KEYWORD) && (tokens[currentTokenIndex].value == "public" || tokens[currentTokenIndex].value == "private") && matchNext(TokenType::COLON)) {
+            consumeToken(); // Consume ?
+            consumeToken(); // Consume ':'
+        }
+        
         std::string memberType = tokens[currentTokenIndex].value;
-            
+        
         if(memberType._Equal(className)) {
             ASTNode* constructorNode = parseConstructor();
-                
+            
             if (constructorNode) {
                 classBodyNode->children.push_back(constructorNode);
+                
+                if(match(TokenType::RIGHT_BRACE))
+                    consumeToken(); // Consume '}'
             } else {
                 // Handle error: Failed to parse constructor
                 std::cout << "Erorr happened while doing custrctor bs" << '\n';
+                consumeToken();
             }
-                
-            //return classBodyNode;
         }
-            
+        
         ASTNode* member = parseMember(NodeType::MEMBER_VARIABLE); // Parse class members (functions, variables, etc.)
-            
+        
         if (member) {
             classBodyNode->children.push_back(member);
         } else {
@@ -193,26 +216,27 @@ ASTNode* Parser::parseClassBody(std::string className) {
             //currentTokenIndex++;
         }
     }
-        
+    
     Token tdsa = tokens[currentTokenIndex];
-        
+    
     return classBodyNode;
 }
 
 ASTNode* Parser::parseConstructor() {
     std::string constructorName = tokens[currentTokenIndex].value;
     consumeToken(); // Consume member name
-
+    
     Token token = tokens[currentTokenIndex];
-
+    
     consumeToken(); // Consume '('
-
+    
     ASTNode* constructor = new ASTNode(NodeType::CONSTRUCTOR, constructorName);
-
+    
+    //TODO; ??????????????????????????????????????????????????????????????
     while (!match(TokenType::RIGHT_PAREN)) {
         Token t = tokens[currentTokenIndex];
-    
-        //Parameters:
+        
+        //Parameters: Wtf is this ???????????????????
         std::string paramType = tokens[currentTokenIndex].value;
         consumeToken();
         
@@ -231,7 +255,7 @@ ASTNode* Parser::parseConstructor() {
         
         while (!match(TokenType::LEFT_BRACE)) {
             // {
-            //radius(r), test(t)..
+            //: radius(r), test(t)..
 
             // Skip comma
             if (match(TokenType::COMMA))
@@ -262,71 +286,95 @@ ASTNode* Parser::parseConstructor() {
 ASTNode* Parser::parseMember(NodeType memberDeclarationType) {
     Token token = tokens[currentTokenIndex];
     
-    // Gets to here, then stops. variable sum is an IDENTIFIER.  
+    ASTNode* modifiers = new ASTNode(NodeType::MODIFIERS, "Modifiers; ");
     
-    if (match(TokenType::KEYWORD)) {
-        std::string memberType = tokens[currentTokenIndex].value;
-        consumeToken(); // Consume member type
+    while(match(TokenType::KEYWORD)) {
+        std::string type = tokens[currentTokenIndex].value;
         
-        Token d = tokens[currentTokenIndex];
-        
-        if (match(TokenType::IDENTIFIER)) {
-            std::string memberName = tokens[currentTokenIndex].value;
-            consumeToken(); // Consume member name
+        if(tokens[currentTokenIndex].type == TokenType::REFERENCE) {
+            // Check if it's a pointer/reference
+            std::string pointerType = tokens[currentTokenIndex].value;
             
-            if (match(TokenType::LEFT_PAREN)) { // '('
-                // Parsing a member function
-                return parseMemberFunction(memberType, memberName);
-            } else {
-                //TODO; global variable..?
-                ASTNode* memberVariable = new ASTNode(memberDeclarationType, memberName);
-                memberVariable->children.push_back(new ASTNode(NodeType::VARIABLE_TYPE, memberType));
-                //TODO;
-                //consumeToken(); // Consume the token representing the member variable
-                
-                /*if (match(TokenType::OPERATOR) && tokens[currentTokenIndex].value == "=") {
-                    consumeToken(); // Consume '=' token
-                    
-                    ASTNode* expressionNode = expression(); // Parse expression on the right-hand side of assignment
-                    
-                    memberVariable->children.push_back(expressionNode);
-                    
-                    //return assignmentNode;
-                }*/
-                
-                // If variable has no assignment.
-                if(match(TokenType::SEMICOLON)) {
-                    return memberVariable;
-                }
-                
-                ASTNode* compoundAssignNode = new ASTNode(NodeType::COMPOUND_ASSIGNMENT, tokens[currentTokenIndex].value);
-                
-                consumeToken(); // Consume operator token
-                ASTNode* expressionNode = expression(); // Parse expression on the right-hand side of assignment
-                
-                compoundAssignNode->children.push_back(expressionNode);
-                memberVariable->children.push_back(compoundAssignNode);
-                
-                return memberVariable;
+            NodeType nodeType = NodeType::POINTER;
+            if(tokens[currentTokenIndex].type == TokenType::REFERENCE)
+                nodeType = NodeType::REFERENCE;
+            
+            ASTNode* pointerNode = new ASTNode(nodeType, "POINTER_TYPE: " + pointerType);
+            pointerNode->children.push_back(new ASTNode(NodeType::POINTER, "TO: " + tokens[currentTokenIndex - 1].value));
+            
+            modifiers->children.push_back(pointerNode);
+        } else {
+            // Does type exist
+            if(modifiersTypes.count(type)) {
+                modifiers->children.push_back(new ASTNode(modifiersTypes[type], type));
             }
         }
-    } else {
-        consumeToken(); //ERROR happened so skip
+        
+        consumeToken(); // Consume modifier
     }
     
-    // Handle other member types (variables, constructors, etc.) if needed
+    std::string memberType = tokens[currentTokenIndex - 1].value;
     
-    // If no valid member found, return nullptr or handle error
-    return nullptr;
+    Token t = tokens[currentTokenIndex];
+    
+    // Function
+    if(matchNext(TokenType::LEFT_PAREN)) {
+        std::string memberType = tokens[currentTokenIndex].value;
+        consumeToken(); // Consume member
+        
+        return parseFunction(memberType, memberType);
+    }
+    
+    // Perhaps a variable usage?
+    //TODO; So this is the current problem..
+    /*if(match(TokenType::IDENTIFIER) && (!matchNext(TokenType::KEYWORD) && !matchNext(TokenType::REFERENCE) && !matchNext(TokenType::POINTER))) {
+        ASTNode* variableNode = parseVariable(memberDeclarationType, "None");
+        variableNode->children.push_back(modifiers);
+        
+        return variableNode;
+    }*/
+    
+    Token z = tokens[currentTokenIndex];
+    
+    if(!match(TokenType::IDENTIFIER) && !match(TokenType::KEYWORD)) {
+        consumeToken();
+        return nullptr;
+    }
+    
+    //consumeToken(); // Consume member name
+    
+    Token d = tokens[currentTokenIndex];
+    
+    if (match(TokenType::REFERENCE) || match(TokenType::POINTER)) {
+        consumeToken(); // Consume reference
+        
+        ASTNode* variableNode = parseReference(memberType);
+        
+        if(!modifiers->children.empty())
+            variableNode->children.push_back(modifiers);
+        
+        return variableNode;
+    }
+    
+    // Go back 1 index for, [MemberType] -> double radius
+    //currentTokenIndex--;
+    
+    ASTNode* variableNode = parseVariable(memberDeclarationType, memberType);
+
+    if(!modifiers->children.empty())
+        variableNode->children.push_back(modifiers);
+    
+    return variableNode;
+    //}
 }
 
-ASTNode* Parser::parseMemberFunction(const std::string& returnType, const std::string& functionName) {
+ASTNode* Parser::parseFunction(const std::string& returnType, const std::string& functionName) {
     ASTNode* memberFunction = new ASTNode(NodeType::MEMBER_FUNCTION, "Function: " + functionName);
-        memberFunction->children.push_back(new ASTNode(NodeType::RETURN_STATEMENT, "ReturnType: " + returnType));
+    memberFunction->children.push_back(new ASTNode(NodeType::RETURN_STATEMENT, "ReturnType: " + returnType));
         
-        // Parse function parameters
-        if (match(TokenType::LEFT_PAREN)) { // '('
-            consumeToken(); // Consume '('
+    // Parse function parameters
+    if (match(TokenType::LEFT_PAREN)) { // '('
+        consumeToken(); // Consume '('
             
             // Parse parameters (if any)
             std::vector<std::string> parameters = parseFunctionParameters();
@@ -385,9 +433,9 @@ ASTNode* Parser::parseMemberFunction(const std::string& returnType, const std::s
                     memberFunction->children.push_back(new ASTNode(NodeType::FinalModifier, type + ": true"));
                 } else if(match(TokenType::KEYWORD, "protected")) {
                     memberFunction->children.push_back(new ASTNode(NodeType::ProtectedModifier, type + ": true"));
-                } else {
+                }/* else {
                     std::cout << "Unknown modifier..; " << type << '\n';
-                }
+                }*/
                 
                 consumeToken(); // Consume modifier token
             }
@@ -643,6 +691,12 @@ ASTNode* Parser::parseStatement() {
         return ifStatementNode;
     }
     
+    Token hghg = tokens[currentTokenIndex];
+    
+    ASTNode* variableNote2 = parseMember(NodeType::LOCAL_VARIABLE_DECLARATION);
+    
+    return variableNote2;
+    
     //TODO; Move all of thise inside 'parseMember'
     //TODO; Still is the main cause of every problem.. fu old me for being too lazy
     bool isVariable = false;
@@ -653,8 +707,8 @@ ASTNode* Parser::parseStatement() {
         Token t = tokens[curIndex];
 
         //TODO..
-        if (tokens[curIndex].type == TokenType::OPERATOR && tokens[curIndex].value == "="
-            || tokens[curIndex].type == TokenType::INCREMENT_EQUAL) {
+        if (tokens[curIndex].type == TokenType::OPERATOR/* && tokens[curIndex].value == "="
+            || tokens[curIndex].type == TokenType::INCREMENT_EQUAL*/) {
             isVariable = true;
             
             break;
@@ -817,13 +871,74 @@ ASTNode* Parser::parseCondition() {
     return condition;
 }
 
+ASTNode* Parser::parseVariable(NodeType memberDeclarationType, const std::string& memberType) {
+    std::string memberName = tokens[currentTokenIndex].value;
+    consumeToken(); // Consume member name
+    
+    if (match(TokenType::LEFT_PAREN)) { // '('
+        return parseFunction(memberType, memberName);
+    }
+    
+    //TODO; global variable..? Can't remember what I meant by this...
+    ASTNode* memberVariable = new ASTNode(memberDeclarationType, memberName);
+    memberVariable->children.push_back(new ASTNode(NodeType::VARIABLE_TYPE, memberType));
+    
+    // If variable has no assignment.
+    if (match(TokenType::SEMICOLON)) {
+        return memberVariable;
+    }
+    
+    ASTNode* compoundAssignNode = new ASTNode(NodeType::COMPOUND_ASSIGNMENT, tokens[currentTokenIndex].value);
+
+    //TODO; this is returing nullptr
+    consumeToken(); // Consume operator token
+    ASTNode* expressionNode = expression(); // Parse expression on the right-hand side of assignment
+    
+    compoundAssignNode->children.push_back(expressionNode);
+    memberVariable->children.push_back(compoundAssignNode);
+    
+    return memberVariable;
+}
+
+ASTNode* Parser::parseReference(const std::string& memberType) {
+    NodeType pointerType;
+    
+    if(tokens[currentTokenIndex - 1].type == TokenType::POINTER)
+        pointerType = NodeType::POINTER;
+    else
+        pointerType = NodeType::REFERENCE;
+    
+    std::string memberName = tokens[currentTokenIndex].value;
+    consumeToken(); // Consume member name
+    
+    ASTNode* memberReference = new ASTNode(pointerType, memberName);
+    memberReference->children.push_back(new ASTNode(NodeType::VARIABLE_TYPE, memberType));
+    
+    return memberReference;
+}
+
 std::vector<std::string> Parser::parseFunctionParameters() {
     std::vector<std::string> parameters;
     
     Token t = tokens[currentTokenIndex];
     
     while (!match(TokenType::RIGHT_PAREN)) {
-        if (match(TokenType::KEYWORD)) {
+        Token t = tokens[currentTokenIndex];
+        
+        if(match(TokenType::COMMA))
+            consumeToken();
+        
+        /*std::string test = "";
+        while(!match(TokenType::COMMA)) {
+            if(match(TokenType::RIGHT_PAREN))
+                break;
+            
+            //null
+            ASTNode* node = parseMember(NodeType::PARAMETER_VARIABLE);
+            test = node->children[0]->value;
+        }*/
+        
+        //if (match(TokenType::KEYWORD)) {
             std::string paramType = tokens[currentTokenIndex].value;
             consumeToken(); // Consume parameter type token
             
@@ -845,27 +960,34 @@ std::vector<std::string> Parser::parseFunctionParameters() {
                 std::cout << "ERROR; Seems to have a syntax error in the parameter declaration at: " << currentTokenIndex << "\n"; 
                 //return nullptr;
             }
-        } else {
+        /*} else {
             // Handle syntax errors in parameter declaration
             std::cout << "ERROR; Seems to have a syntax error in the parameter declaration at: " << currentTokenIndex << "\n"; 
             
             //return nullptr;
-        }
+        }*/
     }
     
     return parameters;
 }
 
 ASTNode* Parser::expression() {
+    if(currentTokenIndex < tokens.size() - 1)
+        return nullptr;
+    
     ASTNode* left = term();
     
-    while (currentTokenIndex < tokens.size() && tokens[currentTokenIndex].type == TokenType::OPERATOR &&
+    while (currentTokenIndex < tokens.size() - 2 && tokens[currentTokenIndex].type == TokenType::OPERATOR &&
            (tokens[currentTokenIndex].value == "+" || tokens[currentTokenIndex].value == "-") ||
            (tokens[currentTokenIndex].value == "<" || tokens[currentTokenIndex].value == ">") ||
-           (match(TokenType::INCREMENT) || match(TokenType::DECREMENT)) ||
-           (match(TokenType::INCREMENT_EQUAL) || match(TokenType::DECREMENT_EQUAL)) ||
+           match(TokenType::OPERATOR) ||
+           /*(match(TokenType::INCREMENT) || match(TokenType::DECREMENT)) ||
+           (match(TokenType::INCREMENT_EQUAL) || match(TokenType::DECREMENT_EQUAL)) ||*/
            (match(TokenType::LESS_THAN_EQUAL) || match(TokenType::GREATER_THAN_EQUAL)) ||
            (match(TokenType::EQUAL) || match(TokenType::NOT_EQUAL))) {
+
+        
+        
         std::string op = tokens[currentTokenIndex++].value;
         
         ASTNode* right = term();

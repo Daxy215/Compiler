@@ -9,7 +9,12 @@ void SemanticAnalysis::generateSymbolTable(ASTNode* node) {
     performSemanticChecks();
     printSymbolTable();
     
-    std::cout << "\n\nErrrors\n\n";
+    if(errors.empty()) {
+        std::cout << "\nNo errors found!";
+        return;
+    }
+    
+    std::cout << "\n\nErrors\n\n";
     
     for (const auto& error : errors) {
         std::cout << error << std::endl;
@@ -17,6 +22,9 @@ void SemanticAnalysis::generateSymbolTable(ASTNode* node) {
 }
 
 void SemanticAnalysis::traverseNodes(ASTNode* node, std::string currentScope) {
+    if(node == nullptr)
+        return;
+    
     if (node->type == NodeType::CLASS) {
         currentScope = split(node->value);
     } else if (node->type == NodeType::MEMBER_FUNCTION || node->type == NodeType::MEMBER_VARIABLE
@@ -25,7 +33,7 @@ void SemanticAnalysis::traverseNodes(ASTNode* node, std::string currentScope) {
         std::string identifier = split(node->value);
         std::string scopePrefix = (currentScope != "Global Scope") ? currentScope + "::" : "";
         std::string fullName = scopePrefix + identifier;
-
+        
         //TODO; 
         /*if ((node->type == NodeType::MEMBER_FUNCTION || node->type == NodeType::LOCAL_VARIABLE_DECLARATION)
        && node->children.size() < 3
@@ -42,10 +50,12 @@ void SemanticAnalysis::traverseNodes(ASTNode* node, std::string currentScope) {
             if(node->type == NodeType::MEMBER_VARIABLE) {
                 addToSymbolTable(returnType, identifier, fullName, currentScope, node->type)->isVariable = true;
             } else if(node->type == NodeType::LOCAL_VARIABLE_DECLARATION) {
-                identifier = splitString(node->value, ' ')[2];
+                addToSymbolTable(returnType, identifier, fullName, currentScope, node->type)->isVariable = true;
                 
-                // TODO; DO PARSER 'parseMember' merge with 'parseStatement'
-                int size = node->children.size();
+                /*std::vector<std::string> s = splitString(node->value, ' ');
+                identifier = s[s.size() - 1];
+                
+                size_t size = node->children.size();
                 
                 if(size > 2)
                     returnType = node->children[2]->value;
@@ -54,7 +64,7 @@ void SemanticAnalysis::traverseNodes(ASTNode* node, std::string currentScope) {
                 
                 fullName = scopePrefix + identifier;
                 
-                addToSymbolTable(returnType, identifier, fullName, currentScope, node->type)->isVariable = true;
+                addToSymbolTable(returnType, identifier, fullName, currentScope, node->type)->isVariable = true;*/
             } else { //TODO; Add more types
                 addToSymbolTable(returnType, identifier, fullName, currentScope, node->type);
             }

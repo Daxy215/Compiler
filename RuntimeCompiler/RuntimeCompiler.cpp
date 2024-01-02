@@ -2,7 +2,6 @@
 #include <iostream>
 #include <string>
 #include <vector>
-#include <unordered_set>
 #include <string>
 #include <sstream>
 #include <fstream>
@@ -12,6 +11,14 @@
 #include <memory>
 #include <stdexcept>
 #include <iostream>
+
+#include <string>
+#include <iostream>
+#include <list>
+#include <sstream>
+#include <type_traits>
+#include <iomanip>
+#include <cctype>
 
 #include "AssemblyGenerator.h"
 #include "Lexer.h"
@@ -43,10 +50,12 @@ bool checkBalance(std::vector<Token>& tokens, TokenType left, TokenType right) {
 }
 
 bool checkCodeBalance(std::vector<Token>& tokens) {
-    if(checkBalance(tokens, TokenType::LEFT_BRACE, TokenType::RIGHT_BRACE)
-        && checkBalance(tokens, TokenType::LEFT_PAREN, TokenType::RIGHT_PAREN)
-        && checkBalance(tokens, TokenType::LEFT_SQUARE_BRACE, TokenType::RIGHT_SQUARE_BRACE)
-        && checkBalance(tokens, TokenType::LEFT_ANGLE_BRACKET, TokenType::RIGHT_ANGLE_BRACKET)) {
+    bool braces = checkBalance(tokens, TokenType::LEFT_BRACE, TokenType::RIGHT_BRACE);
+    bool parens = checkBalance(tokens, TokenType::LEFT_PAREN, TokenType::RIGHT_PAREN);
+    bool squareBraces = checkBalance(tokens, TokenType::LEFT_SQUARE_BRACE, TokenType::RIGHT_SQUARE_BRACE);
+    //bool angleBrackets = checkBalance(tokens, TokenType::LEFT_ANGLE_BRACE, TokenType::RIGHT_ANGLE_BRACE);
+    
+    if(braces && parens && squareBraces/* && angleBrackets*/) {
         return true;
     }
     
@@ -67,6 +76,33 @@ std::string execCommand(const char* cmd) {
     }
     return result;
 }
+
+/* Needs c++14 or later.
+template <typename T = int> requires std::is_arithmetic_v<T>
+class Calculator {
+public:
+    Calculator(const std::string& expression);
+    T exp();
+
+private:
+    //std::list<std::string> mTokens;
+    std::string mCurrent;
+
+    void next();
+    T bshift();
+    T band();
+    T bxor();
+    T bor();
+    T plus();
+    T term();
+    T factor();
+    T toNum(const std::string& s) const;
+};
+
+template<typename T = int> requires std::is_arithmetic_v<T>
+T calculate(const std::string& s) {
+    return Calculator<T> { s }.exp();
+}*/
 
 int main() {
     //TODO; having classes within classes...
@@ -137,7 +173,7 @@ int main() {
     
     std::string test3 = R"(
         int getSum() {
-            int sum /= 0 + 5 / 5 * 9;
+            int sum = 0;
             for(int i = 0; i < 10; i++) {
                 if(i > 5) {
                     break;
@@ -150,8 +186,32 @@ int main() {
         }
     )";
     
+    std::string test4 = R"(
+        namespace TestNamespace {
+           class TestClass {
+               int x;
+               public:
+               TestClass(int val): x(val) {}
+               void printValue() {
+                   if (x > 0) {
+                       for (int i = 0; i < x; ++i) {
+                          std::cout << "Test value: " << i << std::endl;
+                       }
+                   } else {
+                       std::cout << "Invalid value" << std::endl;
+                   }
+               }
+           };
+        
+           template <typename T>
+           T square(T num) {
+               return num * num;
+           }
+        }
+    )";
+    
     Lexer* lexer = new Lexer();
-    std::vector<Token> tokens = lexer->generateTokens(test3);
+    std::vector<Token> tokens = lexer->generateTokens(complexCode);
     
     std::cout << "Generated tokens: \n\n";
     

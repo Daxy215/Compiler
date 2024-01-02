@@ -1,0 +1,16 @@
+
+RuntimeCompiler/x64/Debug/RuntimeCompiler.obj
+RuntimeCompiler/x64/Debug/RuntimeCompiler.ilk
+RuntimeCompiler/x64/Debug/RuntimeCompiler.obj
+RuntimeCompiler/x64/Debug/RuntimeCompiler.tlog/CL.command.1.tlog
+RuntimeCompiler/x64/Debug/RuntimeCompiler.tlog/CL.write.1.tlog
+RuntimeCompiler/x64/Debug/vc143.idb
+RuntimeCompiler/x64/Debug/vc143.pdb
+RuntimeCompiler/x64/Debug/vc143.pdb
+x64/Debug/RuntimeCompiler.pdb
+*.pdb
+*.idb
+*.obj
+*.obj
+*.ilk
+*.tlog
