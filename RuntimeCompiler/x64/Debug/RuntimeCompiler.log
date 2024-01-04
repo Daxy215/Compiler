@@ -1,0 +1,14 @@
+﻿  AssemblyGenerator.cpp
+  Lexer.cpp
+  Parser.cpp
+  RuntimeCompiler.cpp
+C:\Users\smsmk\RiderProjects\RuntimeCompiler\RuntimeCompiler\SemanticAnalysis.h(106,18): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+  (compiling source file 'RuntimeCompiler.cpp')
+  
+  SemanticAnalysis.cpp
+C:\Users\smsmk\RiderProjects\RuntimeCompiler\RuntimeCompiler\SemanticAnalysis.h(106,18): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+  (compiling source file 'SemanticAnalysis.cpp')
+  
+  TACGenerator.cpp
+  Generating Code...
+  RuntimeCompiler.vcxproj -> C:\Users\smsmk\RiderProjects\RuntimeCompiler\x64\Debug\RuntimeCompiler.exe
