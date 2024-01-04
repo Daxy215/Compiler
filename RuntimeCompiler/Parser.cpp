@@ -178,7 +178,7 @@ ASTNode* Parser::parseClassBody(std::string className) {
     
     Token t = tokens[currentTokenIndex];
     
-    while (!match(TokenType::RIGHT_BRACE)) {
+    while (currentTokenIndex < tokens.size() && !match(TokenType::RIGHT_BRACE)) {
         if(match(TokenType::SEMICOLON))
             consumeToken(); // Consume ';'
         
@@ -314,11 +314,15 @@ ASTNode* Parser::parseMember(NodeType memberDeclarationType) {
     }
     
     std::string memberType;
-
+    
+    // Ik junky code shush
     if(token.type == TokenType::IDENTIFIER)
         memberType = tokens[currentTokenIndex].value;
     else
-        memberType = tokens[currentTokenIndex - 1].value;
+        if(currentTokenIndex == 0)
+            memberType = tokens[currentTokenIndex].value;
+        else
+            memberType = tokens[currentTokenIndex - 1].value;
     
     Token t = tokens[currentTokenIndex];
     
@@ -635,7 +639,8 @@ ASTNode* Parser::parseStatement() {
     
     switch (tokens[currentTokenIndex].type) {
     case TokenType::FOR_LOOP:
-        // Idk if there are other types of "for loops"
+        {
+            // Idk if there are other types of "for loops"
             if (tokens[currentTokenIndex].value == "for") {
                 /**
                  * Types of for loops:
@@ -686,38 +691,54 @@ ASTNode* Parser::parseStatement() {
                 return forLoopNode;
             }
         
-        break;
+            break;
+        }
     case TokenType::IF_STATEMENT:
-        // Handle 'if' statement
-        // Parse the condition, then the body of the 'if' statement
-        // Create AST nodes accordingly
-        // For demonstration, assume a simple 'if' statement without 'else' or 'else if'
-        consumeToken(); // Consume 'if'
+        {
+            consumeToken(); // Consume 'if'
 
-        if(!match(TokenType::LEFT_PAREN)) {
-            std::cerr << "Error: Missing '(' after if statement.\n";
+            if(!match(TokenType::LEFT_PAREN)) {
+                std::cerr << "Error: Missing '(' after if statement.\n";
             
-            return nullptr;
-        }
+                return nullptr;
+            }
         
-        consumeToken(); // '('
+            consumeToken(); // '('
         
-        Token t = tokens[currentTokenIndex];
+            Token t = tokens[currentTokenIndex];
         
-        ASTNode* conditionNode = parseCondition(); // Parse the condition expression
-        ASTNode* ifBodyNode = parseStatement(); // Parse the body of 'if'
+            ASTNode* conditionNode = parseCondition(); // Parse the condition expression
+            ASTNode* ifBodyNode = parseStatement(); // Parse the body of 'if'
         
-        // Create an 'if' statement node and attach the condition and body
-        ASTNode* ifStatementNode = new ASTNode(NodeType::IF_STATEMENT, "If Statement");
-        ifStatementNode->children.push_back(conditionNode);
-        ifStatementNode->children.push_back(ifBodyNode);
+            // Create an 'if' statement node and attach the condition and body
+            ASTNode* ifStatementNode = new ASTNode(NodeType::IF_STATEMENT, "If Statement");
+            ifStatementNode->children.push_back(conditionNode);
+            ifStatementNode->children.push_back(ifBodyNode);
 
-        // Should be at the end of the if statement.
-        if(match(TokenType::RIGHT_BRACE)) {
-            consumeToken(); // '}'
-        }
+            // Should be at the end of the if statement.
+            if(match(TokenType::RIGHT_BRACE)) {
+                consumeToken(); // '}'
+            }
         
-        return ifStatementNode;
+            return ifStatementNode;
+        }
+    case TokenType::ELSE_STATEMENT:
+        {
+            consumeToken(); // Consume 'else'
+            
+            ASTNode* elseBodyNode = parseStatement(); // Parse the body of 'else'
+        
+            // Create an 'else' statement node and attach the condition and body
+            ASTNode* elseStatementNode = new ASTNode(NodeType::ELSE_STATEMENT, "Else Statement");
+            elseStatementNode->children.push_back(elseBodyNode);
+        
+            // Should be at the end of the else statement.
+            if(match(TokenType::RIGHT_BRACE)) {
+                consumeToken(); // '}'
+            }
+        
+            return elseStatementNode;
+        }
     }
     
     Token hghg = tokens[currentTokenIndex];

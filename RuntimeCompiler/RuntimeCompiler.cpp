@@ -185,8 +185,33 @@ int main() {
             return sum;
         }
     )";
-    
+
     std::string test4 = R"(
+        int main() {
+            if(x < 5) {
+                
+            } else {
+                
+            }
+        }
+    )";
+    
+    std::string test5 = R"(
+           class TestClass {
+               int x;
+               public:
+               TestClass(int val): x(val) {}
+               void printValue() {
+                   if (x > 0) {
+                       for (int i = 0; i < x; ++i) {
+
+                       }
+                   }
+               }
+           }
+    )";
+    
+    std::string test6 = R"(
         namespace TestNamespace {
            class TestClass {
                int x;
@@ -202,7 +227,7 @@ int main() {
                    }
                }
            };
-        
+           
            template <typename T>
            T square(T num) {
                return num * num;
@@ -211,7 +236,7 @@ int main() {
     )";
     
     Lexer* lexer = new Lexer();
-    std::vector<Token> tokens = lexer->generateTokens(complexCode);
+    std::vector<Token> tokens = lexer->generateTokens(test4);
     
     std::cout << "Generated tokens: \n\n";
     

@@ -213,6 +213,8 @@ std::vector<Token> Lexer::generateTokens(std::string code) {
                 type = TokenType::FOR_LOOP;
             } else if(currentToken == "if") {
                 type = TokenType::IF_STATEMENT;
+            } else if(currentToken == "else") {
+                type = TokenType::ELSE_STATEMENT;
             } else if(currentToken == "return") {
                 type = TokenType::RETURN_STATEMENT;
             } else if(currentToken == "break") {

@@ -25,6 +25,7 @@ enum class TokenType {
     // Statement types
     FOR_LOOP,
     IF_STATEMENT,
+    ELSE_STATEMENT,
     
     // Logical operations
     LOGICAL_AND,

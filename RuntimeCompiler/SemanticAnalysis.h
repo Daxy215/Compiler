@@ -103,7 +103,7 @@ private:
             tokens.push_back(token);
         }
         
-        int size = tokens.size();
+        const size_t size = tokens.size();
         
         if(size > 1)
             return tokens[1];
