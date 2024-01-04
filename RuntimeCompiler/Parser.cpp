@@ -539,7 +539,8 @@ ASTNode* Parser::parseStatement() {
             Token fxz = tokens[currentTokenIndex];
             
             // Function ended?
-            if(match(TokenType::RIGHT_BRACE)) {
+            if(match(TokenType::RIGHT_BRACE)) { // '}'
+                consumeToken(); // Consume '};
                 return blockNode;
             }
         }
@@ -719,7 +720,9 @@ ASTNode* Parser::parseStatement() {
             if(match(TokenType::RIGHT_BRACE)) {
                 consumeToken(); // '}'
             }
-        
+            
+            Token zzz = tokens[currentTokenIndex];
+            
             return ifStatementNode;
         }
     case TokenType::ELSE_STATEMENT:

@@ -189,9 +189,13 @@ int main() {
     std::string test4 = R"(
         int main() {
             if(x < 5) {
-                
+                for (int i = 0; i < x; i++) {
+                    
+                }
             } else {
-                
+                for (int i = 0; i < x; i++) {
+                    
+                }
             }
         }
     )";
@@ -204,7 +208,7 @@ int main() {
                void printValue() {
                    if (x > 0) {
                        for (int i = 0; i < x; ++i) {
-
+                            
                        }
                    }
                }
@@ -236,7 +240,7 @@ int main() {
     )";
     
     Lexer* lexer = new Lexer();
-    std::vector<Token> tokens = lexer->generateTokens(test4);
+    std::vector<Token> tokens = lexer->generateTokens(complexCode);
     
     std::cout << "Generated tokens: \n\n";
     
