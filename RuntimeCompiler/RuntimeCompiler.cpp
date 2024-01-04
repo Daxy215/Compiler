@@ -149,7 +149,7 @@ int main() {
         int main() {
             int i = 0;
             Shape* shape = new Circle(5.0);
-            shape->draw();
+            shape->draw(5.0);
             delete shape;
             
             return 0;

@@ -14,3 +14,8 @@ x64/Debug/RuntimeCompiler.pdb
 *.obj
 *.ilk
 *.tlog
+*.obj
+*.obj
+*.obj
+*.ilk
+*.tlog

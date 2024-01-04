@@ -28,18 +28,21 @@ enum class NodeType {
     INHERITANCE,
     CONSTRUCTOR,
     BLOCK,
-    IF_STATEMENT,
-    ELSE_STATEMENT,
+    
     FOR_LOOP,
     POINTER,
     REFERENCE,
     FUNCTION_CALL,
-    DELETE,
-    COMPOUND_ASSIGNMENT,
     
+    // Statements
     BREAK_STATEMENT,
     CONTINUE_STATEMENT,
     RETURN_STATEMENT,
+    DELETE_STATEMENT,
+    COMPOUND_ASSIGNMENT,
+    IF_STATEMENT,
+    ELSE_STATEMENT,
+    // Add else if statement.
     
     // Modifiers
     MODIFIERS,
@@ -50,7 +53,7 @@ enum class NodeType {
     ProtectedModifier,
     VirtualModifier,
     AbstractModifier,
-
+    
     // Variable Modifiers
     ShortModifier,
     
@@ -129,7 +132,7 @@ private:
     ASTNode* parseFunctionCall();
     ASTNode* parseCondition();
     ASTNode* parseVariable(NodeType memberDeclarationType, const std::string& memberType);
-    ASTNode* parseReference(const std::string& memberType);
+    ASTNode* parseReference(NodeType memberDeclarationType, const std::string& memberType);
     std::vector<std::string> parseFunctionParameters();
     
     ASTNode* expression();
@@ -137,11 +140,11 @@ private:
     ASTNode* factor();
 private: // Helper functions
     auto match(TokenType type) -> bool {
-        return currentTokenIndex < tokens.size() - 1 && tokens[currentTokenIndex].type == type;    
+        return currentTokenIndex < tokens.size() && tokens[currentTokenIndex].type == type;    
     }
     
     auto match(TokenType type, std::string value) -> bool {
-        return currentTokenIndex < tokens.size() - 1 &&  tokens[currentTokenIndex].type == type && tokens[currentTokenIndex].value._Equal(value);
+        return currentTokenIndex < tokens.size() &&  tokens[currentTokenIndex].type == type && tokens[currentTokenIndex].value._Equal(value);
     }
     
     auto matchNext(TokenType type) -> bool {
