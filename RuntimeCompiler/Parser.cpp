@@ -12,6 +12,7 @@ std::map<std::string, NodeType> modifiersTypes =
         {"override", NodeType::OverrideModifier},
         
         // Variable modifiers
+        {"short", NodeType::ShortModifier},
     };
 
 ASTNode* Parser::parseCode() {
@@ -36,6 +37,8 @@ ASTNode* Parser::parseCode() {
         } else {
             // Try parsing a function
             node = parseMember(NodeType::MEMBER_VARIABLE);
+            
+            node->setIsGlobal(true);
             
             if(node) {
                 currentTokenIndex++;
@@ -156,6 +159,9 @@ ASTNode* Parser::parseClassDeclaration() {
                     
                     if (match(TokenType::RIGHT_BRACE)) { // }
                         consumeToken(); // Consume '}' for class body end
+
+                        if(match(TokenType::SEMICOLON)) // ';'
+                            consumeToken(); // Consume ';'
                         
                         isInClass = false;
                         
@@ -199,11 +205,12 @@ ASTNode* Parser::parseClassBody(std::string className) {
                     consumeToken(); // Consume '}'
             } else {
                 // Handle error: Failed to parse constructor
-                std::cout << "Erorr happened while doing custrctor bs" << '\n';
+                std::cout << "Error; happened while doing constructor bs" << '\n';
                 consumeToken();
             }
         }
-        
+
+        // HERE !!!!!!!!!!!!!!!!
         ASTNode* member = parseMember(NodeType::MEMBER_VARIABLE); // Parse class members (functions, variables, etc.)
         
         if (member) {
@@ -215,6 +222,8 @@ ASTNode* Parser::parseClassBody(std::string className) {
             // Skip token or perform error recovery logic
             //currentTokenIndex++;
         }
+
+        Token endofclassig = tokens[currentTokenIndex];
     }
     
     Token tdsa = tokens[currentTokenIndex];
@@ -232,11 +241,10 @@ ASTNode* Parser::parseConstructor() {
     
     ASTNode* constructor = new ASTNode(NodeType::CONSTRUCTOR, constructorName);
     
-    //TODO; ??????????????????????????????????????????????????????????????
     while (!match(TokenType::RIGHT_PAREN)) {
         Token t = tokens[currentTokenIndex];
-        
-        //Parameters: Wtf is this ???????????????????
+         
+        // Parameters handling
         std::string paramType = tokens[currentTokenIndex].value;
         consumeToken();
         
@@ -316,13 +324,15 @@ ASTNode* Parser::parseMember(NodeType memberDeclarationType) {
     std::string memberType;
     
     // Ik junky code shush
-    if(token.type == TokenType::IDENTIFIER)
+    if(token.type == TokenType::IDENTIFIER) {
         memberType = tokens[currentTokenIndex].value;
-    else
+        consumeToken();
+    } else {
         if(currentTokenIndex == 0)
             memberType = tokens[currentTokenIndex].value;
         else
             memberType = tokens[currentTokenIndex - 1].value;
+    }
     
     Token t = tokens[currentTokenIndex];
     
@@ -331,11 +341,16 @@ ASTNode* Parser::parseMember(NodeType memberDeclarationType) {
         std::string memberName = tokens[currentTokenIndex].value;
         consumeToken(); // Consume member
         
-        return parseFunction(memberType, memberName);
+        ASTNode* functionNode = parseFunction(memberType, memberName);
+
+        if(!isInClass)
+            functionNode->isGlobal = true;
+        
+        return functionNode;
     }
     
     // Perhaps a variable usage?
-    //TODO; So this is the current problem..
+    //TODO; So this is the current problem.. Cant even remember what this was :)
     /*if(match(TokenType::IDENTIFIER) && (!matchNext(TokenType::KEYWORD) && !matchNext(TokenType::REFERENCE) && !matchNext(TokenType::POINTER))) {
         ASTNode* variableNode = parseVariable(memberDeclarationType, "None");
         variableNode->children.push_back(modifiers);
@@ -345,15 +360,6 @@ ASTNode* Parser::parseMember(NodeType memberDeclarationType) {
     
     Token z = tokens[currentTokenIndex];
     
-    if(!match(TokenType::IDENTIFIER) && !match(TokenType::KEYWORD)) {
-        consumeToken();
-        return nullptr;
-    }
-    
-    //consumeToken(); // Consume member name
-    
-    Token d = tokens[currentTokenIndex];
-    
     if (matchNext(TokenType::REFERENCE) || matchNext(TokenType::POINTER)) {
         consumeToken(); // Consume reference
         
@@ -361,9 +367,19 @@ ASTNode* Parser::parseMember(NodeType memberDeclarationType) {
         
         if(!modifiers->children.empty())
             variableNode->children.push_back(modifiers);
+
+        if(!isInClass)
+            variableNode->isGlobal = true;
         
         return variableNode;
     }
+    
+    if(!match(TokenType::IDENTIFIER) && !match(TokenType::KEYWORD)) {
+        consumeToken();
+        return nullptr;
+    }
+    
+    Token d = tokens[currentTokenIndex];
     
     // Go back 1 index for, [MemberType] -> double radius
     //currentTokenIndex--;
@@ -375,6 +391,9 @@ ASTNode* Parser::parseMember(NodeType memberDeclarationType) {
     
     if(match(TokenType::RIGHT_PAREN))
         consumeToken(); // Consume ')'
+
+    if(!isInClass)
+        variableNode->isGlobal = true;
     
     return variableNode;
     //}
@@ -540,7 +559,8 @@ ASTNode* Parser::parseStatement() {
             
             // Function ended?
             if(match(TokenType::RIGHT_BRACE)) { // '}'
-                consumeToken(); // Consume '};
+                //THIS WAS THE PROBLEM?
+                //consumeToken(); // Consume '};
                 return blockNode;
             }
         }
@@ -864,7 +884,7 @@ ASTNode* Parser::parseFunctionCall() {
     
     if (match(TokenType::IDENTIFIER) && matchNext(TokenType::LEFT_PAREN)) {
         std::string functionName = tokens[currentTokenIndex].value;
-        std::string objectName = tokens[currentTokenIndex - 2].value;
+        std::string objectName = tokens[currentTokenIndex - 3].value;
         consumeToken(); // Consume function name token
         
         if (match(TokenType::LEFT_PAREN) || matchNext(TokenType::LEFT_PAREN)) {
@@ -927,6 +947,8 @@ ASTNode* Parser::parseCondition() {
 ASTNode* Parser::parseVariable(NodeType memberDeclarationType, const std::string& memberType) {
     std::string memberName = tokens[currentTokenIndex].value;
     consumeToken(); // Consume member name
+    
+    Token t = tokens[currentTokenIndex];
     
     if (match(TokenType::LEFT_PAREN)) { // '('
         return parseFunction(memberType, memberName);
@@ -1053,6 +1075,8 @@ ASTNode* Parser::expression() {
     
     ASTNode* left = term();
     
+    Token t = tokens[currentTokenIndex];
+    
     while (currentTokenIndex < tokens.size() - 2 && tokens[currentTokenIndex].type == TokenType::OPERATOR &&
            (tokens[currentTokenIndex].value == "+" || tokens[currentTokenIndex].value == "-") ||
            (tokens[currentTokenIndex].value == "<" || tokens[currentTokenIndex].value == ">") ||
@@ -1061,9 +1085,6 @@ ASTNode* Parser::expression() {
            (match(TokenType::INCREMENT_EQUAL) || match(TokenType::DECREMENT_EQUAL)) ||*/
            (match(TokenType::LESS_THAN_EQUAL) || match(TokenType::GREATER_THAN_EQUAL)) ||
            (match(TokenType::EQUAL) || match(TokenType::NOT_EQUAL))) {
-
-        
-        
         std::string op = tokens[currentTokenIndex++].value;
         
         ASTNode* right = term();

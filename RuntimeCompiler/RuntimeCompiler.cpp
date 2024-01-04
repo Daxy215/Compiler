@@ -6,7 +6,6 @@
 #include <sstream>
 #include <fstream>
 #include <unordered_map>
-#include <stdio.h>
 #include <cstdio>
 #include <memory>
 #include <stdexcept>
@@ -108,7 +107,7 @@ int main() {
     //TODO; having classes within classes...
     //TODO; Well it don't detect namespaces within class/function :)
     //TODO; Making it so that it says EMPTY FUNCTION
-    //TODO; Can't detect 5.0f, but can detect, 5.0
+    //TODO; Expression doesn't work for '++i'
     
     //TODO; For the sentifmxi???????? thingy; Check if the overloaded function is within the same class.
     
@@ -148,7 +147,7 @@ int main() {
         
         int main() {
             int i = 0;
-            Shape* shape = new Circle(5.0);
+            Shape* shape = new Circle(5.0f);
             shape->draw(5.0);
             delete shape;
             
@@ -201,29 +200,44 @@ int main() {
     )";
     
     std::string test5 = R"(
+        int main() {
+            for (int i = 0; i < x; i++) {
+                
+            }
+        }
+    )";
+
+    std::string test6 = R"(
+        T square(T num) {
+            return num * num;
+        }
+    )";
+    
+    std::string test7 = R"(
            class TestClass {
                int x;
                public:
                TestClass(int val): x(val) {}
                void printValue() {
                    if (x > 0) {
-                       for (int i = 0; i < x; ++i) {
-                            
+                       for (int i = 0; i < x; i++) {
+                          std::cout << "Test value: " << i << std::endl;
                        }
+                   } else {
+                       std::cout << "Invalid value" << std::endl;
                    }
                }
            }
     )";
     
-    std::string test6 = R"(
-        namespace TestNamespace {
+    std::string test8 = R"(
            class TestClass {
                int x;
                public:
                TestClass(int val): x(val) {}
                void printValue() {
                    if (x > 0) {
-                       for (int i = 0; i < x; ++i) {
+                       for (int i = 0; i < x; i++) {
                           std::cout << "Test value: " << i << std::endl;
                        }
                    } else {
@@ -232,11 +246,9 @@ int main() {
                }
            };
            
-           template <typename T>
            T square(T num) {
                return num * num;
            }
-        }
     )";
     
     Lexer* lexer = new Lexer();
@@ -274,10 +286,10 @@ int main() {
     TACGenerator* tac = new TACGenerator();
     int c = 0;
     tac->generateTAC(root,c);
-
+    
     for(std::string f : tac->tac)
-        std::cout << f << std::endl;
-
+        std::cout << f << '\n';
+    
     return 0;
     
     // Sample AST representing an arithmetic expression: 5 + 3 * 2

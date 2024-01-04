@@ -30,7 +30,7 @@ class SemanticAnalysis {
         }
 
         std::string returnType, identifier, fullName, scope;
-
+        
         //FunctionProperties* functionProperties;
         bool isFunction = false;
         bool isVariable = false;
@@ -65,21 +65,39 @@ private:
 public:
     void printSymbolTable() {
         std::cout << "Symbol Table Contents:" << std::endl;
+
+        /*for (const auto& pair : symbolTable) {
+            const SymbolTable* entry = pair.second;
+
+            if (entry->isFunction) {
+                std::cout << "Function: " << entry->fullName << "\n";
+                std::cout << "   Variables:\n";
+                /*for (const auto& var : entry->variables) {
+                    std::cout << "       - " << var << "\n";
+                }
+                std::cout << "   Actions:\n";
+                for (const auto& action : entry->actions) {
+                    std::cout << "       - " << action << "\n";
+                }#1#
+            } else if (entry->isVariable) {
+                std::cout << "Variable: " << entry->fullName << "\n";
+            }
+        }*/
         
-        std::cout << "Functions: \n";
+        /*std::cout << "Functions: \n";
         for (const auto& entry : symbolTable) {
             if(entry.second->isFunction)
                 std::cout << entry.second->returnType + " " + entry.second->identifier + " : " + entry.second->fullName <<
                     " : " << static_cast<int>(entry.second->type) << std::endl;
         }
-
+    
         std::cout << "\nVariables: \n";
         for (const auto& entry : symbolTable) {
             if(entry.second->isVariable)
                 std::cout << entry.second->returnType + " " + entry.second->identifier + " : " + entry.second->fullName <<
                     " : " << static_cast<int>(entry.second->type) << std::endl;
-        }
-    
+        }*/
+        
         std::cout << "End of Symbol Table" << std::endl;
     }
 private:

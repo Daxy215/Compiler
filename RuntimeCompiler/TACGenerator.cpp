@@ -3,6 +3,9 @@
 using namespace std;
 
 void TACGenerator::generateTAC(ASTNode* node, int& tempCounter) {
+    if(node == nullptr)
+        return;
+    
     switch(node->type) {
     case NodeType::OPERATOR:
         if(node->value == "+" || node->value == "-" || node->value == "*" || node->value == "/") {
@@ -10,7 +13,7 @@ void TACGenerator::generateTAC(ASTNode* node, int& tempCounter) {
             /*
             generateTAC(node->children[0], tempCounter);
             generateTAC(node->children[1], tempCounter);
-            cout << "t" << ++tempCounter << " = " << "t" << tempCounter - 2 << " " << node->value << " " << "t" << tempCounter - 1 << endl;
+            
         */
             
             std::string leftOperand = "t" + std::to_string(tempCounter++);
@@ -21,7 +24,7 @@ void TACGenerator::generateTAC(ASTNode* node, int& tempCounter) {
             // Generate TAC for addition
             tac.push_back(leftOperand + " = " + node->children[0]->value);
             tac.push_back(rightOperand + " = " + node->children[1]->value);
-            tac.push_back("t" + std::to_string(tempCounter) + " = " + leftOperand + " + " + rightOperand);
+            tac.push_back("t" + std::to_string(tempCounter) + " = " + leftOperand + " " + node->value + " " + rightOperand);
             tempCounter++;
             
             node->value = "t" + std::to_string(tempCounter - 1);

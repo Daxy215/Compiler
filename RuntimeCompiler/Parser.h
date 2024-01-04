@@ -70,7 +70,10 @@ enum class DataType {
 struct ASTNode {
     NodeType type;
     DataType dataType;
+    
     std::string value;
+    bool isGlobal = false;
+    
     std::vector<ASTNode*> children;
     
     ASTNode(const std::string& val) : type(NodeType::ConstModifier), value(val) {}
@@ -78,6 +81,14 @@ struct ASTNode {
     ~ASTNode() {
         for (auto child : children) {
             delete child;
+        }
+    }
+
+    void setIsGlobal(bool cond) {
+        this->isGlobal = cond;
+        
+        for (auto child : children) {
+            //setIsGlobal(child);
         }
     }
 };

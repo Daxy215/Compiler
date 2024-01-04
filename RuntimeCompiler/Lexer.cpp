@@ -113,7 +113,7 @@ std::vector<Token> Lexer::generateTokens(std::string code) {
             
             break;
         default:
-            std::cout << "Error: Unknown token: " << c << "\n";
+            //std::cout << "Error: Unknown token: " << c << "\n";
             
             break;
         }
@@ -124,11 +124,7 @@ std::vector<Token> Lexer::generateTokens(std::string code) {
     
             while (std::isdigit(code[i]) || code[i] == '.') {
                 if (code[i] == '.') {
-                    
-                    // Check if a decimal point is already encountered
                     if (hasDecimal) {
-                        // Handle error: Multiple decimal points in the number
-                        // Possibly set a flag to indicate an error occurred
                         std::cout << "Error: Multiple decimal points in the number" << "\n";
                         
                         break;
@@ -140,13 +136,18 @@ std::vector<Token> Lexer::generateTokens(std::string code) {
                 literal += code[i++];
             }
             
-            // If the accumulated literal has a decimal point, treat it as a floating-point literal
             if (hasDecimal) {
+                //TODO; Handle missing ';' after "float i = 5.0f"
+                if(code[i] == 'f') {
+                    literal += code[i++];
+                }
+                
                 tokens.push_back({TokenType::FLOATING_POINT_LITERAL, literal});
             } else {
                 tokens.push_back({TokenType::INTEGER_LITERAL, literal});
             }
-    
+
+            //???
             --i;
             continue;
         } else if(c == '"') { //String
