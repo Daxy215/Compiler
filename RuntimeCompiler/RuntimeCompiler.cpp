@@ -225,10 +225,10 @@ int main() {
             }
         }
     )";
-
+    
     std::string test6 = R"(
         T square(T num) {
-            return num * num;
+            return num * num * num + num / num - num;
         }
     )";
     
@@ -266,12 +266,39 @@ int main() {
            };
            
            T square(T num) {
-               return num * num;
+               return num * num * num;
            }
     )";
     
+    std::string test9 = R"(
+        #include <iostream>
+        #include <string>
+        #include <vector>
+        
+        void GeneratePascalTriangle(int n) {
+           std::vector<std::vector<int>> pascalTriangle(n);
+           for (int i = 0; i < n; i++) {
+               pascalTriangle[i].resize(i + 1);
+               pascalTriangle[i][0] = pascalTriangle[i][i] = 1;
+               for (int j = 1; j < i; j++) {
+                   pascalTriangle[i][j] = pascalTriangle[i - 1][j - 1] + pascalTriangle[i - 1][j];
+               }
+           }
+           
+           for (int i = 0; i < n; i++) {
+               for (int j = 0; j <= i; j++) {
+               }
+           }
+        }
+        
+        int main() {
+           GeneratePascalTriangle(10);
+           return 0;
+        }
+    )";
+    
     Lexer* lexer = new Lexer();
-    std::vector<Token> tokens = lexer->generateTokens(complexCode);
+    std::vector<Token> tokens = lexer->generateTokens(test9);
     
     std::cout << "Generated tokens: \n\n";
     

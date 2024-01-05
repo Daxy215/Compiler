@@ -30,6 +30,10 @@ ASTNode* Parser::parseCode() {
             node = parseIncludeDirective();
         } else if(match(TokenType::NAMESPACE)) { //TODO; Not detecting namespace.
             node = parseNameSpace();
+        } else if(match(TokenType::ENUM)) {
+            node = parseEnumDeclaration();
+        } else if(match(TokenType::STRUCT)) {
+            node = parseStructDeclaration();
         } else if (match(TokenType::CLASS)) {
             isInClass = true;
             
@@ -90,6 +94,14 @@ ASTNode* Parser::parseNameSpace() {
     }
         
     // Handle error or return nullptr for invalid or unexpected tokens
+    return nullptr;
+}
+
+ASTNode* Parser::parseEnumDeclaration() {
+    return nullptr;
+}
+
+ASTNode* Parser::parseStructDeclaration() {
     return nullptr;
 }
 
@@ -453,7 +465,7 @@ ASTNode* Parser::parseFunction(const std::string& returnType, const std::string&
         }
         
         // Check for modifiers
-        // TODO; Make this as a function.
+        // TODO; Make this as a function. I'm too lazy :D
         while(!match(TokenType::LEFT_BRACE)) { // '{'
             std::string type = tokens[currentTokenIndex].value;
             
@@ -770,6 +782,10 @@ ASTNode* Parser::parseStatement() {
     }
     
     Token hghg = tokens[currentTokenIndex];
+
+    if(match(TokenType::IDENTIFIER)) {
+        
+    }
     
     return parseMember(NodeType::LOCAL_VARIABLE_DECLARATION);
 }
@@ -1052,11 +1068,13 @@ ASTNode* Parser::expression() {
     if(currentTokenIndex >= tokens.size() - 1)
         return nullptr;
     
+    Token tZ = tokens[currentTokenIndex];
+    
     ASTNode* left = term();
     
     Token t = tokens[currentTokenIndex];
     
-    while (currentTokenIndex < tokens.size() - 2 && tokens[currentTokenIndex].type == TokenType::OPERATOR &&
+    while (currentTokenIndex < tokens.size() - 2 && (!match(TokenType::OPERATOR, "*") || !match(TokenType::OPERATOR, "/"))  && tokens[currentTokenIndex].type == TokenType::OPERATOR &&
            (tokens[currentTokenIndex].value == "+" || tokens[currentTokenIndex].value == "-") ||
            (tokens[currentTokenIndex].value == "<" || tokens[currentTokenIndex].value == ">") ||
            match(TokenType::OPERATOR) ||
@@ -1123,8 +1141,10 @@ ASTNode* Parser::term() {
     }
     
     left = factor();
+
+    Token zzzt = tokens[currentTokenIndex];
     
-    while (currentTokenIndex < tokens.size() && tokens[currentTokenIndex].type == TokenType::OPERATOR &&
+    while (currentTokenIndex < tokens.size() && (match(TokenType::POINTER) || match(TokenType::OPERATOR)) &&
            (tokens[currentTokenIndex].value == "*" || tokens[currentTokenIndex].value == "/")) {
         
         std::string op = tokens[currentTokenIndex++].value;
@@ -1146,7 +1166,7 @@ ASTNode* Parser::factor() {
         currentToken.type == TokenType::FLOATING_POINT_LITERAL ||
         currentToken.type == TokenType::IDENTIFIER ||
         currentToken.type == TokenType::KEYWORD) {
-        return new ASTNode(NodeType::EXPRESSION, currentToken.value); // Creating a generic expression node
+        return new ASTNode(NodeType::EXPRESSION, currentToken.value);
     }
     
     std::cout << "huh " << currentToken.value << '\n';

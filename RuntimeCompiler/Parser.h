@@ -113,8 +113,10 @@ public:
 private:
     ASTNode* parseIncludeDirective();
     ASTNode* parseNameSpace();
+    ASTNode* parseEnumDeclaration();
+    ASTNode* parseStructDeclaration();
     ASTNode* parseClassDeclaration();
-
+    
     /**
      * className is used to check for constructor.
      */
@@ -145,7 +147,7 @@ private:
      * TODO; If empty, add "EmptyBody" tag.
      */
     ASTNode* parseMember(NodeType memberDeclarationType);
-
+    
     /**
      * Handles function parameters
      */
