@@ -28,7 +28,7 @@ class SemanticAnalysis {
               type(type) {
             
         }
-
+    
         std::string returnType, identifier, fullName, scope;
         
         //FunctionProperties* functionProperties;

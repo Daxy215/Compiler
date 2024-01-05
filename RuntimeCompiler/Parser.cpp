@@ -38,7 +38,7 @@ ASTNode* Parser::parseCode() {
             // Try parsing a function
             node = parseMember(NodeType::MEMBER_VARIABLE);
             
-            node->setIsGlobal(true);
+            node->setIsGlobal(node, true);
             
             if(node) {
                 currentTokenIndex++;
@@ -636,30 +636,8 @@ ASTNode* Parser::parseStatement() {
         }
     }
     
-    // Handle loops (for, while, do-while)
-    // if (match(TokenType::KEYWORD)) {
-    //     if (tokens[currentTokenIndex].value == "if") {
-    //  
-    //     } else if (tokens[currentTokenIndex].value == "else") {
-    //     
-    //     } else if (tokens[currentTokenIndex].value == "else if") {
-    //      
-    //     } else if(tokens[currentTokenIndex].value == "while") {
-    //      
-    //     } else if(tokens[currentTokenIndex].value == "do-while") {
-    //         // Fuck you.
-    //     } else if(tokens[currentTokenIndex].value == "delete") {
-    //         consumeToken(); // Consume 'delete'
-    //         
-    //         return new ASTNode(NodeType::DELETE, "DELETE_STATEMENT: " + tokens[currentTokenIndex].value);
-    //     } else {
-    //         //std::cout << "BRO WTF IS " << tokens[currentTokenIndex].value << std::endl;
-    //     }
-    // }
-    
     switch (tokens[currentTokenIndex].type) {
-    case TokenType::FOR_LOOP:
-        {
+    case TokenType::FOR_LOOP: {
             // Idk if there are other types of "for loops"
             if (tokens[currentTokenIndex].value == "for") {
                 /**
@@ -686,7 +664,7 @@ ASTNode* Parser::parseStatement() {
                     consumeToken(); // Consume ';'
                 
                 // Parse condition
-                ASTNode* conditionNode = expression(); // Assuming you have a function to parse expressions
+                ASTNode* conditionNode = parseConditions(); // Assuming you have a function to parse expressions
                 forLoopNode->children.push_back(conditionNode);
                 
                 if(!match(TokenType::SEMICOLON)) {
@@ -713,12 +691,43 @@ ASTNode* Parser::parseStatement() {
             
             break;
         }
-    case TokenType::IF_STATEMENT:
-        {
+    case TokenType::WHILE_LOOP: {
+            if(tokens[currentTokenIndex].value == "while") {
+                consumeToken(); // Consume 'while'
+
+                ASTNode* whileloopNode = new ASTNode(NodeType::WHILE_LOOP, "While Loop");
+                
+                if(!match(TokenType::LEFT_PAREN)) {
+                    std::cout << "Missing '(' after while loop\n";
+                } else
+                    consumeToken(); // Consume '('
+                
+                ASTNode* conditionsNode = parseConditions();
+                ASTNode* bodyNode = parseStatement();
+
+                whileloopNode->children.push_back(conditionsNode);
+                whileloopNode->children.push_back(bodyNode);
+                
+                Token tfd = tokens[currentTokenIndex];
+                
+                if(!match(TokenType::RIGHT_BRACE)) {
+                    std::cout << "Missing '}' after while loop\n";
+                } else
+                    consumeToken(); // Consume '}'
+                
+                return whileloopNode;
+            }
+            
+            break;
+        }
+    case TokenType::DO_WHILE_LOOP: {
+
+            break;
+        }
+    case TokenType::IF_STATEMENT: {
             return parseIfStatement();
         }
-    case TokenType::ELSE_STATEMENT:
-        {
+    case TokenType::ELSE_STATEMENT: {
             if(matchNext(TokenType::IF_STATEMENT)) {
                 consumeToken(); // Consume 'else'
                 
@@ -733,117 +742,7 @@ ASTNode* Parser::parseStatement() {
     
     Token hghg = tokens[currentTokenIndex];
     
-    ASTNode* variableNote2 = parseMember(NodeType::LOCAL_VARIABLE_DECLARATION);
-    
-    return variableNote2;
-    
-    //TODO; Move all of thise inside 'parseMember'
-    //TODO; Still is the main cause of every problem.. fu old me for being too lazy
-    bool isVariable = false;
-    
-    size_t curIndex = currentTokenIndex;
-    
-    while(curIndex < tokens.size() && tokens[curIndex].type != TokenType::SEMICOLON) {
-        Token t = tokens[curIndex];
-
-        //TODO..
-        if (tokens[curIndex].type == TokenType::OPERATOR/* && tokens[curIndex].value == "="
-            || tokens[curIndex].type == TokenType::INCREMENT_EQUAL*/) {
-            isVariable = true;
-            
-            break;
-        }
-        
-        curIndex++;
-    }
-    
-    if(!isVariable)
-        return nullptr;
-    
-    // As, curIndex is '=', the previous token, should be the name.
-    
-    //int originalIndex = currentTokenIndex;
-    //currentTokenIndex = curIndex - 2;
-    
-    /*ASTNode* variableNode = *///parseMember(NodeType::LOCAL_VARIABLE_DECLARATION);
-    //currentTokenIndex = originalIndex;
-    
-    std::string variableName = tokens[curIndex - 1].value;
-    ASTNode* variableNode = new ASTNode(NodeType::LOCAL_VARIABLE_DECLARATION, "LOCAL VARIABLE: " + variableName);
-    
-    // Add modifiers
-    //TODO; Make this a function instead..
-    //TODO; As the same code, is being used.
-    //No need to check for variable name, hence the - 1.
-    for(size_t i = currentTokenIndex; i < curIndex - 1; i++) { // '{'
-        std::string type = tokens[i].value;
-        
-        //TODO; Virtual
-        if(tokens[i].type == TokenType::KEYWORD && tokens[i].value == "const") {
-            variableNode->children.push_back(new ASTNode(NodeType::ConstModifier, type + ": true"));
-        } else if(tokens[i].type == TokenType::KEYWORD && tokens[i].value == "override") {
-            variableNode->children.push_back(new ASTNode(NodeType::OverrideModifier, type + ": true"));
-        } else if(tokens[i].type == TokenType::KEYWORD && tokens[i].value == "final") {
-            variableNode->children.push_back(new ASTNode(NodeType::FinalModifier, type + ": true"));
-        } else if(tokens[i].type == TokenType::KEYWORD && tokens[i].value == "protected") {
-            variableNode->children.push_back(new ASTNode(NodeType::ProtectedModifier, type + ": true"));
-        } else if(tokens[i].type == TokenType::POINTER || tokens[i].type == TokenType::REFERENCE) {
-            // Check if it's a pointer/reference
-            std::string pointerType = tokens[i].value;
-            
-            NodeType nodeType = NodeType::POINTER;
-            if(tokens[i].type == TokenType::REFERENCE)
-                nodeType = NodeType::REFERENCE;
-            
-            ASTNode* pointerNode = new ASTNode(nodeType, "POINTER_TYPE: " + pointerType);
-            pointerNode->children.push_back(new ASTNode(NodeType::POINTER, "TO: " + tokens[i-1].value));
-            
-            variableNode->children.push_back(pointerNode);
-        } else {
-            std::cout << "Unknown modifier..; " << type << '\n';
-        }
-        
-        consumeToken(); // Consume modifier token
-    }
-    
-    size_t typeIndex = currentTokenIndex;
-    
-    while (true) {
-        if(tokens[typeIndex].type == TokenType::IDENTIFIER
-            || tokens[typeIndex].type == TokenType::KEYWORD) {
-            break;
-        }
-        
-        typeIndex--;
-    }
-    
-    variableNode->children.push_back(new ASTNode(NodeType::VARIABLE_TYPE, tokens[typeIndex - 1].value));
-    
-    //currentTokenIndex = originalIndex;
-   Token t = tokens[currentTokenIndex];
-    
-    if (match(TokenType::IDENTIFIER)) {
-        consumeToken(); // Consume variable name token
-    }
-    
-    Token d = tokens[currentTokenIndex];
-    
-    /*if (match(TokenType::OPERATOR) && tokens[currentTokenIndex].value == "=") {
-        consumeToken(); // Consume '=' token
-        ASTNode* expressionNode = expression(); // Parse expression on the right-hand side of assignment
-        
-        variableNode->children.push_back(expressionNode);
-    } else {*/
-        ASTNode* compoundAssignNode = new ASTNode(NodeType::COMPOUND_ASSIGNMENT, tokens[currentTokenIndex].value);
-        
-        consumeToken(); // Consume '=' token
-        ASTNode* expressionNode = expression(); // Parse expression on the right-hand side of assignment
-        
-        compoundAssignNode->children.push_back(expressionNode);
-        variableNode->children.push_back(compoundAssignNode);
-   // }
-    
-    return variableNode;
+    return parseMember(NodeType::LOCAL_VARIABLE_DECLARATION);
 }
 
 ASTNode* Parser::parseFunctionCall() {
@@ -944,7 +843,7 @@ ASTNode* Parser::parseElseStatement() {
 ASTNode* Parser::parseConditions() {
     ASTNode* conditionsNode = new ASTNode(NodeType::CONDITIONS, "CONDITIONS;");
     
-    while(!match(TokenType::LEFT_BRACE)) {
+    while(!match(TokenType::LEFT_BRACE) && !match(TokenType::SEMICOLON)) {
         Token z = tokens[currentTokenIndex];
         
         if(match(TokenType::LEFT_PAREN)) {
@@ -981,14 +880,14 @@ ASTNode* Parser::parseCondition() {
     }
     
     Token tzz = tokens[currentTokenIndex];
-
+    
     // Assuming this will be for conditions such as:
     // (i > 5 && i < 10)
     //if(match(TokenType::RIGHT_PAREN))
         //consumeToken(); // Consume ')'
     
     // Check for '{' symbol
-    if (!match(TokenType::RIGHT_PAREN) && !match(TokenType::LEFT_BRACE) && (!match(TokenType::LOGICAL_AND) && !match(TokenType::LOGICAL_OR))) {
+    if (!match(TokenType::SEMICOLON) && !match(TokenType::RIGHT_PAREN) && !match(TokenType::LEFT_BRACE) && (!match(TokenType::LOGICAL_AND) && !match(TokenType::LOGICAL_OR))) {
         throw std::runtime_error("Expected '{' after 'if' condition");
     }
     

@@ -22,63 +22,63 @@ void SemanticAnalysis::generateSymbolTable(ASTNode* node) {
 }
 
 void SemanticAnalysis::traverseNodes(ASTNode* node, std::string currentScope) {
-    if(node == nullptr)
-       return;
+    if (node == nullptr)
+        return;
+    
+    if (node->type == NodeType::CLASS) {
+        currentScope = split(node->value);
+        std::cout << "Class: " << currentScope;
+        /*if (!node->parent->value.empty()) {
+            std::cout << " (inherits from " << node->parent->value << ")";
+        }*/
+        std::cout << "\n";
+    } else if (node->type == NodeType::MEMBER_FUNCTION || node->type == NodeType::CONSTRUCTOR) {
+        std::string returnType = split(node->children[0]->value);
+        std::string identifier = split(node->value);
+        std::string scopePrefix = (currentScope != "") ? currentScope + "::" : "";
+        std::string fullName = scopePrefix + identifier;
 
-   if (node->type == NodeType::CLASS) {
-       currentScope = split(node->value);
-       std::cout << "Class: " << currentScope;
-       /*if (!node->parent->value.empty()) {
-           std::cout << " (inherits from " << node->parent->value << ")";
-       }*/
-       std::cout << "\n";
-   } else if (node->type == NodeType::MEMBER_FUNCTION || node->type == NodeType::CONSTRUCTOR) {
-       std::string returnType = split(node->children[0]->value);
-       std::string identifier = split(node->value);
-       std::string scopePrefix = (currentScope != "") ? currentScope + "::" : "";
-       std::string fullName = scopePrefix + identifier;
-       
-       std::cout << "   Member functions:\n";
-       std::cout << "       - " << returnType << " " << fullName << " ; " << node->isGlobal << "\n";
-       
-       if (isFunctionOverloaded(identifier, currentScope)) {
-           identifier = generateUniqueFunctionName(identifier);
-           fullName = scopePrefix + identifier;
-       }
+        std::cout << "   Member functions:\n";
+        std::cout << "       - " << returnType << " " << fullName << " ; " << node->isGlobal << "\n";
 
-       addToSymbolTable(returnType, identifier, fullName, currentScope, node->type);
-   } else if (node->type == NodeType::MEMBER_VARIABLE) {
-       std::string returnType = split(node->children[0]->value);
-       std::string identifier = split(node->value);
-       std::string scopePrefix = (currentScope != "") ? currentScope + "::" : "";
-       std::string fullName = scopePrefix + identifier;
+        if (isFunctionOverloaded(identifier, currentScope)) {
+            identifier = generateUniqueFunctionName(identifier);
+            fullName = scopePrefix + identifier;
+        }
 
-       std::cout << "   Member variables:\n";
-       std::cout << "       - " << returnType << " " << fullName << " ; " << node->isGlobal << "\n";
+        addToSymbolTable(returnType, identifier, fullName, currentScope, node->type);
+    } else if (node->type == NodeType::MEMBER_VARIABLE) {
+        std::string returnType = split(node->children[0]->value);
+        std::string identifier = split(node->value);
+        std::string scopePrefix = (currentScope != "") ? currentScope + "::" : "";
+        std::string fullName = scopePrefix + identifier;
 
-       addToSymbolTable(returnType, identifier, fullName, currentScope, node->type);
-   } else if (node->type == NodeType::MEMBER_FUNCTION) {
-       std::string returnType = split(node->children[0]->value);
-       std::string identifier = split(node->value);
-       std::string fullName = identifier;
+        std::cout << "   Member variables:\n";
+        std::cout << "       - " << returnType << " " << fullName << " ; " << node->isGlobal << "\n";
 
-       std::cout << "Function: " << returnType << " " << fullName << " ; " << node->isGlobal << "\n";
+        addToSymbolTable(returnType, identifier, fullName, currentScope, node->type);
+    } else if (node->type == NodeType::MEMBER_FUNCTION) {
+        std::string returnType = split(node->children[0]->value);
+        std::string identifier = split(node->value);
+        std::string fullName = identifier;
 
-       addToSymbolTable(returnType, identifier, fullName, "", node->type);
-   } else if (node->type == NodeType::LOCAL_VARIABLE_DECLARATION) {
-       std::string returnType = split(node->children[0]->value);
-       std::string identifier = split(node->value);
-       std::string fullName = identifier;
+        std::cout << "Function: " << returnType << " " << fullName << " ; " << node->isGlobal << "\n";
 
-       std::cout << "Variables:\n";
-       std::cout << "   - " << returnType << " " << fullName << "\n";
+        addToSymbolTable(returnType, identifier, fullName, "", node->type);
+    } else if (node->type == NodeType::LOCAL_VARIABLE_DECLARATION) {
+        std::string returnType = split(node->children[0]->value);
+        std::string identifier = split(node->value);
+        std::string fullName = identifier;
 
-       addToSymbolTable(returnType, identifier, fullName, "", node->type);
-   }
+        std::cout << "Variables:\n";
+        std::cout << "   - " << returnType << " " << fullName << "\n";
 
-   for (auto child : node->children) {
-       traverseNodes(child, currentScope);
-   }
+        addToSymbolTable(returnType, identifier, fullName, "", node->type);
+    }
+
+    for (auto child : node->children) {
+        traverseNodes(child, currentScope);
+    }
 }
 
 void SemanticAnalysis::performSemanticChecks() {

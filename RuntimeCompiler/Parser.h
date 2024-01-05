@@ -9,6 +9,7 @@
 
 // Please make this tidier.........
 enum class NodeType {
+    // Basic Types
     PROGRAM,
     CLASS,
     CLASS_BODY,
@@ -30,7 +31,11 @@ enum class NodeType {
     CONDITIONS,
     BLOCK,
     
+    // Control Structures
     FOR_LOOP,
+    WHILE_LOOP,
+    DO_WHILE_LOOP,
+    
     POINTER,
     REFERENCE,
     FUNCTION_CALL,
@@ -47,11 +52,11 @@ enum class NodeType {
     COMPOUND_ASSIGNMENT,
     IF_STATEMENT,
     ELSE_STATEMENT,
-    // Add else if statement.
     
     // Modifiers
     MODIFIERS,
     
+    // Access Modifiers
     ConstModifier,
     OverrideModifier,
     FinalModifier,
@@ -61,8 +66,7 @@ enum class NodeType {
     
     // Variable Modifiers
     ShortModifier,
-    
-};
+ };
 
 enum class DataType {
     INT,
@@ -88,12 +92,15 @@ struct ASTNode {
             delete child;
         }
     }
-
-    void setIsGlobal(bool cond) {
-        this->isGlobal = cond;
+    
+    void setIsGlobal(ASTNode* node, bool cond) {
+        if(node == nullptr)
+            return;
         
-        for (auto child : children) {
-            //setIsGlobal(child);
+        node->isGlobal = cond;
+        
+        for (auto child : node->children) {
+            setIsGlobal(child, cond);
         }
     }
 };

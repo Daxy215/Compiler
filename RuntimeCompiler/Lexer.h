@@ -7,13 +7,13 @@
 #include <unordered_set>
 #include <vector>
 
-//TODO; Handle += or -=.. or *=.. /=.. etc
+//TODO; Handle += or -=.. or *=.. /=.. etc I think I did??
 
 enum class TokenType {
     // ???
     IDENTIFIER,
     KEYWORD,
-
+    
     // Statements
     BREAK_STATEMENT,
     CONTINUE_STATEMENT,
@@ -24,6 +24,8 @@ enum class TokenType {
     
     // Statement types
     FOR_LOOP,
+    WHILE_LOOP,
+    DO_WHILE_LOOP, // Bruhhhhhhhhhhhhhhhhhhhhhh im too lazy
     IF_STATEMENT,
     ELSE_STATEMENT,
     
@@ -71,24 +73,56 @@ enum class TokenType {
     // Modifiers??
     STRUCT,
     CLASS,
+    ENUM,
     
     // ()
+    /**
+     * \brief (
+     */
     LEFT_PAREN,
+
+    /**
+     * \brief )
+     */
     RIGHT_PAREN,
 
     // {}
+    /**
+     * \brief {
+     */
     LEFT_BRACE,
-    RIGHT_BRACE,
 
+    /**
+     * \brief }
+     */
+    RIGHT_BRACE,
+    
     // []
+    /**
+     * \brief [
+     */
     LEFT_SQUARE_BRACE,
+
+    /**
+     * \brief ]
+     */
     RIGHT_SQUARE_BRACE,
     
     // <>
+    /**
+     * \brief <
+     */
     LEFT_ANGLE_BRACE,
+
+    /**
+     * \brief >
+     */
     RIGHT_ANGLE_BRACE,
     
     // Something..
+    /**
+     * \brief ;
+     */
     SEMICOLON,
     COMMA,
     COLON,

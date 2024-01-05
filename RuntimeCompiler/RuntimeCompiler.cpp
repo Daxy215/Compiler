@@ -108,12 +108,17 @@ int main() {
     //TODO; Well it don't detect namespaces within class/function :)
     //TODO; Making it so that it says EMPTY FUNCTION
     //TODO; Expression doesn't work for '++i'
+    //TODO; No support for structs, enums or while loops.
     
     //TODO; For the sentifmxi???????? thingy; Check if the overloaded function is within the same class.
     
     std::string complexCode = R"(
         #include <iostream>
         using namespace std;
+        
+        struct test {
+            int someInt = 1;
+        }
         
         class Shape {
         public:
@@ -158,6 +163,10 @@ int main() {
             delete shape;
             
             return 0;
+            
+            while(i < 10 && i > 10) {
+                
+            }
         }
     )";
     

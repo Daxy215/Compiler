@@ -210,8 +210,14 @@ std::vector<Token> Lexer::generateTokens(std::string code) {
                 type = TokenType::STRUCT;
             } else if (currentToken == "class") {
                 type = TokenType::CLASS;
+            } else if (currentToken == "enum") {
+                type = TokenType::ENUM;
             } else if(currentToken == "for") {
                 type = TokenType::FOR_LOOP;
+            } else if(currentToken == "while") {
+                type = TokenType::WHILE_LOOP;
+            } else if(currentToken == "do") {
+                type = TokenType::DO_WHILE_LOOP;
             } else if(currentToken == "if") {
                 type = TokenType::IF_STATEMENT;
             } else if(currentToken == "else") {
