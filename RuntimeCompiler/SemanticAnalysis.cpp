@@ -10,14 +10,14 @@ void SemanticAnalysis::generateSymbolTable(ASTNode* node) {
     printSymbolTable();
     
     if(errors.empty()) {
-        std::cout << "\nNo errors found!";
+        std::cout << "\nNo errors found!\n\n";
         return;
     }
     
     std::cout << "\n\nErrors\n\n";
     
     for (const auto& error : errors) {
-        std::cout << error << std::endl;
+        std::cout << error << '\n';
     }
 }
 

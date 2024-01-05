@@ -27,12 +27,17 @@ enum class NodeType {
     ASSIGNMENT,
     INHERITANCE,
     CONSTRUCTOR,
+    CONDITIONS,
     BLOCK,
     
     FOR_LOOP,
     POINTER,
     REFERENCE,
     FUNCTION_CALL,
+    
+    // Logicals
+    LOGICAL_OR,
+    LOGICAL_AND,
     
     // Statements
     BREAK_STATEMENT,
@@ -76,7 +81,7 @@ struct ASTNode {
     
     std::vector<ASTNode*> children;
     
-    ASTNode(const std::string& val) : type(NodeType::ConstModifier), value(val) {}
+    //ASTNode(const std::string& val) : type(NodeType::ConstModifier), value(val) {}
     ASTNode(NodeType t, const std::string& val) : type(t), value(val) {}
     ~ASTNode() {
         for (auto child : children) {
@@ -141,6 +146,9 @@ private:
     ASTNode* parseFunctionBody();
     ASTNode* parseStatement();
     ASTNode* parseFunctionCall();
+    ASTNode* parseIfStatement();
+    ASTNode* parseElseStatement();
+    ASTNode* parseConditions();
     ASTNode* parseCondition();
     ASTNode* parseVariable(NodeType memberDeclarationType, const std::string& memberType);
     ASTNode* parseReference(NodeType memberDeclarationType, const std::string& memberType);

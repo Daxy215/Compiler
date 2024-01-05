@@ -141,8 +141,14 @@ int main() {
             
         }
         
-        void test(int i) {
-            
+        bool test(int i) {
+            if(i > 5 && i < 10 || (i > 5 && i < 10 || (i == 100))) {
+                return true;  
+            }  else if(i < 5) {
+                return false;
+            } else {
+                return true;
+            }
         }
         
         int main() {

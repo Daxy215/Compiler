@@ -406,96 +406,95 @@ ASTNode* Parser::parseFunction(const std::string& returnType, const std::string&
     // Parse function parameters
     if (match(TokenType::LEFT_PAREN)) { // '('
         consumeToken(); // Consume '('
+        
+        // Parse parameters (if any)
+        std::vector<std::string> parameters = parseFunctionParameters();
+        
+        consumeToken(); // Consume ')'
+        
+        Token c = tokens[currentTokenIndex];
+        
+        //This is for;
+        //virtual void draw() const = 0;
+        //void draw() {}
+        /*TODO;
+         * Use while loop instead for;
+         * void draw() const override
+         */
+        if(match(TokenType::KEYWORD) && (matchNext(TokenType::OPERATOR, "=") || matchNext(TokenType::RIGHT_BRACE))) { //TODO; FOR virtual void draw() const = 0;
+            std::string type = tokens[currentTokenIndex].value;
             
-            // Parse parameters (if any)
-            std::vector<std::string> parameters = parseFunctionParameters();
+            consumeToken(); // Consume 'const' token
             
-            consumeToken(); // Consume ')'
+            Token dd = tokens[currentTokenIndex];
             
-            Token c = tokens[currentTokenIndex];
-            
-            //This is for;
-            //virtual void draw() const = 0;
-            //void draw() {}
-            /*TODO;
-             * Use while loop instead for;
-             * void draw() const override
-             */
-            if(match(TokenType::KEYWORD) && (matchNext(TokenType::OPERATOR, "=") || matchNext(TokenType::RIGHT_BRACE))) { //TODO; FOR virtual void draw() const = 0;
-                std::string type = tokens[currentTokenIndex].value;
+            // Has a body?
+            if(match(TokenType::OPERATOR, "=")) {
+                // No body
                 
-                consumeToken(); // Consume 'const' token
+                consumeToken(); // Consume '=' token
                 
-                Token dd = tokens[currentTokenIndex];
+                Token d = tokens[currentTokenIndex];
                 
-                // Has a body?
-                if(match(TokenType::OPERATOR, "=")) {
-                    // No body
+                if (match(TokenType::INTEGER_LITERAL) && tokens[currentTokenIndex].value == "0") {
+                    consumeToken(); // Consume '0' token
+                    consumeToken(); // Consume ';' token
                     
-                    consumeToken(); // Consume '=' token
+                    // Indicate a pure virtual function and return without attempting to parse the function body
+                    //TODO; Fix this.. "type" can be more than 1..
+                    memberFunction->value = returnType + " " + functionName + "() " + type + " = 0";
                     
-                    Token d = tokens[currentTokenIndex];
+                    //No body found:
+                    memberFunction->children.push_back(new ASTNode(NodeType::FUNCTION_BODY, "EmptyFunctionBody"));
                     
-                    if (match(TokenType::INTEGER_LITERAL) && tokens[currentTokenIndex].value == "0") {
-                        consumeToken(); // Consume '0' token
-                        consumeToken(); // Consume ';' token
-                        
-                        // Indicate a pure virtual function and return without attempting to parse the function body
-                        //TODO; Fix this.. "type" can be more than 1..
-                        memberFunction->value = returnType + " " + functionName + "() " + type + " = 0";
-                        
-                        //No body found:
-                        memberFunction->children.push_back(new ASTNode(NodeType::FUNCTION_BODY, "EmptyFunctionBody"));
-                        
-                        return memberFunction;
-                    }
+                    return memberFunction;
                 }
-            }
-            
-            // Check for modifiers
-            while(!match(TokenType::LEFT_BRACE)) { // '{'
-                std::string type = tokens[currentTokenIndex].value;
-                
-                if(match(TokenType::KEYWORD, "const")) {
-                    memberFunction->children.push_back(new ASTNode(NodeType::ConstModifier, type + ": true"));
-                } else if(match(TokenType::KEYWORD, "override")) {
-                    memberFunction->children.push_back(new ASTNode(NodeType::OverrideModifier, type + ": true"));
-                } else if(match(TokenType::KEYWORD, "final")) {
-                    memberFunction->children.push_back(new ASTNode(NodeType::FinalModifier, type + ": true"));
-                } else if(match(TokenType::KEYWORD, "protected")) {
-                    memberFunction->children.push_back(new ASTNode(NodeType::ProtectedModifier, type + ": true"));
-                }/* else {
-                    std::cout << "Unknown modifier..; " << type << '\n';
-                }*/
-                
-                consumeToken(); // Consume modifier token
-            }
-            
-            Token bb = tokens[currentTokenIndex];
-            
-            // Parse function body
-            //TODO; DONT SKIP
-            ASTNode* functionBody = parseFunctionBody();
-            
-            if (functionBody) {
-                // Add parameters to the member function node
-                
-                for (int i = 0; !parameters.empty() && i < parameters.size() - 1; i+=2) {
-                    std::string paramName = parameters[i];
-                    std::string paramType = parameters[i + 1];
-                    
-                    ASTNode* parameterNode = new ASTNode(NodeType::PARAMETER, paramName);
-                    parameterNode->children.push_back(new ASTNode(NodeType::VARIABLE_TYPE, paramType));
-                    
-                    memberFunction->children.push_back(parameterNode);
-                }
-
-                //Empty function
-                memberFunction->children.push_back(functionBody);
             }
         }
         
-        return memberFunction;
+        // Check for modifiers
+        // TODO; Make this as a function.
+        while(!match(TokenType::LEFT_BRACE)) { // '{'
+            std::string type = tokens[currentTokenIndex].value;
+            
+            if(match(TokenType::KEYWORD, "const")) {
+                memberFunction->children.push_back(new ASTNode(NodeType::ConstModifier, type + ": true"));
+            } else if(match(TokenType::KEYWORD, "override")) {
+                memberFunction->children.push_back(new ASTNode(NodeType::OverrideModifier, type + ": true"));
+            } else if(match(TokenType::KEYWORD, "final")) {
+                memberFunction->children.push_back(new ASTNode(NodeType::FinalModifier, type + ": true"));
+            } else if(match(TokenType::KEYWORD, "protected")) {
+                memberFunction->children.push_back(new ASTNode(NodeType::ProtectedModifier, type + ": true"));
+            }
+            
+            consumeToken(); // Consume modifier token
+        }
+        
+        Token bb = tokens[currentTokenIndex];
+        
+        // Parse function body
+        //TODO; DONT SKIP
+        ASTNode* functionBody = parseFunctionBody();
+        
+        if (functionBody) {
+            // Add parameters to the member function node
+            
+            for (int i = 0; !parameters.empty() && i < parameters.size() - 1; i+=2) {
+                std::string paramName = parameters[i];
+                std::string paramType = parameters[i + 1];
+                
+                ASTNode* parameterNode = new ASTNode(NodeType::PARAMETER, paramName);
+                parameterNode->children.push_back(new ASTNode(NodeType::VARIABLE_TYPE, paramType));
+                
+                memberFunction->children.push_back(parameterNode);
+            }
+            
+            //Empty function
+            memberFunction->children.push_back(functionBody);
+        }
+    }
+    
+    return memberFunction;
 }
 
 ASTNode* Parser::parseFunctionBody() {
@@ -599,10 +598,10 @@ ASTNode* Parser::parseStatement() {
         return new ASTNode(NodeType::FUNCTION_BODY, "EmptyFunctionBody");
     
     // Check if it's a function call
-    ASTNode* functionCallNode = parseFunctionCall();
+    /*ASTNode* functionCallNode = parseFunctionCall();
     if (functionCallNode) {
         return functionCallNode; // Return the function call node or handle it as needed
-    }
+    }*/
     
     // Handle return statement:
     if(match(TokenType::KEYWORD)) {
@@ -711,56 +710,24 @@ ASTNode* Parser::parseStatement() {
                 
                 return forLoopNode;
             }
-        
+            
             break;
         }
     case TokenType::IF_STATEMENT:
         {
-            consumeToken(); // Consume 'if'
-
-            if(!match(TokenType::LEFT_PAREN)) {
-                std::cerr << "Error: Missing '(' after if statement.\n";
-            
-                return nullptr;
-            }
-        
-            consumeToken(); // '('
-        
-            Token t = tokens[currentTokenIndex];
-        
-            ASTNode* conditionNode = parseCondition(); // Parse the condition expression
-            ASTNode* ifBodyNode = parseStatement(); // Parse the body of 'if'
-        
-            // Create an 'if' statement node and attach the condition and body
-            ASTNode* ifStatementNode = new ASTNode(NodeType::IF_STATEMENT, "If Statement");
-            ifStatementNode->children.push_back(conditionNode);
-            ifStatementNode->children.push_back(ifBodyNode);
-
-            // Should be at the end of the if statement.
-            if(match(TokenType::RIGHT_BRACE)) {
-                consumeToken(); // '}'
-            }
-            
-            Token zzz = tokens[currentTokenIndex];
-            
-            return ifStatementNode;
+            return parseIfStatement();
         }
     case TokenType::ELSE_STATEMENT:
         {
-            consumeToken(); // Consume 'else'
-            
-            ASTNode* elseBodyNode = parseStatement(); // Parse the body of 'else'
-        
-            // Create an 'else' statement node and attach the condition and body
-            ASTNode* elseStatementNode = new ASTNode(NodeType::ELSE_STATEMENT, "Else Statement");
-            elseStatementNode->children.push_back(elseBodyNode);
-        
-            // Should be at the end of the else statement.
-            if(match(TokenType::RIGHT_BRACE)) {
-                consumeToken(); // '}'
+            if(matchNext(TokenType::IF_STATEMENT)) {
+                consumeToken(); // Consume 'else'
+                
+                ASTNode* ifStatement = parseIfStatement();
+                
+                return ifStatement;
             }
-        
-            return elseStatementNode;
+            
+            return parseElseStatement();
         }
     }
     
@@ -926,18 +893,102 @@ ASTNode* Parser::parseFunctionCall() {
     return nullptr;
 }
 
+ASTNode* Parser::parseIfStatement() {
+    consumeToken(); // Consume 'if'
+    
+    if(!match(TokenType::LEFT_PAREN)) {
+        std::cerr << "Error: Missing '(' after if statement.\n";
+        
+        return nullptr;
+    }
+    
+    consumeToken(); // '('
+    
+    Token t = tokens[currentTokenIndex];
+    
+    ASTNode* conditionsNode = parseConditions();
+    ASTNode* ifBodyNode = parseStatement(); // Parse the body of 'if'
+    
+    // Create an 'if' statement node and attach the condition and body
+    ASTNode* ifStatementNode = new ASTNode(NodeType::IF_STATEMENT, "If Statement");
+    ifStatementNode->children.push_back(conditionsNode);
+    ifStatementNode->children.push_back(ifBodyNode);
+    
+    // Should be at the end of the if statement.
+    if(match(TokenType::RIGHT_BRACE)) {
+        consumeToken(); // '}'
+    }
+    
+    Token zzz = tokens[currentTokenIndex];
+    
+    return ifStatementNode;
+}
+
+ASTNode* Parser::parseElseStatement() {
+    consumeToken(); // Consume 'else'
+    
+    ASTNode* elseBodyNode = parseStatement(); // Parse the body of 'else'
+    
+    // Create an 'else' statement node and attach the condition and body
+    ASTNode* elseStatementNode = new ASTNode(NodeType::ELSE_STATEMENT, "Else Statement");
+    elseStatementNode->children.push_back(elseBodyNode);
+    
+    // Should be at the end of the else statement.
+    if(match(TokenType::RIGHT_BRACE)) {
+        consumeToken(); // '}'
+    }
+    
+    return elseStatementNode;
+}
+
+ASTNode* Parser::parseConditions() {
+    ASTNode* conditionsNode = new ASTNode(NodeType::CONDITIONS, "CONDITIONS;");
+    
+    while(!match(TokenType::LEFT_BRACE)) {
+        Token z = tokens[currentTokenIndex];
+        
+        if(match(TokenType::LEFT_PAREN)) {
+            consumeToken(); // Consume '('
+            conditionsNode->children.push_back(parseConditions());
+            
+            if(match(TokenType::LEFT_BRACE))
+                break;
+        }
+        
+        Token zxx = tokens[currentTokenIndex];
+        
+        conditionsNode->children.push_back(parseCondition());
+        Token tzz = tokens[currentTokenIndex];
+        
+        if(match(TokenType::LOGICAL_OR) || match(TokenType::LOGICAL_AND)) {
+            conditionsNode->children.push_back(new ASTNode(match(TokenType::LOGICAL_OR) ? NodeType::LOGICAL_OR : NodeType::LOGICAL_AND, tokens[currentTokenIndex].value));
+            
+            consumeToken(); // Consume logical gate.
+        }
+    }
+    
+    return conditionsNode;
+}
+
 ASTNode* Parser::parseCondition() {
     // Parse the condition
     ASTNode* condition = expression();
-
+    
     if(match(TokenType::RIGHT_PAREN)) { // ')'
         consumeToken(); // Consume ')'
     } else {
         std::cerr << "Error: Missing ')' after if statement condition.\n";
     }
     
+    Token tzz = tokens[currentTokenIndex];
+
+    // Assuming this will be for conditions such as:
+    // (i > 5 && i < 10)
+    //if(match(TokenType::RIGHT_PAREN))
+        //consumeToken(); // Consume ')'
+    
     // Check for '{' symbol
-    if (!match(TokenType::LEFT_BRACE)) {
+    if (!match(TokenType::RIGHT_PAREN) && !match(TokenType::LEFT_BRACE) && (!match(TokenType::LOGICAL_AND) && !match(TokenType::LOGICAL_OR))) {
         throw std::runtime_error("Expected '{' after 'if' condition");
     }
     
