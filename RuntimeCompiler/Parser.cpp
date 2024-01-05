@@ -721,7 +721,36 @@ ASTNode* Parser::parseStatement() {
             break;
         }
     case TokenType::DO_WHILE_LOOP: {
+            if(tokens[currentTokenIndex].value == "do") {
+                consumeToken(); // Consume 'do'
+                
+                ASTNode* doWhileloopNode = new ASTNode(NodeType::WHILE_LOOP, "Do While Loop");
+                ASTNode* bodyNode = parseStatement();
+                
+                Token tfjjd = tokens[currentTokenIndex];
+                
+                if(!match(TokenType::RIGHT_BRACE)) {
+                    std::cout << "Missing '}' after do while loop\n";
+                } else
+                    consumeToken(); // Consume '}'
 
+                Token tfdz = tokens[currentTokenIndex];
+                
+                consumeToken(); // Consume 'while'
+
+                if(!match(TokenType::LEFT_PAREN)) {
+                    std::cout << "Missing '( after while in do while loop\n";
+                } else
+                    consumeToken(); // Consume '('
+                
+                ASTNode* conditionsNode = parseConditions();
+                
+                doWhileloopNode->children.push_back(conditionsNode);
+                doWhileloopNode->children.push_back(bodyNode);
+                
+                return doWhileloopNode;
+            }
+            
             break;
         }
     case TokenType::IF_STATEMENT: {

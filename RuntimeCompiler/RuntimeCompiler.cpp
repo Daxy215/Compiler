@@ -167,6 +167,10 @@ int main() {
             while(i < 10 && i > 10) {
                 
             }
+            
+            do {
+                
+            } while(i > 10);
         }
     )";
     
