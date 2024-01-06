@@ -306,6 +306,10 @@ ASTNode* Parser::parseConstructor() {
 ASTNode* Parser::parseMember(NodeType memberDeclarationType) {
     Token token = tokens[currentTokenIndex];
     
+    ASTNode* namespaceUsageNode = parseNamespacesUsage(0);
+    if(namespaceUsageNode)
+        return namespaceUsageNode;
+    
     ASTNode* modifiers = new ASTNode(NodeType::MODIFIERS, "Modifiers; ");
     
     while(match(TokenType::KEYWORD)) {
@@ -332,6 +336,9 @@ ASTNode* Parser::parseMember(NodeType memberDeclarationType) {
         
         consumeToken(); // Consume modifier
     }
+    
+    // Handle it here..
+    //pascalTriangle[i].resize(i + 1);
     
     std::string memberType;
     
@@ -543,7 +550,6 @@ ASTNode* Parser::parseStatement() {
     if (match(TokenType::LEFT_BRACE)) {
         consumeToken(); // Consume '{'
         
-        // Here, parse multiple statements within the block and create an AST node for the block
         ASTNode* blockNode = new ASTNode(NodeType::BLOCK, "Block");
         while (!match(TokenType::RIGHT_BRACE)) {
             if(match(TokenType::SEMICOLON)) {
@@ -553,13 +559,11 @@ ASTNode* Parser::parseStatement() {
             
             Token f = tokens[currentTokenIndex];
             
-            ASTNode* statement = parseStatement(); // Recursively parse individual statements
+            ASTNode* statement = parseStatement();
             
             if (statement) {
                 blockNode->children.push_back(statement);
             } else {
-                // Handle error or unrecognized statement
-                // Skip token or perform error recovery logic
                 currentTokenIndex++;
             }
             
@@ -782,10 +786,6 @@ ASTNode* Parser::parseStatement() {
     }
     
     Token hghg = tokens[currentTokenIndex];
-
-    if(match(TokenType::IDENTIFIER)) {
-        
-    }
     
     return parseMember(NodeType::LOCAL_VARIABLE_DECLARATION);
 }
@@ -937,6 +937,74 @@ ASTNode* Parser::parseCondition() {
     }
     
     return condition;
+}
+
+ASTNode* Parser::parseNamespacesUsage(int counter) {
+    Token t = tokens[currentTokenIndex];
+
+    
+    
+    if (match("std")) {
+        consumeToken(); // Consume "std"
+        
+        Token tzz = tokens[currentTokenIndex];
+        
+        if (!match(TokenType::OPERATOR, "::")) {
+            std::cerr << "Expected '::' after 'std'\n";
+        }
+        
+        consumeToken(); // Consume "::"
+        
+        if (match("vector")) {
+            consumeToken(); // Consume "vector"
+            
+            Token ddtzz = tokens[currentTokenIndex];
+            
+            if (!match(TokenType::LEFT_ANGLE_BRACE)) {
+                std::cerr << "Expected '<' after 'vector'\n";
+            } else
+                consumeToken(); // Consume "<"
+            
+            // std::vector<std::vector<int>> pascalTriangle(n);
+            Token ddzztzz = tokens[currentTokenIndex];
+            
+            ASTNode* vectorType = new ASTNode(NodeType::VECTOR_TYPE, "Vector Type");
+            
+            // std::vector<std::vector<int>> pascalTriangle(n);
+            while(!match(TokenType::RIGHT_ANGLE_BRACE)) {
+                // Parse type.
+                ASTNode* type = parseNamespacesUsage(++counter);
+                
+                if(!type) {
+                    Token z = tokens[currentTokenIndex];
+                    
+                    vectorType->children.push_back(new ASTNode(NodeType::VARIABLE_TYPE, tokens[currentTokenIndex].value));
+                    
+                    consumeToken(); // Consume type.
+                } else {
+                    vectorType->children.push_back(type);
+                }
+            }
+            
+            Token tsz = tokens[currentTokenIndex];
+            
+            if(match(TokenType::RIGHT_ANGLE_BRACE))
+                consumeToken(); // Consume '>'
+            else
+                std::cerr << "Missing '>' after vector\n";
+            
+            return vectorType;
+        } else if(match("string")) {
+            // Possibly in a vector..
+            if(counter > 0) {
+                
+            }
+        }  else {
+            std::cout << "Namespace usage not found; " << tokens[currentTokenIndex].value << "\n";
+        }
+    }
+
+    return nullptr;
 }
 
 ASTNode* Parser::parseVariable(NodeType memberDeclarationType, const std::string& memberType) {

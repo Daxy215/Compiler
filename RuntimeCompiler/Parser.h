@@ -16,6 +16,7 @@ enum class NodeType {
     MEMBER_FUNCTION,
     MEMBER_VARIABLE,
     VARIABLE_TYPE,
+    VECTOR_TYPE,
     INITIALIZER_VARIABLE,
     PARAMETER_VARIABLE,
     FUNCTION_BODY,
@@ -141,7 +142,7 @@ private:
      * - Constructor: Circle()\n
      */
     ASTNode* parseConstructor();
-
+    
     /**
      * Handles Variables
      * TODO; If empty, add "EmptyBody" tag.
@@ -159,6 +160,7 @@ private:
     ASTNode* parseElseStatement();
     ASTNode* parseConditions();
     ASTNode* parseCondition();
+    ASTNode* parseNamespacesUsage(int counter);
     ASTNode* parseVariable(NodeType memberDeclarationType, const std::string& memberType);
     ASTNode* parseReference(NodeType memberDeclarationType, const std::string& memberType);
     std::vector<std::string> parseFunctionParameters();
@@ -167,6 +169,10 @@ private:
     ASTNode* term();
     ASTNode* factor();
 private: // Helper functions
+    auto match(std::string value) -> bool {
+        return currentTokenIndex < tokens.size() && tokens[currentTokenIndex].value == value;
+    }
+    
     auto match(TokenType type) -> bool {
         return currentTokenIndex < tokens.size() && tokens[currentTokenIndex].type == type;    
     }

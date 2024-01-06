@@ -5,7 +5,7 @@
 
 std::map<std::string, TokenType> multiCharOps =
     {{"<<", TokenType::OPERATOR}, // Can also be a bit shift operator
-    {">>", TokenType::OPERATOR}, // Can also be a bit shift operator
+    //{">>", TokenType::OPERATOR}, // Can also be a bit shift operator
     {"::", TokenType::OPERATOR},
     {"->", TokenType::OPERATOR},
     {"++", TokenType::OPERATOR},

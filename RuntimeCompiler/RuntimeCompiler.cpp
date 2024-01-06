@@ -269,8 +269,14 @@ int main() {
                return num * num * num;
            }
     )";
-    
+
     std::string test9 = R"(
+        int main() {
+            pascalTriangle[i].resize(i + 1);
+        }
+    )";
+    
+    std::string test10 = R"(
         #include <iostream>
         #include <string>
         #include <vector>
