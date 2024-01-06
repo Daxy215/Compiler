@@ -277,30 +277,31 @@ int main() {
     )";
     
     std::string test10 = R"(
-        #include <iostream>
-        #include <string>
-        #include <vector>
-        
-        void GeneratePascalTriangle(int n) {
-           std::vector<std::vector<int>> pascalTriangle(n);
-           for (int i = 0; i < n; i++) {
-               pascalTriangle[i].resize(i + 1);
-               pascalTriangle[i][0] = pascalTriangle[i][i] = 1;
-               for (int j = 1; j < i; j++) {
-                   pascalTriangle[i][j] = pascalTriangle[i - 1][j - 1] + pascalTriangle[i - 1][j];
+            #include <iostream>
+            #include <string>
+            #include <vector>
+            
+            void GeneratePascalTriangle(int n) {
+               std::vector<std::vector<int>> pascalTriangle(n);
+               for (int i = 0; i < n; i++) {
+                   pascalTriangle[i].resize(i + 1);
+                   pascalTriangle[i][0] = pascalTriangle[i][i] = 1;
+                   for (int j = 1; j < i; j++) {
+                       pascalTriangle[i][j] = pascalTriangle[i - 1][j - 1] + pascalTriangle[i - 1][j];
+                   }
                }
-           }
-           
-           for (int i = 0; i < n; i++) {
-               for (int j = 0; j <= i; j++) {
+               
+               for (int i = 0; i < n; i++) {
+                   for (int j = 0; j <= i; j++) {
+                             
+                   }
                }
-           }
-        }
-        
-        int main() {
-           GeneratePascalTriangle(10);
-           return 0;
-        }
+            }
+            
+            int main() {
+               GeneratePascalTriangle(10);
+               return 0;
+            }
     )";
     
     Lexer* lexer = new Lexer();

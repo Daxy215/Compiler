@@ -310,6 +310,12 @@ ASTNode* Parser::parseMember(NodeType memberDeclarationType) {
     if(namespaceUsageNode)
         return namespaceUsageNode;
     
+    // Handle it here..
+    //pascalTriangle[i].resize(i + 1);
+    ASTNode* functionCall = parseFunctionCall();
+    if(functionCall)
+        return functionCall;
+    
     ASTNode* modifiers = new ASTNode(NodeType::MODIFIERS, "Modifiers; ");
     
     while(match(TokenType::KEYWORD)) {
@@ -336,9 +342,6 @@ ASTNode* Parser::parseMember(NodeType memberDeclarationType) {
         
         consumeToken(); // Consume modifier
     }
-    
-    // Handle it here..
-    //pascalTriangle[i].resize(i + 1);
     
     std::string memberType;
     
@@ -793,44 +796,66 @@ ASTNode* Parser::parseStatement() {
 ASTNode* Parser::parseFunctionCall() {
     Token t = tokens[currentTokenIndex];
     
-    if (match(TokenType::IDENTIFIER) && matchNext(TokenType::LEFT_PAREN)) {
+    if (match(TokenType::IDENTIFIER)) {
         std::string functionName = tokens[currentTokenIndex].value;
-        std::string objectName = tokens[currentTokenIndex - 3].value;
-        consumeToken(); // Consume function name token
+        consumeToken(); // Consume function name.
         
-        if (match(TokenType::LEFT_PAREN) || matchNext(TokenType::LEFT_PAREN)) {
-            consumeToken(); // Consume '('
+        if(match(TokenType::LEFT_PAREN)) {
+            ASTNode* functionCallNode = new ASTNode(NodeType::FUNCTION_CALL, functionName);
+            Token txx = tokens[currentTokenIndex];
             
-            Token z = tokens[currentTokenIndex];
-            
-            // Parse function arguments (if any)
-            // You might call another function to handle this
-            std::vector<std::string> parameters = parseFunctionParameters();
-            
-            if (match(TokenType::RIGHT_PAREN)) {
-                consumeToken(); // Consume ')'
+            if (match(TokenType::LEFT_PAREN)) {
+                consumeToken(); // Consume '('
                 
-                // Create an AST node for the function call
-                ASTNode* functionCallNode = new ASTNode(NodeType::FUNCTION_CALL, "METHOD CALL: ");
-                functionCallNode->children.push_back(new ASTNode(NodeType::FUNCTION_CALL, "OBJECT: " + objectName));
-                functionCallNode->children.push_back(new ASTNode(NodeType::FUNCTION_CALL, "METHOD: " + functionName));
-                // Attach argument nodes as children to the function call node
+                Token z = tokens[currentTokenIndex];
                 
-                for (int i = 0; !parameters.empty() && i < parameters.size() - 1; i += 2) {
-                    std::string paramName = parameters[i];
-                    std::string paramType = parameters[i + 1];
+                ASTNode* parameters = new ASTNode(NodeType::PARAMETER, "PARAMETERS;");
+                
+                while(!match(TokenType::RIGHT_PAREN)) { // ')'
+                    if(match(TokenType::COMMA))
+                        consumeToken();
                     
-                    ASTNode* parameterNode = new ASTNode(NodeType::PARAMETER, paramName);
-                    parameterNode->children.push_back(new ASTNode(NodeType::VARIABLE_TYPE, paramType));
+                    Token zzaToken = tokens[currentTokenIndex];
                     
-                    functionCallNode->children.push_back(parameterNode);
+                    ASTNode* paramaterNode = expression();
+                    parameters->children.push_back(paramaterNode);
+                }
+                
+                if(parameters)
+                    functionCallNode->children.push_back(parameters);
+                
+                if (match(TokenType::RIGHT_PAREN)) {
+                    consumeToken(); // Consume ')'
+                } else {
+                    std::cerr << "Error; Missing ')' after function call\n";
                 }
                 
                 return functionCallNode;
             }
-        }/* else {
-            currentTokenIndex--;
-        }*/
+        } else if(match(TokenType::LEFT_SQUARE_BRACE)) {
+            consumeToken(); // Consume '['
+            
+            ASTNode* arrayCall = new ASTNode(NodeType::ARRAY_CALL, "Array Call");
+            
+            Token tz = tokens[currentTokenIndex];
+            ASTNode* indexNode = expression();
+            arrayCall->children.push_back(indexNode);
+            
+            if(match(TokenType::RIGHT_SQUARE_BRACE)) {
+                consumeToken(); // Consume ']'
+            } else {
+                std::cerr << "Error; Forgot ']' after array calling\n";
+            }
+            
+            if(match(TokenType::DOT)) {
+                ASTNode* statement = parseStatement();
+                arrayCall->children.push_back(statement);
+            }
+            
+            Token tzzz = tokens[currentTokenIndex];
+
+            return arrayCall;
+        }
     }
     
     // Handle other cases or return nullptr for invalid or unexpected tokens
@@ -942,18 +967,26 @@ ASTNode* Parser::parseCondition() {
 ASTNode* Parser::parseNamespacesUsage(int counter) {
     Token t = tokens[currentTokenIndex];
 
+    //.someFunction();
+    if(match(TokenType::DOT)) {
+        consumeToken(); // Consume '.'
+
+        return parseStatement();
+    }
     
-    
-    if (match("std")) {
-        consumeToken(); // Consume "std"
+    // Possible namespace or class.somefunction;
+    if(match(TokenType::IDENTIFIER) && (matchNext(TokenType::OPERATOR, "::") || matchNext(TokenType::DOT))) {
+        consumeToken(); // Consume namespace/class.
         
-        Token tzz = tokens[currentTokenIndex];
+        std::string referenceType = "";
         
-        if (!match(TokenType::OPERATOR, "::")) {
-            std::cerr << "Expected '::' after 'std'\n";
+        if(match(TokenType::OPERATOR, "::")) {
+            referenceType = "STATIC";
+        } else {
+            referenceType = "LOCAL";
         }
         
-        consumeToken(); // Consume "::"
+        consumeToken(); // Consume reference
         
         if (match("vector")) {
             consumeToken(); // Consume "vector"
@@ -994,16 +1027,39 @@ ASTNode* Parser::parseNamespacesUsage(int counter) {
                 std::cerr << "Missing '>' after vector\n";
             
             return vectorType;
-        } else if(match("string")) {
-            // Possibly in a vector..
-            if(counter > 0) {
+        } else if(match("cout")) {
+            ASTNode* coutStatementNode = new ASTNode(NodeType::COUT_STATEMENT, "cout");
+            consumeToken(); // Consume cout
+            Token za = tokens[currentTokenIndex];
+            
+            while(!match(TokenType::SEMICOLON)) {
+                if(match("<<")) {
+                    coutStatementNode->children.push_back(new ASTNode(NodeType::OPERATOR, "<<"));
+                    
+                    consumeToken(); // Consume <<
+                }
                 
+                Token ss = tokens[currentTokenIndex];
+                
+                if(match(TokenType::STRING_LITERAL)) {
+                    coutStatementNode->children.push_back(new ASTNode(NodeType::STRING, tokens[currentTokenIndex].value));
+                    consumeToken();
+                } else {
+                    coutStatementNode->children.push_back(parseNamespacesUsage(++counter));
+                }
+                
+                Token end = tokens[currentTokenIndex];
             }
-        }  else {
-            std::cout << "Namespace usage not found; " << tokens[currentTokenIndex].value << "\n";
+            
+            return coutStatementNode;
+        } else if(match("endl")) {
+            consumeToken(); // Consume 'endl'
+            return new ASTNode(NodeType::STRING, tokens[currentTokenIndex - 1].value);
+        } else {
+            std::cerr << "Unknown type..; " << tokens[currentTokenIndex].value << "\n";
         }
     }
-
+    
     return nullptr;
 }
 
@@ -1102,10 +1158,12 @@ std::vector<std::string> Parser::parseFunctionParameters() {
         //if (match(TokenType::KEYWORD)) {
             std::string paramType = tokens[currentTokenIndex].value;
             consumeToken(); // Consume parameter type token
-            
+
+            Token zzaToken = tokens[currentTokenIndex];
+        
             if (match(TokenType::IDENTIFIER)) {
                 std::string paramName = tokens[currentTokenIndex].value;
-                //parameters.push_back(paramType + " " + paramName);
+                parameters.push_back(paramType + " " + paramName);
                 parameters.push_back(paramName);
                 parameters.push_back(paramType);
                 

@@ -94,7 +94,7 @@ std::vector<Token> Lexer::generateTokens(std::string code) {
             break;
         case '.':
             pushToken(c, TokenType::DOT);
-            break;
+            continue;
         case '+': case '-': case '/': case '=':
             pushToken(c, TokenType::OPERATOR);
             break;

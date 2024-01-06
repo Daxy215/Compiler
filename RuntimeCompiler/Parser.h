@@ -40,12 +40,15 @@ enum class NodeType {
     POINTER,
     REFERENCE,
     FUNCTION_CALL,
+    ARRAY_CALL,
+    
     
     // Logicals
     LOGICAL_OR,
     LOGICAL_AND,
     
     // Statements
+    COUT_STATEMENT,
     BREAK_STATEMENT,
     CONTINUE_STATEMENT,
     RETURN_STATEMENT,
@@ -56,6 +59,9 @@ enum class NodeType {
     
     // Modifiers
     MODIFIERS,
+
+    // Variable types?
+    STRING,
     
     // Access Modifiers
     ConstModifier,
