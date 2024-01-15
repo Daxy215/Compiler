@@ -59,9 +59,10 @@ enum class NodeType {
     
     // Modifiers
     MODIFIERS,
-
+    
     // Variable types?
     STRING,
+    VALUE,
     
     // Access Modifiers
     ConstModifier,

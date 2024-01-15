@@ -306,6 +306,11 @@ ASTNode* Parser::parseConstructor() {
 ASTNode* Parser::parseMember(NodeType memberDeclarationType) {
     Token token = tokens[currentTokenIndex];
     
+    if(match(TokenType::INTEGER_LITERAL) || match(TokenType::FLOATING_POINT_LITERAL) || match(TokenType::STRING_LITERAL)) {
+        consumeToken();
+        return new ASTNode(NodeType::VALUE, tokens[currentTokenIndex - 1].value);
+    }
+    
     ASTNode* namespaceUsageNode = parseNamespacesUsage(0);
     if(namespaceUsageNode)
         return namespaceUsageNode;
@@ -704,6 +709,12 @@ ASTNode* Parser::parseStatement() {
                 
                 ASTNode* body = parseStatement();
                 forLoopNode->children.push_back(body);
+
+                Token za = tokens[currentTokenIndex];
+                
+                if(match(TokenType::RIGHT_BRACE)) { // '}'
+                    consumeToken(); // Consume '}'
+                }
                 
                 return forLoopNode;
             }
@@ -833,27 +844,51 @@ ASTNode* Parser::parseFunctionCall() {
                 return functionCallNode;
             }
         } else if(match(TokenType::LEFT_SQUARE_BRACE)) {
-            consumeToken(); // Consume '['
+            ASTNode* arrayCall = new ASTNode(NodeType::ARRAY_CALL, "Array call: " + functionName);
             
-            ASTNode* arrayCall = new ASTNode(NodeType::ARRAY_CALL, "Array Call");
+            Token tokenz = tokens[currentTokenIndex];
             
-            Token tz = tokens[currentTokenIndex];
-            ASTNode* indexNode = expression();
-            arrayCall->children.push_back(indexNode);
-            
-            if(match(TokenType::RIGHT_SQUARE_BRACE)) {
-                consumeToken(); // Consume ']'
-            } else {
-                std::cerr << "Error; Forgot ']' after array calling\n";
+            while(match(TokenType::LEFT_SQUARE_BRACE)) {
+                Token token = tokens[currentTokenIndex];
+                consumeToken(); // Consume '['
+                
+                Token tz = tokens[currentTokenIndex];
+                ASTNode* indexNode = expression();
+                arrayCall->children.push_back(indexNode);
+                
+                if(match(TokenType::RIGHT_SQUARE_BRACE)) {
+                    consumeToken(); // Consume ']'
+                } else {
+                    std::cerr << "Error; Forgot ']' after array calling\n";
+                }
             }
             
+            Token z = tokens[currentTokenIndex];
+            
+            //while(!match(TokenType::SEMICOLON)) {
             if(match(TokenType::DOT)) {
                 ASTNode* statement = parseStatement();
                 arrayCall->children.push_back(statement);
+            } else if(match(TokenType::OPERATOR)) {
+                if(match(TokenType::OPERATOR, "+")) {
+                    std::cout << "Yahoo\n";
+                }
+                ASTNode* assignment = new ASTNode(NodeType::ASSIGNMENT, tokens[currentTokenIndex].value);
+                
+                consumeToken(); // Consume 'operator'
+                
+                ASTNode* statement = parseStatement();
+                
+                assignment->children.push_back(statement);
+                arrayCall->children.push_back(assignment);
             }
+            //}
             
             Token tzzz = tokens[currentTokenIndex];
 
+            if(match(TokenType::SEMICOLON))
+                consumeToken(); // Consume ';'
+            
             return arrayCall;
         }
     }
@@ -1144,41 +1179,30 @@ std::vector<std::string> Parser::parseFunctionParameters() {
         
         if(match(TokenType::COMMA))
             consumeToken();
-        
-        /*std::string test = "";
-        while(!match(TokenType::COMMA)) {
-            if(match(TokenType::RIGHT_PAREN))
-                break;
-            
-            //null
-            ASTNode* node = parseMember(NodeType::PARAMETER_VARIABLE);
-            test = node->children[0]->value;
-        }*/
-        
-        //if (match(TokenType::KEYWORD)) {
-            std::string paramType = tokens[currentTokenIndex].value;
-            consumeToken(); // Consume parameter type token
 
-            Token zzaToken = tokens[currentTokenIndex];
-        
-            if (match(TokenType::IDENTIFIER)) {
-                std::string paramName = tokens[currentTokenIndex].value;
-                parameters.push_back(paramType + " " + paramName);
-                parameters.push_back(paramName);
-                parameters.push_back(paramType);
-                
-                consumeToken(); // Consume parameter name token
-                
-                if (!match(TokenType::COMMA)) {
-                    break; // Last parameter, exit loop
-                }
-                
-                consumeToken(); // Consume ',' before the next parameter
-            } else {
-                // Handle syntax errors in parameter declaration
-                std::cout << "ERROR; Seems to have a syntax error in the parameter declaration at: " << currentTokenIndex << "\n"; 
-                //return nullptr;
+        std::string paramType = tokens[currentTokenIndex].value;
+        consumeToken(); // Consume parameter type token
+
+        Token zzaToken = tokens[currentTokenIndex];
+
+        if (match(TokenType::IDENTIFIER)) {
+            std::string paramName = tokens[currentTokenIndex].value;
+            //parameters.push_back(paramType + " " + paramName);
+            parameters.push_back(paramName);
+            parameters.push_back(paramType);
+            
+            consumeToken(); // Consume parameter name token
+            
+            if (!match(TokenType::COMMA)) {
+                break; // Last parameter, exit loop
             }
+
+            consumeToken(); // Consume ',' before the next parameter
+        } else {
+            // Handle syntax errors in parameter declaration
+            std::cout << "ERROR; Seems to have a syntax error in the parameter declaration at: " << currentTokenIndex << "\n";
+        }
+        
         /*} else {
             // Handle syntax errors in parameter declaration
             std::cout << "ERROR; Seems to have a syntax error in the parameter declaration at: " << currentTokenIndex << "\n"; 

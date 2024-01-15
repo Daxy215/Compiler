@@ -277,6 +277,12 @@ int main() {
     )";
     
     std::string test10 = R"(
+        int main() {
+            pascalTriangle[i][0] = pascalTriangle[i][i] = 1;
+        }
+    )";
+    
+    std::string test11 = R"(
             #include <iostream>
             #include <string>
             #include <vector>
@@ -293,7 +299,7 @@ int main() {
                
                for (int i = 0; i < n; i++) {
                    for (int j = 0; j <= i; j++) {
-                             
+                        
                    }
                }
             }
@@ -305,7 +311,7 @@ int main() {
     )";
     
     Lexer* lexer = new Lexer();
-    std::vector<Token> tokens = lexer->generateTokens(test9);
+    std::vector<Token> tokens = lexer->generateTokens(test11);
     
     std::cout << "Generated tokens: \n\n";
     
