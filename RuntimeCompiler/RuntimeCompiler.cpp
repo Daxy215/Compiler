@@ -22,7 +22,7 @@
 #include "AssemblyGenerator.h"
 #include "Lexer.h"
 #include "Parser.h"
-#include "SemanticAnalysis.h"
+#include "SemanticAnalyzer.h"
 #include "TACGenerator.h"
 
 /* CODE BALANCING CHECK */
@@ -115,10 +115,6 @@ int main() {
     std::string complexCode = R"(
         #include <iostream>
         using namespace std;
-        
-        struct test {
-            int someInt = 1;
-        }
         
         class Shape {
         public:
@@ -309,9 +305,32 @@ int main() {
                return 0;
             }
     )";
+
+    std::string test12 = R"(
+        int main() {
+            Run(v + " " + boost::lexical_cast<std::string>(start), tgt - start, start + 1);
+        }
+    )";
+
+    std::string test13 = R"(
+        #include <iostream>
+        #include <string>
+        #include <boost/lexical_cast.hpp>
+        
+        void Run(const std::string& v, int tgt, int start) {
+           for(; tgt >= 2 * start + 1; start++)
+               Run(v + " " + boost::lexical_cast<std::string>(start), tgt - start, start + 1);
+           std::cout << v << ' ' << tgt << std::endl;
+        }
+    
+        int main() {
+           Run(std::string(), 10, 1);
+           getchar();
+        }
+    )";
     
     Lexer* lexer = new Lexer();
-    std::vector<Token> tokens = lexer->generateTokens(test11);
+    std::vector<Token> tokens = lexer->generateTokens(complexCode);
     
     std::cout << "Generated tokens: \n\n";
     
@@ -336,12 +355,11 @@ int main() {
     std::cout << "\n\nAbstract Syntax Tree:" << "\n";
     parser->printAST(root);
     
-    std::cout << "\n\n\nSemanticAnalysis\n\n\n";
+    std::cout << "\n\n\nSemanticAnalyzer\n\n\n";
     
-    //TODO; Rename to: SemanticAnalyzer
-    SemanticAnalysis* semanticAnalysis = new SemanticAnalysis();
-    semanticAnalysis->generateSymbolTable(root);
-
+    SemanticAnalyzer* semanticAnalyzer = new SemanticAnalyzer();
+    semanticAnalyzer->generateSymbolTable(root);
+    
     TACGenerator* tac = new TACGenerator();
     int c = 0;
     tac->generateTAC(root,c);

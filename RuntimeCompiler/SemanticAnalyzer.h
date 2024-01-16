@@ -9,7 +9,7 @@
 
 #include "Parser.h"
 
-class SemanticAnalysis {
+class SemanticAnalyzer {
     /*struct FunctionProperties {
         std::string returnType;
         bool isConst, isFinal, isVirtual;
@@ -39,7 +39,7 @@ class SemanticAnalysis {
     };
 
 public:
-    SemanticAnalysis();
+    SemanticAnalyzer();
     
     void generateSymbolTable(ASTNode* node);
 private:
@@ -65,38 +65,21 @@ private:
 public:
     void printSymbolTable() {
         std::cout << "Symbol Table Contents:" << std::endl;
-
-        /*for (const auto& pair : symbolTable) {
-            const SymbolTable* entry = pair.second;
-
-            if (entry->isFunction) {
-                std::cout << "Function: " << entry->fullName << "\n";
-                std::cout << "   Variables:\n";
-                /*for (const auto& var : entry->variables) {
-                    std::cout << "       - " << var << "\n";
-                }
-                std::cout << "   Actions:\n";
-                for (const auto& action : entry->actions) {
-                    std::cout << "       - " << action << "\n";
-                }#1#
-            } else if (entry->isVariable) {
-                std::cout << "Variable: " << entry->fullName << "\n";
-            }
-        }*/
         
-        /*std::cout << "Functions: \n";
-        for (const auto& entry : symbolTable) {
-            if(entry.second->isFunction)
-                std::cout << entry.second->returnType + " " + entry.second->identifier + " : " + entry.second->fullName <<
-                    " : " << static_cast<int>(entry.second->type) << std::endl;
+        for (const auto& pair : symbolTable) {
+            const std::string& key = pair.first;
+            const SymbolTable* st = pair.second;
+
+            std::cout << "Key: " << key << "\n";
+            std::cout << "Return Type: " << st->returnType << "\n";
+            std::cout << "Identifier: " << st->identifier << "\n";
+            std::cout << "Full Name: " << st->fullName << "\n";
+            std::cout << "Scope: " << st->scope << "\n";
+            std::cout << "Type: " << static_cast<int>(st->type) << "\n";
+            std::cout << "Is Function: " << (st->isFunction ? "Yes" : "No") << "\n";
+            std::cout << "Is Variable: " << (st->isVariable ? "Yes" : "No") << "\n";
+            std::cout << "\n";
         }
-    
-        std::cout << "\nVariables: \n";
-        for (const auto& entry : symbolTable) {
-            if(entry.second->isVariable)
-                std::cout << entry.second->returnType + " " + entry.second->identifier + " : " + entry.second->fullName <<
-                    " : " << static_cast<int>(entry.second->type) << std::endl;
-        }*/
         
         std::cout << "End of Symbol Table" << std::endl;
     }
@@ -133,11 +116,11 @@ private:
         std::vector<std::string> tokens;
         std::istringstream iss(s);
         std::string token;
-    
+        
         while (std::getline(iss, token, delimiter)) {
             tokens.push_back(token);
         }
-    
+        
         return tokens;
     }
     

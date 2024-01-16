@@ -1,0 +1,103 @@
+#include "SemanticAnalyzer.h"
+
+SemanticAnalyzer::SemanticAnalyzer() {
+    
+}
+
+void SemanticAnalyzer::generateSymbolTable(ASTNode* node) {
+    traverseNodes(node, "GLOBAL");
+    performSemanticChecks();
+    printSymbolTable();
+    
+    if(errors.empty()) {
+        std::cout << "\nNo errors found!\n\n";
+        return;
+    }
+    
+    std::cout << "\n\nErrors\n\n";
+    
+    for (const auto& error : errors) {
+        std::cout << error << '\n';
+    }
+}
+
+void SemanticAnalyzer::traverseNodes(ASTNode* node, std::string currentScope) {
+    if (!node) {
+        return;
+    }
+    
+    switch (node->type) {
+    case NodeType::CLASS: {
+            std::string className = node->value;
+            symbolTable[className] = new SymbolTable("", className, "", currentScope, NodeType::CLASS);
+            currentScope += "::" + className;
+            
+            for (auto child : node->children) {
+                traverseNodes(child, currentScope);
+            }
+            
+            break;
+    }
+    case NodeType::MEMBER_FUNCTION: {
+            std::string funcName = node->value;
+            std::string returnType = node->getChildByType(NodeType::RETURN_TYPE)->getValue();
+            symbolTable[funcName] = new SymbolTable(returnType, funcName, currentScope + "::" + funcName, currentScope, NodeType::MEMBER_FUNCTION);
+                        
+            break;
+    }
+    case NodeType::MEMBER_VARIABLE: {
+            std::string varName = node->value;
+            std::string varType = node->getChildByType(NodeType::VARIABLE_TYPE)->getValue();
+            symbolTable[varName] = new SymbolTable(varType, varName, currentScope + "::" + varName, currentScope, NodeType::MEMBER_VARIABLE);
+            
+            break;
+    }
+    default: {
+            for (auto child : node->children) {
+                traverseNodes(child, currentScope);
+            }
+            
+            break;
+        }
+    }
+}
+
+void SemanticAnalyzer::performSemanticChecks() {
+    for (const auto& entry : symbolTable) {
+        // Check for each entry in the symbol table
+        const std::string& variable = entry.first;
+        const std::string& type = entry.second->identifier;
+        
+        // Perform checks (e.g., type checking, scope checking, etc.)
+        if (!checkVariableDeclaration(variable)) {
+            std::cout << "Error: Variable '" << variable << "' used without declaration" << std::endl;
+            // Handle undeclared variable error
+        }
+        
+        // Perform other checks...
+        // Type checking, scope checking, etc.
+    }
+}
+
+bool SemanticAnalyzer::isFunctionOverloaded(const std::string& functionName, const std::string& scope) {
+    int count = 0;
+    
+    // Iterate through the symbol table to count occurrences of the function name
+    for (const auto& entry : symbolTable) {
+        if(entry.second == nullptr) {
+            std::cout << "Heh? " << entry.first << std::endl;
+            continue;
+        }
+        
+        std::string identifier = entry.second->identifier;
+        
+        // Check if the identifier matches the function name
+        size_t found = identifier.find(functionName);
+        if (found != std::string::npos && found == 0) {
+            count++;
+        }
+    }
+    
+    // If more than one occurrence, function is overloaded
+    return count > 0;
+}

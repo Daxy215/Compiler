@@ -352,8 +352,8 @@ ASTNode* Parser::parseMember(NodeType memberDeclarationType) {
     
     // Ik junky code shush
     if(token.type == TokenType::IDENTIFIER) {
-        memberType = tokens[currentTokenIndex].value;
-        consumeToken();
+        memberType = tokens[currentTokenIndex - 1].value;
+        //consumeToken();
     } else {
         if(currentTokenIndex == 0)
             memberType = tokens[currentTokenIndex].value;
@@ -369,7 +369,7 @@ ASTNode* Parser::parseMember(NodeType memberDeclarationType) {
         consumeToken(); // Consume member
         
         ASTNode* functionNode = parseFunction(memberType, memberName);
-
+        
         if(!isInClass)
             functionNode->isGlobal = true;
         
@@ -428,7 +428,7 @@ ASTNode* Parser::parseMember(NodeType memberDeclarationType) {
 
 ASTNode* Parser::parseFunction(const std::string& returnType, const std::string& functionName) {
     ASTNode* memberFunction = new ASTNode(NodeType::MEMBER_FUNCTION, "Function: " + functionName);
-    memberFunction->children.push_back(new ASTNode(NodeType::RETURN_STATEMENT, "ReturnType: " + returnType));
+    memberFunction->children.push_back(new ASTNode(NodeType::RETURN_TYPE, "ReturnType: " + returnType));
         
     // Parse function parameters
     if (match(TokenType::LEFT_PAREN)) { // '('
@@ -679,13 +679,17 @@ ASTNode* Parser::parseStatement() {
                     consumeToken(); // Consume '('
                 
                 // Parse initialization
-                ASTNode* initNode = parseMember(NodeType::MEMBER_VARIABLE); // Assuming you have a function to parse expressions
-                forLoopNode->children.push_back(initNode);
-                
                 if(!match(TokenType::SEMICOLON)) {
-                    std::cerr << "Syntax Error: Missing semicolon after '" << initNode->value << "' in for loop initialization.\n";
-                } else
+                    ASTNode* initNode = parseMember(NodeType::MEMBER_VARIABLE); // Assuming you have a function to parse expressions
+                    forLoopNode->children.push_back(initNode);
+
+                    if(!match(TokenType::SEMICOLON)) {
+                        std::cerr << "Syntax Error: Missing semicolon after '" << initNode->value << "' in for loop initialization.\n";
+                    } else
+                        consumeToken(); // Consume ';'
+                } else {
                     consumeToken(); // Consume ';'
+                }
                 
                 // Parse condition
                 ASTNode* conditionNode = parseConditions(); // Assuming you have a function to parse expressions
@@ -1022,8 +1026,12 @@ ASTNode* Parser::parseNamespacesUsage(int counter) {
         }
         
         consumeToken(); // Consume reference
+
+        Token zaToken = tokens[currentTokenIndex];
         
-        if (match("vector")) {
+        if(matchNext(TokenType::LEFT_ANGLE_BRACE, "<")) {
+        //if (match("vector")) {
+            std::string vectorType = tokens[currentTokenIndex].value;
             consumeToken(); // Consume "vector"
             
             Token ddtzz = tokens[currentTokenIndex];
@@ -1036,7 +1044,7 @@ ASTNode* Parser::parseNamespacesUsage(int counter) {
             // std::vector<std::vector<int>> pascalTriangle(n);
             Token ddzztzz = tokens[currentTokenIndex];
             
-            ASTNode* vectorType = new ASTNode(NodeType::VECTOR_TYPE, "Vector Type");
+            ASTNode* vectorTypeNode = new ASTNode(NodeType::VECTOR_TYPE, "Vector Type: " + vectorType);
             
             // std::vector<std::vector<int>> pascalTriangle(n);
             while(!match(TokenType::RIGHT_ANGLE_BRACE)) {
@@ -1046,11 +1054,11 @@ ASTNode* Parser::parseNamespacesUsage(int counter) {
                 if(!type) {
                     Token z = tokens[currentTokenIndex];
                     
-                    vectorType->children.push_back(new ASTNode(NodeType::VARIABLE_TYPE, tokens[currentTokenIndex].value));
+                    vectorTypeNode->children.push_back(new ASTNode(NodeType::VARIABLE_TYPE, tokens[currentTokenIndex].value));
                     
                     consumeToken(); // Consume type.
                 } else {
-                    vectorType->children.push_back(type);
+                    vectorTypeNode->children.push_back(type);
                 }
             }
             
@@ -1061,7 +1069,7 @@ ASTNode* Parser::parseNamespacesUsage(int counter) {
             else
                 std::cerr << "Missing '>' after vector\n";
             
-            return vectorType;
+            return vectorTypeNode;
         } else if(match("cout")) {
             ASTNode* coutStatementNode = new ASTNode(NodeType::COUT_STATEMENT, "cout");
             consumeToken(); // Consume cout
@@ -1091,7 +1099,8 @@ ASTNode* Parser::parseNamespacesUsage(int counter) {
             consumeToken(); // Consume 'endl'
             return new ASTNode(NodeType::STRING, tokens[currentTokenIndex - 1].value);
         } else {
-            std::cerr << "Unknown type..; " << tokens[currentTokenIndex].value << "\n";
+            ASTNode* statementNode = parseStatement();
+            //std::cerr << "Unknown type..; " << tokens[currentTokenIndex].value << "\n";
         }
     }
     
@@ -1235,6 +1244,12 @@ ASTNode* Parser::expression() {
         std::string op = tokens[currentTokenIndex++].value;
         
         ASTNode* right = term();
+        
+        if(right == nullptr) {
+            consumeToken(); // Consume 'operator'
+            right = parseStatement();
+        }
+        
         ASTNode* newOpNode = new ASTNode(NodeType::OPERATOR, op);
         newOpNode->children.push_back(left);
         newOpNode->children.push_back(right);
@@ -1291,7 +1306,7 @@ ASTNode* Parser::term() {
     }
     
     left = factor();
-
+    
     Token zzzt = tokens[currentTokenIndex];
     
     while (currentTokenIndex < tokens.size() && (match(TokenType::POINTER) || match(TokenType::OPERATOR)) &&

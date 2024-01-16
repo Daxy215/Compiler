@@ -16,6 +16,7 @@ enum class NodeType {
     MEMBER_FUNCTION,
     MEMBER_VARIABLE,
     VARIABLE_TYPE,
+    RETURN_TYPE,
     VECTOR_TYPE,
     INITIALIZER_VARIABLE,
     PARAMETER_VARIABLE,
@@ -101,6 +102,16 @@ struct ASTNode {
         }
     }
     
+    ASTNode* getChildByType(NodeType nodeType) {
+        for (ASTNode* child : children) {
+            if (child->getType() == nodeType) {
+                return child;
+            }
+        }
+        
+        return nullptr;
+    }
+    
     void setIsGlobal(ASTNode* node, bool cond) {
         if(node == nullptr)
             return;
@@ -110,6 +121,19 @@ struct ASTNode {
         for (auto child : node->children) {
             setIsGlobal(child, cond);
         }
+    }
+
+    // Getters & Setters
+    std::string getValue() {
+        return value;
+    }
+
+    NodeType getType() {
+        return type;
+    }
+    
+    void addChild(const NodeType& nodeType, const std::string& nodeValue) {
+        children.push_back(new ASTNode(nodeType, nodeValue));
     }
 };
 
