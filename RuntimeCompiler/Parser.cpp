@@ -86,13 +86,13 @@ ASTNode* Parser::parseNameSpace() {
     if (match(TokenType::NAMESPACE)) {
         std::string namespaceValue = tokens[currentTokenIndex].value;
         consumeToken(); // Consume the '#include' directive
-            
+        
         // Create an AST node representing the include directive
-        ASTNode* namespaceNode = new ASTNode(NodeType::NAMESPACE, "NAMESPACE: " + namespaceValue);
+        ASTNode* namespaceNode = new ASTNode(NodeType::NAMESPACE, namespaceValue);
         
         return namespaceNode;
     }
-        
+    
     // Handle error or return nullptr for invalid or unexpected tokens
     return nullptr;
 }
@@ -276,16 +276,16 @@ ASTNode* Parser::parseConstructor() {
         while (!match(TokenType::LEFT_BRACE)) {
             // {
             //: radius(r), test(t)..
-
+            
             // Skip comma
             if (match(TokenType::COMMA))
                 consumeToken(); // Consume ','
-
+            
             Token t = tokens[currentTokenIndex];
             std::string paramName = tokens[currentTokenIndex].value;
             consumeToken(); // Consume variable
             consumeToken(); // Consume '('
-
+            
             // We are at the initializer value:
             std::string paramInitNam = tokens[currentTokenIndex].value;
             consumeToken(); // Consume initializer value
@@ -326,23 +326,9 @@ ASTNode* Parser::parseMember(NodeType memberDeclarationType) {
     while(match(TokenType::KEYWORD)) {
         std::string type = tokens[currentTokenIndex].value;
         
-        if(tokens[currentTokenIndex].type == TokenType::REFERENCE) {
-            // Check if it's a pointer/reference
-            std::string pointerType = tokens[currentTokenIndex].value;
-            
-            NodeType nodeType = NodeType::POINTER;
-            if(tokens[currentTokenIndex].type == TokenType::REFERENCE)
-                nodeType = NodeType::REFERENCE;
-            
-            ASTNode* pointerNode = new ASTNode(nodeType, "POINTER_TYPE: " + pointerType);
-            pointerNode->children.push_back(new ASTNode(NodeType::POINTER, "TO: " + tokens[currentTokenIndex - 1].value));
-            
-            modifiers->children.push_back(pointerNode);
-        } else {
-            // Does type exist
-            if(modifiersTypes.count(type)) {
-                modifiers->children.push_back(new ASTNode(modifiersTypes[type], type));
-            }
+        // Does type exist
+        if(modifiersTypes.count(type)) {
+            modifiers->children.push_back(new ASTNode(modifiersTypes[type], type));
         }
         
         consumeToken(); // Consume modifier
@@ -360,6 +346,24 @@ ASTNode* Parser::parseMember(NodeType memberDeclarationType) {
         else
             memberType = tokens[currentTokenIndex - 1].value;
     }
+    
+    /*if(match(TokenType::POINTER) || match(TokenType::REFERENCE)) {
+        // Check if it's a pointer/reference
+        std::string pointerType = tokens[currentTokenIndex].value;
+        
+        NodeType nodeType = NodeType::POINTER;
+        if(tokens[currentTokenIndex].type == TokenType::REFERENCE)
+            nodeType = NodeType::REFERENCE;
+        
+        consumeToken(); // Consume reference
+        
+        ASTNode* pointerNode = new ASTNode(nodeType, "POINTER_TYPE: " + pointerType);
+        pointerNode->children.push_back(new ASTNode(NodeType::POINTER, "TO: " + tokens[currentTokenIndex - 1].value));
+
+        parseReference();
+        
+        modifiers->children.push_back(pointerNode);
+    }*/
     
     Token t = tokens[currentTokenIndex];
     
@@ -387,7 +391,7 @@ ASTNode* Parser::parseMember(NodeType memberDeclarationType) {
     
     Token z = tokens[currentTokenIndex];
     
-    if (matchNext(TokenType::REFERENCE) || matchNext(TokenType::POINTER)) {
+    if (match(TokenType::REFERENCE) || match(TokenType::POINTER)) {
         consumeToken(); // Consume reference
         
         ASTNode* variableNode = parseReference(memberDeclarationType, memberType);
@@ -815,6 +819,14 @@ ASTNode* Parser::parseFunctionCall() {
         std::string functionName = tokens[currentTokenIndex].value;
         consumeToken(); // Consume function name.
         
+        // Handling things like "shape.somefunction();"
+        
+        /*
+        if(match(TokenType::DOT) || match(TokenType::OPERATOR, "->")) {
+            
+        }
+        */
+        
         if(match(TokenType::LEFT_PAREN)) {
             ASTNode* functionCallNode = new ASTNode(NodeType::FUNCTION_CALL, functionName);
             Token txx = tokens[currentTokenIndex];
@@ -869,7 +881,6 @@ ASTNode* Parser::parseFunctionCall() {
             
             Token z = tokens[currentTokenIndex];
             
-            //while(!match(TokenType::SEMICOLON)) {
             if(match(TokenType::DOT)) {
                 ASTNode* statement = parseStatement();
                 arrayCall->children.push_back(statement);
@@ -1004,17 +1015,18 @@ ASTNode* Parser::parseCondition() {
 }
 
 ASTNode* Parser::parseNamespacesUsage(int counter) {
+    std::string functionName = tokens[currentTokenIndex].value;
     Token t = tokens[currentTokenIndex];
-
+    
     //.someFunction();
     if(match(TokenType::DOT)) {
         consumeToken(); // Consume '.'
-
+        
         return parseStatement();
     }
     
     // Possible namespace or class.somefunction;
-    if(match(TokenType::IDENTIFIER) && (matchNext(TokenType::OPERATOR, "::") || matchNext(TokenType::DOT))) {
+    if(match(TokenType::IDENTIFIER) && (matchNext(TokenType::DOT) || matchNext(TokenType::OPERATOR, "->") || matchNext(TokenType::OPERATOR, "::"))) {
         consumeToken(); // Consume namespace/class.
         
         std::string referenceType = "";
@@ -1026,8 +1038,18 @@ ASTNode* Parser::parseNamespacesUsage(int counter) {
         }
         
         consumeToken(); // Consume reference
-
+        
         Token zaToken = tokens[currentTokenIndex];
+
+        // Just a functioncall.
+        //shape.draw(5);
+        if(matchNext(TokenType::LEFT_PAREN)) {
+            ASTNode* functionCallNode = new ASTNode(NodeType::FUNCTION_CALL, functionName);
+            functionCallNode->addChild(NodeType::RETURN_TYPE, referenceType);
+            functionCallNode->addChild(parseFunctionCall());
+
+            return functionCallNode;
+        }
         
         if(matchNext(TokenType::LEFT_ANGLE_BRACE, "<")) {
         //if (match("vector")) {
@@ -1100,6 +1122,7 @@ ASTNode* Parser::parseNamespacesUsage(int counter) {
             return new ASTNode(NodeType::STRING, tokens[currentTokenIndex - 1].value);
         } else {
             ASTNode* statementNode = parseStatement();
+            return statementNode;
             //std::cerr << "Unknown type..; " << tokens[currentTokenIndex].value << "\n";
         }
     }

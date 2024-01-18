@@ -27,9 +27,16 @@ void SemanticAnalyzer::traverseNodes(ASTNode* node, std::string currentScope) {
     }
     
     switch (node->type) {
+    case NodeType::NAMESPACE: {
+            std::string namespaceType = node->value;
+            symbolTable[namespaceType] = new SymbolTable("Namespace", namespaceType, namespaceType, currentScope, node->type);
+            //symbolTable[namespaceType]->isFunction = true;
+            
+            break;
+        }
     case NodeType::CLASS: {
             std::string className = node->value;
-            symbolTable[className] = new SymbolTable("", className, "", currentScope, NodeType::CLASS);
+            symbolTable[className] = new SymbolTable("", className, "", currentScope, node->type);
             currentScope += "::" + className;
             
             for (auto child : node->children) {
@@ -38,17 +45,26 @@ void SemanticAnalyzer::traverseNodes(ASTNode* node, std::string currentScope) {
             
             break;
     }
+    case NodeType::CONSTRUCTOR: {
+            std::string constructorName = node->value;
+            symbolTable[constructorName] = new SymbolTable("Constructor", constructorName, currentScope + "::" + constructorName, currentScope, node->type);
+            symbolTable[constructorName]->isConstructor = true;
+            
+            break;
+        }
     case NodeType::MEMBER_FUNCTION: {
             std::string funcName = node->value;
             std::string returnType = node->getChildByType(NodeType::RETURN_TYPE)->getValue();
-            symbolTable[funcName] = new SymbolTable(returnType, funcName, currentScope + "::" + funcName, currentScope, NodeType::MEMBER_FUNCTION);
-                        
+            symbolTable[funcName] = new SymbolTable(returnType, funcName, currentScope + "::" + funcName, currentScope, node->type);
+            symbolTable[funcName]->isFunction = true;
+            
             break;
     }
     case NodeType::MEMBER_VARIABLE: {
             std::string varName = node->value;
             std::string varType = node->getChildByType(NodeType::VARIABLE_TYPE)->getValue();
-            symbolTable[varName] = new SymbolTable(varType, varName, currentScope + "::" + varName, currentScope, NodeType::MEMBER_VARIABLE);
+            symbolTable[varName] = new SymbolTable(varType, varName, currentScope + "::" + varName, currentScope, node->type);
+            symbolTable[varName]->isVariable = true;
             
             break;
     }

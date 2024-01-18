@@ -32,9 +32,10 @@ class SemanticAnalyzer {
         std::string returnType, identifier, fullName, scope;
         
         //FunctionProperties* functionProperties;
+        bool isConstructor = false;
         bool isFunction = false;
         bool isVariable = false;
-
+        
         NodeType type;
     };
 
@@ -76,6 +77,7 @@ public:
             std::cout << "Full Name: " << st->fullName << "\n";
             std::cout << "Scope: " << st->scope << "\n";
             std::cout << "Type: " << static_cast<int>(st->type) << "\n";
+            std::cout << "Is Function: " << (st->isConstructor ? "Yes" : "No") << "\n";
             std::cout << "Is Function: " << (st->isFunction ? "Yes" : "No") << "\n";
             std::cout << "Is Variable: " << (st->isVariable ? "Yes" : "No") << "\n";
             std::cout << "\n";

@@ -131,9 +131,17 @@ struct ASTNode {
     NodeType getType() {
         return type;
     }
+
+    bool isTypeOf(NodeType other) {
+        return type == other;
+    }
     
     void addChild(const NodeType& nodeType, const std::string& nodeValue) {
         children.push_back(new ASTNode(nodeType, nodeValue));
+    }
+
+    void addChild(ASTNode* node) {
+        children.push_back(node);
     }
 };
 

@@ -76,17 +76,17 @@ std::string execCommand(const char* cmd) {
     return result;
 }
 
-/* Needs c++14 or later.
+/* Needs c++14 or later. */
 template <typename T = int> requires std::is_arithmetic_v<T>
 class Calculator {
 public:
     Calculator(const std::string& expression);
     T exp();
-
+    
 private:
     //std::list<std::string> mTokens;
     std::string mCurrent;
-
+    
     void next();
     T bshift();
     T band();
@@ -101,14 +101,14 @@ private:
 template<typename T = int> requires std::is_arithmetic_v<T>
 T calculate(const std::string& s) {
     return Calculator<T> { s }.exp();
-}*/
+}
 
 int main() {
     //TODO; having classes within classes...
     //TODO; Well it don't detect namespaces within class/function :)
     //TODO; Making it so that it says EMPTY FUNCTION
     //TODO; Expression doesn't work for '++i'
-    //TODO; No support for structs, enums or while loops.
+    //TODO; No support for structs, enums.
     
     //TODO; For the sentifmxi???????? thingy; Check if the overloaded function is within the same class.
     
@@ -153,8 +153,8 @@ int main() {
         }
         
         int main() {
-            int i = 0;
-            Shape* shape = new Circle(5.0f);
+            float i = 5.0f;
+            Shape* shape = new Circle(i);
             shape->draw(5.0);
             delete shape;
             
@@ -171,7 +171,7 @@ int main() {
     )";
     
     std::string testCode = "int i = 5 + 3 * 2;";
-
+    
     std::string test1 = R"(
         class Test {
             public:
@@ -199,7 +199,7 @@ int main() {
             return sum;
         }
     )";
-
+    
     std::string test4 = R"(
         int main() {
             if(x < 5) {
@@ -265,7 +265,7 @@ int main() {
                return num * num * num;
            }
     )";
-
+    
     std::string test9 = R"(
         int main() {
             pascalTriangle[i].resize(i + 1);
