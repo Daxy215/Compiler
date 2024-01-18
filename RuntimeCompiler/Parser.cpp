@@ -392,7 +392,7 @@ ASTNode* Parser::parseMember(NodeType memberDeclarationType) {
     Token z = tokens[currentTokenIndex];
     
     if (match(TokenType::REFERENCE) || match(TokenType::POINTER)) {
-        consumeToken(); // Consume reference
+        //consumeToken(); // Consume reference
         
         ASTNode* variableNode = parseReference(memberDeclarationType, memberType);
         
@@ -1040,7 +1040,7 @@ ASTNode* Parser::parseNamespacesUsage(int counter) {
         consumeToken(); // Consume reference
         
         Token zaToken = tokens[currentTokenIndex];
-
+        
         // Just a functioncall.
         //shape.draw(5);
         if(matchNext(TokenType::LEFT_PAREN)) {
@@ -1162,17 +1162,19 @@ ASTNode* Parser::parseVariable(NodeType memberDeclarationType, const std::string
 }
 
 ASTNode* Parser::parseReference(NodeType memberDeclarationType, const std::string& memberType) {
+    Token tzzz = tokens[currentTokenIndex];
+    
     NodeType pointerType;
     
     if(tokens[currentTokenIndex].type == TokenType::POINTER)
         pointerType = NodeType::POINTER;
     else
         pointerType = NodeType::REFERENCE;
-
+    
     consumeToken(); // Consume pointer
     
     std::string memberName = tokens[currentTokenIndex].value;
-    consumeToken(); // Consume member name
+    consumeToken(); // Consume memberName
     
     ASTNode* memberReference = new ASTNode(memberDeclarationType, memberName);
     memberReference->children.push_back(new ASTNode(NodeType::VARIABLE_TYPE, memberType));
