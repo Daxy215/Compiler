@@ -13,94 +13,27 @@
 
 #include <string>
 #include <iostream>
-#include <list>
-#include <sstream>
 #include <type_traits>
 #include <iomanip>
-#include <cctype>
 
-#include "AssemblyGenerator.h"
-#include "Lexer.h"
-#include "Parser.h"
-#include "SemanticAnalyzer.h"
-#include "TACGenerator.h"
-
-/* CODE BALANCING CHECK */
-bool checkBalance(std::vector<Token>& tokens, TokenType left, TokenType right) {
-    int leftBraceCount = 0;
-    int rightBraceCount = 0;
-    
-    for (const auto& token : tokens) {
-        if (token.type == left) {
-            leftBraceCount++;
-        } else if (token.type == right) {
-            rightBraceCount++;
-            if (rightBraceCount > leftBraceCount) {
-                return false;
-            }
-        }
-    }
-    
-    if (leftBraceCount != rightBraceCount) {
-        return false;
-    }
-    
-    return true;
-}
-
-bool checkCodeBalance(std::vector<Token>& tokens) {
-    bool braces = checkBalance(tokens, TokenType::LEFT_BRACE, TokenType::RIGHT_BRACE);
-    bool parens = checkBalance(tokens, TokenType::LEFT_PAREN, TokenType::RIGHT_PAREN);
-    bool squareBraces = checkBalance(tokens, TokenType::LEFT_SQUARE_BRACE, TokenType::RIGHT_SQUARE_BRACE);
-    //bool angleBrackets = checkBalance(tokens, TokenType::LEFT_ANGLE_BRACE, TokenType::RIGHT_ANGLE_BRACE);
-    
-    if(braces && parens && squareBraces/* && angleBrackets*/) {
-        return true;
-    }
-    
-    return false;
-}
+#include "Compiler.h"
 
 std::string execCommand(const char* cmd) {
     std::array<char, 128> buffer;
     std::string result;
     std::shared_ptr<FILE> pipe(_popen(cmd, "r"), _pclose);
+    
     if (!pipe) {
         throw std::runtime_error("_popen() failed!");
     }
+    
     while (!feof(pipe.get())) {
         if (fgets(buffer.data(), 128, pipe.get()) != nullptr) {
             result += buffer.data();
         }
     }
+    
     return result;
-}
-
-/* Needs c++14 or later. */
-template <typename T = int> requires std::is_arithmetic_v<T>
-class Calculator {
-public:
-    Calculator(const std::string& expression);
-    T exp();
-    
-private:
-    //std::list<std::string> mTokens;
-    std::string mCurrent;
-    
-    void next();
-    T bshift();
-    T band();
-    T bxor();
-    T bor();
-    T plus();
-    T term();
-    T factor();
-    T toNum(const std::string& s) const;
-};
-
-template<typename T = int> requires std::is_arithmetic_v<T>
-T calculate(const std::string& s) {
-    return Calculator<T> { s }.exp();
 }
 
 int main() {
@@ -109,8 +42,16 @@ int main() {
     //TODO; Making it so that it says EMPTY FUNCTION
     //TODO; Expression doesn't work for '++i'
     //TODO; No support for structs, enums.
+    //TODO; Parser don't support maps! Simply add a check for a ',' in the vector.
     
     //TODO; For the sentifmxi???????? thingy; Check if the overloaded function is within the same class.
+
+    /*
+     * Dead Code Elimination: Removing code that doesn't affect the program's output.
+     * Constant Folding: Simplifying expressions with constant operands.
+     * Loop Unrolling: Replicating the loop body to reduce overhead.
+     * Function Inlining: Replacing a function call with the body of the called function.
+     */
     
     std::string complexCode = R"(
         #include <iostream>
@@ -144,7 +85,7 @@ int main() {
         
         bool test(int i) {
             if(i > 5 && i < 10 || (i > 5 && i < 10 || (i == 100))) {
-                return true;  
+                return true;
             }  else if(i < 5) {
                 return false;
             } else {
@@ -158,6 +99,8 @@ int main() {
             shape->draw(5.0);
             delete shape;
             
+            std::cout << "removed :D" << std::endl;
+            
             return 0;
             
             while(i < 10 && i > 10) {
@@ -170,7 +113,34 @@ int main() {
         }
     )";
     
-    std::string testCode = "int i = 5 + 3 * 2;";
+    std::string helloworld = R"(
+        #include <iostream>        
+        
+        int main() {
+            std::cout << "Hello world from compiler!!" << std::endl; 
+        }
+    )";
+    
+    std::string testProgram = R"(
+        int main() {
+            int x = 1;
+            int total = 2 + 4 / 4 * 8;
+            
+            if(x > 4) {
+                std::cout << "Ayoo; " << x << std::endl;
+            } else {
+                std::cout << "Total; " << total << std::endl;
+            }
+        }
+    )";
+    
+    std::string test0 = R"(
+        int main() {
+            if(i > 5 && i < 10 || (i > 5 && i < 10 || (i == 100))) {
+                return 0;
+            }
+        }
+    )";
     
     std::string test1 = R"(
         class Test {
@@ -305,13 +275,13 @@ int main() {
                return 0;
             }
     )";
-
+    
     std::string test12 = R"(
         int main() {
             Run(v + " " + boost::lexical_cast<std::string>(start), tgt - start, start + 1);
         }
     )";
-
+    
     std::string test13 = R"(
         #include <iostream>
         #include <string>
@@ -322,71 +292,22 @@ int main() {
                Run(v + " " + boost::lexical_cast<std::string>(start), tgt - start, start + 1);
            std::cout << v << ' ' << tgt << std::endl;
         }
-    
+        
         int main() {
            Run(std::string(), 10, 1);
            getchar();
         }
     )";
     
-    Lexer* lexer = new Lexer();
-    std::vector<Token> tokens = lexer->generateTokens(complexCode);
-    
-    std::cout << "Generated tokens: \n\n";
-    
-    for (const auto& token : tokens) {
-        std::cout << "Token Type: " << static_cast<int>(token.type) << ", Value: " << token.value << "\n";
-    }
-    
-    std::cout << "\n";
-    
-    // TODO; Check make this a class.. Perhaps inside lexer
-    if(checkCodeBalance(tokens)) {
-        std::cout << "No balancing problems :D\n";
-    } else {
-        std::cout << "Code not balanced\n";
-        
-        return 1;
-    }
-    
-    Parser* parser = new Parser(tokens);
-    ASTNode* root = parser->parseCode();
-    
-    std::cout << "\n\nAbstract Syntax Tree:" << "\n";
-    parser->printAST(root);
-    
-    std::cout << "\n\n\nSemanticAnalyzer\n\n\n";
-    
-    SemanticAnalyzer* semanticAnalyzer = new SemanticAnalyzer();
-    semanticAnalyzer->generateSymbolTable(root);
-    
-    TACGenerator* tac = new TACGenerator();
-    int c = 0;
-    tac->generateTAC(root,c);
-    
-    for(std::string f : tac->tac)
-        std::cout << f << '\n';
-    
-    return 0;
-    
-    // Sample AST representing an arithmetic expression: 5 + 3 * 2
-    
-    AssemblyGenerator* assemblyGenerator = new AssemblyGenerator();
-    assemblyGenerator->generateAssembly("generated_code.asm", tac->tac);
-    
-    std::cout << "\n\n\n\n";
-    
-    // Print file content(for testing)
-    std::ifstream f("generated_code.asm");
-    
-    if (f.is_open())
-        std::cout << f.rdbuf();
+    Compiler* compiler = new Compiler();
+    compiler->compileCode(testProgram);
     
     std::cout << "\n\n\n\n";
     
 #if defined(__x86_64__) || defined(_M_X64)
     std::system("nasm -f win64 generated_code.asm -o generated_code.obj"); // For 64-bit assembly
-    std::system(R"("C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.38.33130\bin\Hostx64\x64\link.exe" generated_code.obj /subsystem:windows /entry:_start /libpath:./libs/x64 /nodefaultlib kernel32.lib user32.lib /largeaddressaware:no)"); // Linking for 64-bit architecture
+    //std::system(R"("C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.38.33130\bin\Hostx64\x64\link.exe" generated_code.obj /subsystem:windows /entry:main /libpath:./libs/x64 /nodefaultlib kernel32.lib user32.lib /largeaddressaware:no)"); // Linking for 64-bit architecture
+    std::system("gcc generated_code.obj -o generated_code.exe");
 #else
     std::system("nasm -f win32 generated_code.asm -o generated_code.o"); // For 32-bit assembly
     std::system("ld -m elf_i386 -o generated_executable generated_code.o"); // Linking for 32-bit architecture

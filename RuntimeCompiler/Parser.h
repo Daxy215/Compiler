@@ -43,7 +43,6 @@ enum class NodeType {
     FUNCTION_CALL,
     ARRAY_CALL,
     
-    
     // Logicals
     LOGICAL_OR,
     LOGICAL_AND,
@@ -56,6 +55,7 @@ enum class NodeType {
     DELETE_STATEMENT,
     COMPOUND_ASSIGNMENT,
     IF_STATEMENT,
+    ELSEIF_STATEMENT,
     ELSE_STATEMENT,
     
     // Modifiers
@@ -76,18 +76,18 @@ enum class NodeType {
     // Variable Modifiers
     ShortModifier,
  };
-
-enum class DataType {
-    INT,
-    FLOAT,
-    DOUBLE,
-    VOID,
-    // Other data types...
-};
+//
+// enum class DataType {
+//     INT,
+//     FLOAT,
+//     DOUBLE,
+//     VOID,
+//     // Other data types...
+// };
 
 struct ASTNode {
     NodeType type;
-    DataType dataType;
+    //DataType dataType;
     
     std::string value;
     bool isGlobal = false;
@@ -101,11 +101,20 @@ struct ASTNode {
             delete child;
         }
     }
-    
+
     ASTNode* getChildByType(NodeType nodeType) {
-        for (ASTNode* child : children) {
-            if (child->getType() == nodeType) {
-                return child;
+        return getChildByType(this, nodeType);
+    }
+    
+    ASTNode* getChildByType(ASTNode* node, NodeType nodeType) {
+        if (node->getType() == nodeType) {
+            return node;
+        }
+        
+        for (ASTNode* child : node->children) {
+            ASTNode* grandChild = getChildByType(child, nodeType);
+            if (grandChild != nullptr) {
+                return grandChild;
             }
         }
         
@@ -147,9 +156,9 @@ struct ASTNode {
 
 class Parser {
 public:
-    Parser(const std::vector<Token>& t) : isInClass(false), currentTokenIndex(0), tokens(t) {}
-
-    ASTNode* parseCode();
+    Parser() : isInClass(false), currentTokenIndex(0) {}
+    
+    ASTNode* parseCode(const std::vector<Token>& t);
 private:
     ASTNode* parseIncludeDirective();
     ASTNode* parseNameSpace();

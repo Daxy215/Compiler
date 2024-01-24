@@ -5,7 +5,7 @@ SemanticAnalyzer::SemanticAnalyzer() {
 }
 
 void SemanticAnalyzer::generateSymbolTable(ASTNode* node) {
-    traverseNodes(node, "GLOBAL");
+    traverseNodes(node, "GLOBAL", nullptr);
     performSemanticChecks();
     printSymbolTable();
     
@@ -21,7 +21,7 @@ void SemanticAnalyzer::generateSymbolTable(ASTNode* node) {
     }
 }
 
-void SemanticAnalyzer::traverseNodes(ASTNode* node, std::string currentScope) {
+void SemanticAnalyzer::traverseNodes(ASTNode* node, std::string currentScope, SymbolTable* parent) {
     if (!node) {
         return;
     }
@@ -36,19 +36,30 @@ void SemanticAnalyzer::traverseNodes(ASTNode* node, std::string currentScope) {
         }
     case NodeType::CLASS: {
             std::string className = node->value;
-            symbolTable[className] = new SymbolTable("", className, "", currentScope, node->type);
+            symbolTable[className] = new SymbolTable("class :D", className, "", currentScope, node->type);
+            symbolTable[className]->isClass = true;
+            symbolTable[className]->properties = new Properties();
+            
+            if(className._Equal("Circle")) {
+                std::cout << "class;  " << className << " ; " << symbolTable[className]->identifier << std::endl;
+            }
+            
             currentScope += "::" + className;
             
             for (auto child : node->children) {
-                traverseNodes(child, currentScope);
+                traverseNodes(child, currentScope, symbolTable[className]);
             }
             
             break;
     }
     case NodeType::CONSTRUCTOR: {
             std::string constructorName = node->value;
-            symbolTable[constructorName] = new SymbolTable("Constructor", constructorName, currentScope + "::" + constructorName, currentScope, node->type);
-            symbolTable[constructorName]->isConstructor = true;
+            symbolTable[currentScope + "::" + constructorName] = new SymbolTable("Constructor", constructorName, currentScope + "::" + constructorName, currentScope, node->type);
+            symbolTable[currentScope + "::" + constructorName]->isConstructor = true;
+            
+            if(parent) {
+                parent->properties->addFunction(symbolTable[currentScope + "::" + constructorName]->properties);
+            }
             
             break;
         }
@@ -58,6 +69,9 @@ void SemanticAnalyzer::traverseNodes(ASTNode* node, std::string currentScope) {
             symbolTable[funcName] = new SymbolTable(returnType, funcName, currentScope + "::" + funcName, currentScope, node->type);
             symbolTable[funcName]->isFunction = true;
             
+            if(parent)
+                parent->properties->addFunction(symbolTable[funcName]->properties);
+            
             break;
     }
     case NodeType::MEMBER_VARIABLE: {
@@ -66,11 +80,14 @@ void SemanticAnalyzer::traverseNodes(ASTNode* node, std::string currentScope) {
             symbolTable[varName] = new SymbolTable(varType, varName, currentScope + "::" + varName, currentScope, node->type);
             symbolTable[varName]->isVariable = true;
             
+            if(parent)
+                parent->properties->addMember(symbolTable[varName]->properties);
+            
             break;
     }
     default: {
             for (auto child : node->children) {
-                traverseNodes(child, currentScope);
+                traverseNodes(child, currentScope, parent);
             }
             
             break;

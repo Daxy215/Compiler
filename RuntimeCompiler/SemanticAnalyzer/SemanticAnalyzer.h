@@ -7,44 +7,20 @@
 #include <string>
 #include <unordered_map>
 
-#include "Parser.h"
+#include "SymbolTable.h"
+#include "../Parser.h"
 
 class SemanticAnalyzer {
-    /*struct FunctionProperties {
-        std::string returnType;
-        bool isConst, isFinal, isVirtual;
+    /*struct ConstructorProperties {
         
-        std::vector<std::string> parameters;
     };*/
-    
-    struct SymbolTable {
-        SymbolTable(const std::string& return_type, const std::string& identifier, const std::string& full_name,
-                    const std::string& scope,
-                    NodeType type)
-            : returnType(return_type),
-              identifier(identifier),
-              fullName(full_name),
-              scope(scope),
-              type(type) {
-            
-        }
-    
-        std::string returnType, identifier, fullName, scope;
-        
-        //FunctionProperties* functionProperties;
-        bool isConstructor = false;
-        bool isFunction = false;
-        bool isVariable = false;
-        
-        NodeType type;
-    };
 
 public:
     SemanticAnalyzer();
     
     void generateSymbolTable(ASTNode* node);
 private:
-    void traverseNodes(ASTNode* node, std::string currentScope);
+    void traverseNodes(ASTNode* node, std::string currentScope, SymbolTable* parent);
     void performSemanticChecks();
     bool isFunctionOverloaded(const std::string& functionName, const std::string& scope);
     
@@ -70,14 +46,14 @@ public:
         for (const auto& pair : symbolTable) {
             const std::string& key = pair.first;
             const SymbolTable* st = pair.second;
-
+            
             std::cout << "Key: " << key << "\n";
             std::cout << "Return Type: " << st->returnType << "\n";
             std::cout << "Identifier: " << st->identifier << "\n";
             std::cout << "Full Name: " << st->fullName << "\n";
             std::cout << "Scope: " << st->scope << "\n";
             std::cout << "Type: " << static_cast<int>(st->type) << "\n";
-            std::cout << "Is Function: " << (st->isConstructor ? "Yes" : "No") << "\n";
+            std::cout << "Is Constructor: " << (st->isConstructor ? "Yes" : "No") << "\n";
             std::cout << "Is Function: " << (st->isFunction ? "Yes" : "No") << "\n";
             std::cout << "Is Variable: " << (st->isVariable ? "Yes" : "No") << "\n";
             std::cout << "\n";

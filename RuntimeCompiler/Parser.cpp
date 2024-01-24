@@ -15,7 +15,9 @@ std::map<std::string, NodeType> modifiersTypes =
         {"short", NodeType::ShortModifier},
     };
 
-ASTNode* Parser::parseCode() {
+ASTNode* Parser::parseCode(const std::vector<Token>& t) {
+    this->tokens = t;
+    
     ASTNode* programAST = new ASTNode(NodeType::PROGRAM, "Program");
     
     while (currentTokenIndex < tokens.size() - 1) {
@@ -46,19 +48,9 @@ ASTNode* Parser::parseCode() {
             
             if(node) {
                 currentTokenIndex++;
-                //isInClass = false;*/
             }
-            
-            //std::cout << "didnt find; " << tokens[currentTokenIndex].type << std::endl;
-            // Handle other constructs here (variable declarations, functions, etc.)
-            // For instance, parseVariableDeclaration, parseFunction, etc.
-            // Use similar logic to create respective AST nodes for different constructs
-            // ...
-            
-            // Skip unknown or unsupported constructs
-            //currentTokenIndex++;
         }
-    
+        
         if (node) {
             programAST->children.push_back(node);
         }
@@ -78,7 +70,6 @@ ASTNode* Parser::parseIncludeDirective() {
         return includeNode;
     }
     
-    // Handle error or return nullptr for invalid or unexpected tokens
     return nullptr;
 }
 
@@ -93,7 +84,6 @@ ASTNode* Parser::parseNameSpace() {
         return namespaceNode;
     }
     
-    // Handle error or return nullptr for invalid or unexpected tokens
     return nullptr;
 }
 
@@ -171,7 +161,7 @@ ASTNode* Parser::parseClassDeclaration() {
                     
                     if (match(TokenType::RIGHT_BRACE)) { // }
                         consumeToken(); // Consume '}' for class body end
-
+                        
                         if(match(TokenType::SEMICOLON)) // ';'
                             consumeToken(); // Consume ';'
                         
@@ -186,8 +176,7 @@ ASTNode* Parser::parseClassDeclaration() {
             }
         }
     }
-
-    // Handle error or return nullptr for invalid or unexpected tokens
+    
     return nullptr;
 }
 
@@ -221,7 +210,7 @@ ASTNode* Parser::parseClassBody(std::string className) {
                 consumeToken();
             }
         }
-
+        
         // HERE !!!!!!!!!!!!!!!!
         ASTNode* member = parseMember(NodeType::MEMBER_VARIABLE); // Parse class members (functions, variables, etc.)
         
@@ -234,7 +223,7 @@ ASTNode* Parser::parseClassBody(std::string className) {
             // Skip token or perform error recovery logic
             //currentTokenIndex++;
         }
-
+        
         Token endofclassig = tokens[currentTokenIndex];
     }
     
@@ -359,7 +348,7 @@ ASTNode* Parser::parseMember(NodeType memberDeclarationType) {
         
         ASTNode* pointerNode = new ASTNode(nodeType, "POINTER_TYPE: " + pointerType);
         pointerNode->children.push_back(new ASTNode(NodeType::POINTER, "TO: " + tokens[currentTokenIndex - 1].value));
-
+        
         parseReference();
         
         modifiers->children.push_back(pointerNode);
@@ -398,7 +387,7 @@ ASTNode* Parser::parseMember(NodeType memberDeclarationType) {
         
         if(!modifiers->children.empty())
             variableNode->children.push_back(modifiers);
-
+        
         if(!isInClass)
             variableNode->isGlobal = true;
         
@@ -422,7 +411,7 @@ ASTNode* Parser::parseMember(NodeType memberDeclarationType) {
     
     if(match(TokenType::RIGHT_PAREN))
         consumeToken(); // Consume ')'
-
+    
     if(!isInClass)
         variableNode->isGlobal = true;
     
@@ -433,7 +422,7 @@ ASTNode* Parser::parseMember(NodeType memberDeclarationType) {
 ASTNode* Parser::parseFunction(const std::string& returnType, const std::string& functionName) {
     ASTNode* memberFunction = new ASTNode(NodeType::MEMBER_FUNCTION, "Function: " + functionName);
     memberFunction->children.push_back(new ASTNode(NodeType::RETURN_TYPE, "ReturnType: " + returnType));
-        
+    
     // Parse function parameters
     if (match(TokenType::LEFT_PAREN)) { // '('
         consumeToken(); // Consume '('
@@ -686,7 +675,7 @@ ASTNode* Parser::parseStatement() {
                 if(!match(TokenType::SEMICOLON)) {
                     ASTNode* initNode = parseMember(NodeType::MEMBER_VARIABLE); // Assuming you have a function to parse expressions
                     forLoopNode->children.push_back(initNode);
-
+                    
                     if(!match(TokenType::SEMICOLON)) {
                         std::cerr << "Syntax Error: Missing semicolon after '" << initNode->value << "' in for loop initialization.\n";
                     } else
@@ -717,7 +706,7 @@ ASTNode* Parser::parseStatement() {
                 
                 ASTNode* body = parseStatement();
                 forLoopNode->children.push_back(body);
-
+                
                 Token za = tokens[currentTokenIndex];
                 
                 if(match(TokenType::RIGHT_BRACE)) { // '}'
@@ -732,7 +721,7 @@ ASTNode* Parser::parseStatement() {
     case TokenType::WHILE_LOOP: {
             if(tokens[currentTokenIndex].value == "while") {
                 consumeToken(); // Consume 'while'
-
+                
                 ASTNode* whileloopNode = new ASTNode(NodeType::WHILE_LOOP, "While Loop");
                 
                 if(!match(TokenType::LEFT_PAREN)) {
@@ -742,7 +731,7 @@ ASTNode* Parser::parseStatement() {
                 
                 ASTNode* conditionsNode = parseConditions();
                 ASTNode* bodyNode = parseStatement();
-
+                
                 whileloopNode->children.push_back(conditionsNode);
                 whileloopNode->children.push_back(bodyNode);
                 
@@ -771,11 +760,11 @@ ASTNode* Parser::parseStatement() {
                     std::cout << "Missing '}' after do while loop\n";
                 } else
                     consumeToken(); // Consume '}'
-
+                
                 Token tfdz = tokens[currentTokenIndex];
                 
                 consumeToken(); // Consume 'while'
-
+                
                 if(!match(TokenType::LEFT_PAREN)) {
                     std::cout << "Missing '( after while in do while loop\n";
                 } else
@@ -799,6 +788,8 @@ ASTNode* Parser::parseStatement() {
                 consumeToken(); // Consume 'else'
                 
                 ASTNode* ifStatement = parseIfStatement();
+                ifStatement->value = "Else if Statement";
+                ifStatement->type = NodeType::ELSEIF_STATEMENT;
                 
                 return ifStatement;
             }
@@ -808,6 +799,9 @@ ASTNode* Parser::parseStatement() {
     }
     
     Token hghg = tokens[currentTokenIndex];
+
+    if(match(TokenType::OPERATOR))
+        return expression();
     
     return parseMember(NodeType::LOCAL_VARIABLE_DECLARATION);
 }
@@ -1109,8 +1103,11 @@ ASTNode* Parser::parseNamespacesUsage(int counter) {
                 if(match(TokenType::STRING_LITERAL)) {
                     coutStatementNode->children.push_back(new ASTNode(NodeType::STRING, tokens[currentTokenIndex].value));
                     consumeToken();
+                } else if(match(TokenType::IDENTIFIER) && matchNext(TokenType::OPERATOR, "<<")) {
+                    coutStatementNode->children.push_back(new ASTNode(NodeType::STRING, tokens[currentTokenIndex].value));
+                    consumeToken();
                 } else {
-                    coutStatementNode->children.push_back(parseNamespacesUsage(++counter));
+                    coutStatementNode->children.push_back(parseStatement());
                 }
                 
                 Token end = tokens[currentTokenIndex];
@@ -1150,8 +1147,8 @@ ASTNode* Parser::parseVariable(NodeType memberDeclarationType, const std::string
     }
     
     ASTNode* compoundAssignNode = new ASTNode(NodeType::COMPOUND_ASSIGNMENT, tokens[currentTokenIndex].value);
-
-    //TODO; this is returing nullptr
+    
+    //TODO; this is returing nullptr. When????????????
     consumeToken(); // Consume operator token
     ASTNode* expressionNode = expression(); // Parse expression on the right-hand side of assignment
     
