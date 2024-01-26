@@ -1,7 +1,5 @@
 #include "TACGenerator.h"
 
-#include <set>
-
 using namespace std;
 
 void TACGenerator::generateTAC(ASTNode* node, ASTNode* parent) {

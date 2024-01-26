@@ -1,15 +1,12 @@
 #pragma once
+
 #include <memory>
 #include <string>
 
-#include "Parser.h"
+#include "IRVisitor.h"
+#include "../Parser.h"
 
-class IRVariableDeclaration;
-
-class IRVisitor {
-public:
-    virtual void visit(IRVariableDeclaration* node) = 0;
-};
+// https://cs.lmu.edu/~ray/notes/ir/
 
 class IRNode {
 public:
@@ -34,6 +31,25 @@ public:
     size_t bytes;
 };
 
+class IR {
+public:
+    // (ALLOC, 4, total)
+    IR(std::string command, std::string temp1, std::string temp2)
+        : command(command), temp1(temp1), temp2(temp2) {
+        
+    }
+    
+    // (MUL, temp1, temp2, temp3)
+    IR(std::string command, std::string temp1, std::string temp2, std::string temp3)
+        : command(command), temp1(temp1), temp2(temp2), temp3(temp3) {
+        
+    }
+    
+public:
+    std::string command, temp1, temp2, temp3;
+};
+
+/*
 class IRBinaryOperation : public IRNode {
 public:
     std::string op;
@@ -68,20 +84,22 @@ public:
     std::unique_ptr<IRNode> thenPart;
     std::unique_ptr<IRNode> elsePart;
 };
-
-class CodeGenerator : public IRVisitor {
-public:
-    void visit(IRVariableDeclaration* node) override {
-        // Allocate memory for the variable
-        std::cout << "sub esp, " << node->bytes << "\n"; // Subtract bytes from ESP to allocate memory
-        std::cout << "mov ebp, [" << node->name << "]\n"; // Move the base pointer to the new variable
-        
-        // Assign a value to the variable
-        std::cout << "mov [" << node->name << "], 1\n"; // Move the value 1 to the new variable
-    }
-};
+*/
 
 class IntermediateRepresentation {
 public:
-    std::unique_ptr<IRNode> generateIR(ASTNode* node);
+    void generateIR(ASTNode* node, ASTNode* parent);
+
+    void addCommand(std::string command, std::string temp1, std::string temp2) {
+        commands.push_back(new IR(command, temp1, temp2));
+    }
+    
+    void addCommand(std::string command, std::string temp1, std::string temp2, std::string temp3) {
+        commands.push_back(new IR(command, temp1, temp2, temp3));
+    }
+    
+public:
+    int tempCounter = 1;
+    
+    std::vector<IR*> commands;
 };

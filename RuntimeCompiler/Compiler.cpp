@@ -34,11 +34,19 @@ bool Compiler::compileCode(std::string code) {
     
     std::cout << "\n\nAbstract Syntax Tree:" << "\n";
     parser->printAST(root);
-    
     std::cout << "\n\n\nSemanticAnalyzer\n\n\n";
     
     semanticAnalyzer->generateSymbolTable(root);
-    std::unique_ptr<IRNode> IRNode = intermediateRepresentation->generateIR(root);
+
+    std::cout << "\n\nIR;\n\n";
+    
+    intermediateRepresentation->generateIR(root, nullptr);
+    
+    for(IR* ir : intermediateRepresentation->commands)
+        std::cout << "(" << ir->command << ", " << ir->temp1 << ", " << ir->temp2 << ", " << ir->temp3 << ")" << '\n';
+
+    std::cout << "\n\nTAC;\n\n";
+    
     tacGenerator->generateTAC(root);
     
     for(std::string f : tacGenerator->tac)
@@ -47,15 +55,15 @@ bool Compiler::compileCode(std::string code) {
     //TACEvaluation* evaluation = new TACEvaluation();
     //evaluation->interpretTAC(tac->tac);
     
-    assemblyGenerator->generateAssembly("generated_code.asm", IRNode);
+    //assemblyGenerator->generateAssembly("generated_code.asm");
     
     std::cout << "\n\n\n\n";
     
     // Print file content(for testing)
-    std::ifstream f("generated_code.asm");
+    //std::ifstream f("generated_code.asm");
     
-    if (f.is_open())
-        std::cout << f.rdbuf();
+    //if (f.is_open())
+      //  std::cout << f.rdbuf();
     
     return true;
 }

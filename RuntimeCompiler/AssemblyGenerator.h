@@ -3,12 +3,12 @@
 #include <string>
 #include <vector>
 
-#include "IntermediateRepresentation.h"
+#include "IR/IntermediateRepresentation.h"
 
-class AssemblyGenerator {
+class AssemblyGenerator : public IRVisitor {
 public:
-    void generateAssembly(std::string fileName, std::unique_ptr<IRNode> IRNode);
-
+    void visit(IRVariableDeclaration* node) override;
+    
 private:
     std::vector<std::string> splitString(const std::string &s, char delimiter) {
         std::vector<std::string> tokens;

@@ -120,6 +120,12 @@ int main() {
             std::cout << "Hello world from compiler!!" << std::endl; 
         }
     )";
+
+    std::string expression = R"(
+        int main() {
+            int total = 2 + 4 / 4 * 8;
+        }
+    )";
     
     std::string testProgram = R"(
         int main() {
@@ -300,7 +306,9 @@ int main() {
     )";
     
     Compiler* compiler = new Compiler();
-    compiler->compileCode(testProgram);
+    compiler->compileCode(expression);
+    
+    return 0;
     
     std::cout << "\n\n\n\n";
     

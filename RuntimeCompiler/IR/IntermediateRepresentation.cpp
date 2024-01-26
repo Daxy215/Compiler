@@ -41,17 +41,19 @@ std::map<std::string, size_t> variablesSize = {
  * (ADD, temp1, temp5, total) <- Add temp1, temp5 and store the results total.
  */
 
-std::unique_ptr<IRNode> IntermediateRepresentation::generateIR(ASTNode* node) {
+void IntermediateRepresentation::generateIR(ASTNode* node, ASTNode* parent) {
+    if(node == nullptr)
+        return;
+    
     switch (node->getType()) {
-    case NodeType::CLASS:
-    case NodeType::MEMBER_FUNCTION: {
-            for (auto child : node->children) {
-                std::unique_ptr<IRNode> c = generateIR(child);
-            }
+    //case NodeType::CLASS:
+    //ase NodeType::MEMBER_FUNCTION: {
+            //for (auto child : node->children) {
+            //    std::unique_ptr<IRNode> c = generateIR(child);
+            //}
             
-            break;
-         }
-
+            //break;
+         //}
     case NodeType::MEMBER_VARIABLE:
     case NodeType::LOCAL_VARIABLE_DECLARATION: {
             /*
@@ -65,37 +67,93 @@ std::unique_ptr<IRNode> IntermediateRepresentation::generateIR(ASTNode* node) {
             ASTNode* varType = node->getChildByType(NodeType::VARIABLE_TYPE);
             const size_t variableSize = variablesSize[varType->value];
             
+            // TODO; Maybe remove this??
             IRVariableDeclaration var(node->value, varType->value, variableSize);
-            CodeGenerator generator;
-            var.accept(&generator);
+            
+            // (ALLOC, 4, x)
+            addCommand("ALLOC", std::to_string(variableSize), node->value);
+            
+            ASTNode* assignment = node->getChildByType(NodeType::COMPOUND_ASSIGNMENT);
+            generateIR(assignment->children[0], node);
+            addCommand("INT", assignment->children[0]->value, node->value);
             
             break;
         }
-     case NodeType::OPERATOR: {
-             auto operatorNode = std::make_unique<IROperator>(
-                 node->value,
-                 generateIR(node->children[0]),
-                 generateIR(node->children[1])
-             );
-             
-             return operatorNode;
+    case NodeType::STRING:
+    case NodeType::VALUE:
+    case NodeType::OPERATOR: {
+            /*
+             * int total = 2 + 4 / 4 * 8;
+             *
+             * IR;
+             * (ALLOC, 4, total) <- Allocates 4 bytes of memory and return the address in total.
+             * (INT, 2, temp1) <- Assign an integer value of 2 to a temporary variable.
+             * (INT, 4, temp2) <- Assign an integer value of 2 to a temporary variable.
+             *
+             * Divide temp2(4) by 4.
+             * (DIV, temp2, 4, temp3) <- Divide temp2 by 4 and store it in temp3.
+             * (INT, 8, temp4) <- Assign an integer value of 8 to a temporary variable.
+             * (MUL, temp3, temp4, temp5) <- Multiply temp3 by temp4 and store it in temp5.
+             * (ADD, temp1, temp5, total) <- Add temp1, temp5 and store the results total.
+             */
+            
+            std::string leftOperand = "temp" + std::to_string(tempCounter++);
+            generateIR(node->children[0], node);
+        
+            std::string rightOperand = "temp" + std::to_string(tempCounter++);
+            generateIR(node->children[1], node);
+            
+            addCommand("INT", leftOperand, node->children[0]->value);
+            addCommand("INT", rightOperand, node->children[1]->value);
+            
+            addCommand(node->value,  leftOperand, rightOperand, "temp" + std::to_string(tempCounter));
+            tempCounter++;
+        
+            node->value = "temp" + std::to_string(tempCounter - 1);
+            
+            break;
          }
-    case NodeType::EXPRESSION: {
-            std::cout << "yo" << std::endl;
-            /*if (node->children[0]->getType() == NodeType::ASSIGNMENT) {
-                auto assignment = std::make_unique<IRAssignment>();
-                assignment->variableName = node->children[0]->children[0]->getValue();
-                assignment->value = generateIR(node->children[0]->children[1]);
-                return assignment;
-            }*/
+    case NodeType::COMPOUND_ASSIGNMENT: {
+            ASTNode* assignment = node->getChildByType(NodeType::COMPOUND_ASSIGNMENT);
+            generateIR(assignment->children[0], node);
+            // (ADD, temp1, temp5, total)
+            // (INT, 1, X) <- Assign an integer value of 1 to x.
+            addCommand("INTSSZZS", "temp" + std::to_string(tempCounter - 1), parent->value);
             
             break;
         }
-    }
+    case NodeType::ASSIGNMENT: {
+            std::cout << "NO WAY MAn" << std::endl;
 
-    //TODO;
-    for(auto& c : node->children) {
-         std::unique_ptr<IRNode> x = generateIR(c);
+            
+            
+            break;
+        }
+    /*case NodeType::EXPRESSION: {
+            /*
+             * (INT, 1, X) <- Assign an integer value of 1 to x.
+             #1#
+            
+            // (INT, 1, x)
+            if(parent == nullptr || parent->isTypeOf(NodeType::OPERATOR)) {
+                //TODO; Vartype.
+                //addCommand("INT", node->value, "temp" + std::to_string(tempCounter));
+            } else {
+                ASTNode* varType = parent->getChildByType(NodeType::VARIABLE_TYPE);
+                std::string str = varType->value;
+                
+                for (auto & c: str) c = toupper(c);
+                
+                addCommand(str, node->value, parent->value);
+            }
+            
+            tempCounter++;
+            
+            break;
+        }*/
+    default:
+        for(auto& c : node->children)
+            generateIR(c, parent);
     }
 }
 

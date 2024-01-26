@@ -1,29 +1,34 @@
 #include "AssemblyGenerator.h"
 
-#include <format>
-#include <fstream>
-#include <iostream>
-#include <sstream>
+void AssemblyGenerator::visit(IRVariableDeclaration* node) {
+    // Allocate memory for the variable
+    std::cout << "sub rsp, " << node->bytes << "\n"; // Subtract bytes from ESP to allocate memory
+    std::cout << "mov rbp, [" << node->name << "]\n"; // Move the base pointer to the new variable
+    
+    // Assign a value to the variable
+    //std::cout << "mov [" << node->name << "], 1\n"; // Move the value 1 to the new variable
+}
 
-void AssemblyGenerator::generateAssembly(std::string fileName, std::unique_ptr<IRNode> IRNode) {
+/*
+void AssemblyGenerator::generateAssembly(std::string fileName) {
     std::ofstream outputFile(fileName);
     if (!outputFile.is_open()) {
         std::cerr << "ERROR: Unable to open file for writing!" << '\n';
         return;
     }
 
-    for (auto &node : IRNode) {
-        auto &op = node.;
-        auto &arg = node.second;
-
-        if (op == "ALLOC" || op == "ASSIGN") {
-            std::cout << opMap[op] << " " << arg << "\n";
-        } else if (op == "INT") {
-            std::cout << "mov " << arg << ", eax\n";
-        } else {
-            std::cout << opMap[op] << " eax, ebx\n";
-        }
-    }
+    // for (auto &node : IRNode) {
+    //     auto &op = node.;
+    //     auto &arg = node.second;
+    //
+    //     if (op == "ALLOC" || op == "ASSIGN") {
+    //         std::cout << opMap[op] << " " << arg << "\n";
+    //     } else if (op == "INT") {
+    //         std::cout << "mov " << arg << ", eax\n";
+    //     } else {
+    //         std::cout << opMap[op] << " eax, ebx\n";
+    //     }
+    // }
     
     // Variables
     /*outputFile << "section .data" << '\n';
@@ -91,10 +96,10 @@ void AssemblyGenerator::generateAssembly(std::string fileName, std::unique_ptr<I
         //     outputFile << "\timul eax, [" << arg2 << "]" << '\n';
         //     outputFile << "\tmov [" << varName << "], eax" << '\n';
         // }
-    }*/
+    }*//*
     
     // Exit the process
     //outputFile << "\n\tret" << '\n';
     
     outputFile.close();
-}
+}*/

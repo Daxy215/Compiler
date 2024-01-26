@@ -2,7 +2,7 @@
 #include <string>
 
 #include "AssemblyGenerator.h"
-#include "IntermediateRepresentation.h"
+#include "IR/IntermediateRepresentation.h"
 #include "Lexer.h"
 #include "Parser.h"
 #include "SemanticAnalyzer/SemanticAnalyzer.h"
