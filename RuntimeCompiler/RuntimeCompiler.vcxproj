@@ -157,6 +157,7 @@
   <ItemGroup>
     <ClCompile Include="AssemblyGenerator.cpp" />
     <ClCompile Include="Compiler.cpp" />
+    <ClCompile Include="IR\Evaluator.cpp" />
     <ClCompile Include="IR\IntermediateRepresentation.cpp">
       <RuntimeLibrary>MultiThreadedDebugDll</RuntimeLibrary>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
@@ -390,6 +391,7 @@
   <ItemGroup>
     <ClInclude Include="AssemblyGenerator.h" />
     <ClInclude Include="Compiler.h" />
+    <ClInclude Include="IR\Evaluator.h" />
     <ClInclude Include="IR\IntermediateRepresentation.h" />
     <ClInclude Include="IR\IRVisitor.h" />
     <ClInclude Include="Lexer.h" />

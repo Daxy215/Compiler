@@ -5,6 +5,7 @@
 #include "IR/IntermediateRepresentation.h"
 #include "Lexer.h"
 #include "Parser.h"
+#include "IR/Evaluator.h"
 #include "SemanticAnalyzer/SemanticAnalyzer.h"
 #include "TAC/TACGenerator.h"
 
@@ -57,5 +58,6 @@ private:
     SemanticAnalyzer* semanticAnalyzer = new SemanticAnalyzer();
     TACGenerator* tacGenerator = new TACGenerator();
     IntermediateRepresentation* intermediateRepresentation = new IntermediateRepresentation();
+    Evaluator* evaluator = new Evaluator();
     AssemblyGenerator* assemblyGenerator = new AssemblyGenerator();
 };

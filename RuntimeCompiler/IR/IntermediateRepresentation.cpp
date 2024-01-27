@@ -68,14 +68,15 @@ void IntermediateRepresentation::generateIR(ASTNode* node, ASTNode* parent) {
             const size_t variableSize = variablesSize[varType->value];
             
             // TODO; Maybe remove this??
-            IRVariableDeclaration var(node->value, varType->value, variableSize);
+            //IRVariableDeclaration var(node->value, varType->value, variableSize);
             
             // (ALLOC, 4, x)
             addCommand("ALLOC", std::to_string(variableSize), node->value);
             
             ASTNode* assignment = node->getChildByType(NodeType::COMPOUND_ASSIGNMENT);
             generateIR(assignment->children[0], node);
-            addCommand("INT", assignment->children[0]->value, node->value);
+            
+            addCommand("STORE", assignment->children[0]->value, node->value);
             
             break;
         }
@@ -99,16 +100,16 @@ void IntermediateRepresentation::generateIR(ASTNode* node, ASTNode* parent) {
             
             std::string leftOperand = "temp" + std::to_string(tempCounter++);
             generateIR(node->children[0], node);
-        
+            
             std::string rightOperand = "temp" + std::to_string(tempCounter++);
             generateIR(node->children[1], node);
             
-            addCommand("INT", leftOperand, node->children[0]->value);
-            addCommand("INT", rightOperand, node->children[1]->value);
+            addCommand("STORE", node->children[0]->value, leftOperand);
+            addCommand("STORE", node->children[1]->value, rightOperand);
             
             addCommand(node->value,  leftOperand, rightOperand, "temp" + std::to_string(tempCounter));
             tempCounter++;
-        
+            
             node->value = "temp" + std::to_string(tempCounter - 1);
             
             break;
@@ -118,39 +119,21 @@ void IntermediateRepresentation::generateIR(ASTNode* node, ASTNode* parent) {
             generateIR(assignment->children[0], node);
             // (ADD, temp1, temp5, total)
             // (INT, 1, X) <- Assign an integer value of 1 to x.
-            addCommand("INTSSZZS", "temp" + std::to_string(tempCounter - 1), parent->value);
+            addCommand("INT", "temp" + std::to_string(tempCounter - 1), parent->value);
             
             break;
         }
     case NodeType::ASSIGNMENT: {
             std::cout << "NO WAY MAn" << std::endl;
-
+            
             
             
             break;
         }
-    /*case NodeType::EXPRESSION: {
-            /*
-             * (INT, 1, X) <- Assign an integer value of 1 to x.
-             #1#
-            
-            // (INT, 1, x)
-            if(parent == nullptr || parent->isTypeOf(NodeType::OPERATOR)) {
-                //TODO; Vartype.
-                //addCommand("INT", node->value, "temp" + std::to_string(tempCounter));
-            } else {
-                ASTNode* varType = parent->getChildByType(NodeType::VARIABLE_TYPE);
-                std::string str = varType->value;
-                
-                for (auto & c: str) c = toupper(c);
-                
-                addCommand(str, node->value, parent->value);
-            }
-            
-            tempCounter++;
+    case NodeType::COUT_STATEMENT: {
             
             break;
-        }*/
+        }
     default:
         for(auto& c : node->children)
             generateIR(c, parent);

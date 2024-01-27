@@ -1,5 +1,5 @@
 #include "AssemblyGenerator.h"
-
+/*
 void AssemblyGenerator::visit(IRVariableDeclaration* node) {
     // Allocate memory for the variable
     std::cout << "sub rsp, " << node->bytes << "\n"; // Subtract bytes from ESP to allocate memory
@@ -7,7 +7,51 @@ void AssemblyGenerator::visit(IRVariableDeclaration* node) {
     
     // Assign a value to the variable
     //std::cout << "mov [" << node->name << "], 1\n"; // Move the value 1 to the new variable
+}*/
+
+void AssemblyGenerator::generateCode(const std::vector<IR*>& instructions) {
+    std::cout << "section .data\n";
+
+    // Assuming total is a global variable, and it's 4 bytes
+    for (const IR* ir : instructions) {
+        if (ir->command == "ALLOC" && ir->temp3 == "total") {
+            std::cout << "total resb 4\n";
+        }
+        // Add additional sections for other data if needed
+    }
+
+    std::cout << "\nsection .text\n";
+
+    std::cout << "global main\n";
+    std::cout << "main:\n";
+
+    for (const IR* ir : instructions) {
+        if (ir->command == "STORE") {
+            std::cout << "mov eax, " << ir->temp2 << "\n";
+            std::cout << "mov dword [" << ir->temp1 << "], eax\n";
+        } else {
+            std::cout << "mov eax, " << ir->temp1 << "\n";
+            std::cout << "mov ebx, " << ir->temp2 << "\n";
+
+            if (ir->command == "/") {
+                std::cout << "cdq\n";
+                std::cout << "idiv ebx\n";
+            } else if (ir->command == "*") {
+                std::cout << "imul eax, ebx\n";
+            }
+
+            if (!ir->temp3.empty()) {
+                std::cout << "mov dword [" << ir->temp3 << "], eax\n";
+            }
+        }
+    }
+
+    // Additional code for program termination
+    std::cout << "\nmov eax, 1\n";
+    std::cout << "xor ebx, ebx\n";
+    std::cout << "int 0x80\n";
 }
+
 
 /*
 void AssemblyGenerator::generateAssembly(std::string fileName) {

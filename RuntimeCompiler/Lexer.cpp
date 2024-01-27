@@ -40,11 +40,20 @@ std::map<std::string, TokenType> multiCharOps =
     };
 
 std::vector<Token> Lexer::generateTokens(std::string code) {
+    this->code = code;
+    
     for(size_t i = 0; i < code.size(); ++i) {
         char c = code[i];
         
-        if(c == ' ')
+        if(c == ' ') {
+            currentPos++;
             continue;
+        }
+        
+        if(c == '\n') {
+            currentLine++;
+            continue;
+        }
         
         if(!tokens.empty())
             prevToken = tokens.back();
@@ -52,7 +61,9 @@ std::vector<Token> Lexer::generateTokens(std::string code) {
         if (i + 1 < code.size() && multiCharOps.count(std::string(1, c) + code[i + 1])) {
             std::string type = std::string(1, c) + code[i + 1];
             
-            tokens.push_back({multiCharOps[type], type});
+            tokens.push_back({multiCharOps[type], type, currentPos, currentPos + 1, currentLine, currentColumn});
+            currentPos++;
+            
             i++;
             
             continue;
@@ -99,17 +110,21 @@ std::vector<Token> Lexer::generateTokens(std::string code) {
             pushToken(c, TokenType::OPERATOR);
             break;
         case '*': case '&':
+            TokenType type;
+            
             if (prevToken.type == TokenType::OPERATOR || prevToken.type == TokenType::REFERENCE ||
                 prevToken.type == TokenType::POINTER || prevToken.type == TokenType::STRUCT ||
                 prevToken.type == TokenType::CLASS || prevToken.type == TokenType::IDENTIFIER) {
+                std::string s = code.substr(currentPos, (currentPos + 1) - currentPos);
                 
                 if(c == '*')
-                    tokens.push_back({TokenType::POINTER, std::string(1, c)});
+                    type = TokenType::POINTER;
                 else if(c == '&')
-                    tokens.push_back({TokenType::REFERENCE, std::string(1, c)});
-                } else {
-                    tokens.push_back({TokenType::OPERATOR, std::string(1, c)});
-                }
+                    type = TokenType::REFERENCE;
+            } else
+                type = TokenType::OPERATOR;
+            
+            tokens.push_back({type, std::string(1, c), currentPos, currentPos + 1, currentLine, currentColumn});
             
             break;
         default:
@@ -121,7 +136,7 @@ std::vector<Token> Lexer::generateTokens(std::string code) {
         if (std::isdigit(c) || c == '.') {
             std::string literal;
             bool hasDecimal = false;
-    
+            
             while (std::isdigit(code[i]) || code[i] == '.') {
                 if (code[i] == '.') {
                     if (hasDecimal) {
@@ -136,17 +151,23 @@ std::vector<Token> Lexer::generateTokens(std::string code) {
                 literal += code[i++];
             }
             
+            TokenType type;
+            
             if (hasDecimal) {
                 //TODO; Handle missing ';' after "float i = 5.0f"
                 if(code[i] == 'f') {
                     literal += code[i++];
                 }
-                
-                tokens.push_back({TokenType::FLOATING_POINT_LITERAL, literal});
-            } else {
-                tokens.push_back({TokenType::INTEGER_LITERAL, literal});
-            }
 
+                type = TokenType::FLOATING_POINT_LITERAL;
+            } else {
+                type = TokenType::INTEGER_LITERAL;
+            }
+            
+            std::string s = code.substr(currentPos, (currentPos + literal.length()) - currentPos);
+            tokens.push_back({type, literal, currentPos, currentPos + literal.length(), currentLine, currentColumn});
+            currentPos += literal.length();
+            
             //???
             --i;
             continue;
@@ -159,7 +180,9 @@ std::vector<Token> Lexer::generateTokens(std::string code) {
                 literal += code[i++];
             }
             
-            tokens.push_back({TokenType::STRING_LITERAL, literal});
+            tokens.push_back({TokenType::STRING_LITERAL,
+                literal, currentPos, currentPos + literal.length(), currentLine, currentColumn});
+            currentPos += literal.length();
             
             continue;
         }
@@ -169,6 +192,13 @@ std::vector<Token> Lexer::generateTokens(std::string code) {
             
             if (i + 1 >= code.size() || !(std::isalnum(code[i + 1]) || code[i + 1] == '_')) {
                 break;
+            }
+            
+            if (c == '\n') {
+                currentLine++;
+                currentColumn = 0;
+            } else {
+                //currentColumn++;
             }
             
             ++i;
@@ -232,7 +262,14 @@ std::vector<Token> Lexer::generateTokens(std::string code) {
                 type = TokenType::IDENTIFIER;
             }
             
-            tokens.push_back({type, currentToken});
+            size_t startPos = i - currentToken.length();
+            // + 1 because .length starts from '0'
+            size_t endPos = startPos + currentToken.length() + 1;
+            size_t line = currentLine;
+            size_t column = currentColumn;
+            //std::string some = code.substr(startPos, endPos - startPos);
+            tokens.push_back({type, currentToken, startPos, endPos, line, column});
+            currentPos = endPos;
             currentToken.clear();
         }
     }
@@ -240,12 +277,25 @@ std::vector<Token> Lexer::generateTokens(std::string code) {
     if (!currentToken.empty()) {
         std::cout << "currentToken is NOT empty.\n";
     }
-
+    
     return tokens;
 }
 
 void Lexer::pushToken(char c, TokenType type) {
-    tokens.push_back({type, std::string(1, c)});
+    size_t startPos = currentPos;
+    size_t endPos = currentPos + 1;
+    size_t line = currentLine;
+    size_t column = currentColumn;
+    //std::string s = code.substr(startPos, endPos - startPos);
+    tokens.push_back({type, std::string(1, c), startPos, endPos, line, column});
+    currentPos = endPos;
+    
+    if (c == '\n') {
+        currentLine++;
+        currentColumn = 0;
+    } else {
+        currentColumn++;
+    }
 }
 
 std::string Lexer::extractNamespaceName(const std::string& input) {

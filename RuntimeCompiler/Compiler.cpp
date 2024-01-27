@@ -6,9 +6,18 @@ Compiler::Compiler() {
     
 }
 
+std::string repeat(const std::string& str, int times) {
+    std::string result;
+    for(int i = 0; i < times; ++i) {
+        result += str;
+    }
+    return result;
+}
+
 bool Compiler::compileClass(std::string classPath) {
     return false;
 }
+
 
 bool Compiler::compileCode(std::string code) {
     std::vector<Token> tokens = lexer->generateTokens(code);
@@ -19,7 +28,17 @@ bool Compiler::compileCode(std::string code) {
         std::cout << "Token Type: " << static_cast<int>(token.type) << ", Value: " << token.value << "\n";
     }
     
-    std::cout << "\n";
+    /*Token token = tokens[4];
+    
+    std::string line = code.substr(token.startPos, token.endPos - token.startPos);
+    
+    std::cerr << "Error at line " << token.line << ", column " << token.column << ": " << "Missing semicolon" << "\n";
+    std::cerr << repeat(" ", token.startPos) << line << "\n";
+    std::cerr << repeat(" ", token.startPos) << "^" << "\n";
+    std::cerr << repeat(" ", token.startPos) << "|" << "\n";
+    std::cerr << repeat(" ", token.startPos) << "+-- Missing semicolon at (" << token.line << ":" << token.column << ")\n";
+    
+    std::cout << "\n";*/
     
     // TODO; Check make this a class.. Perhaps inside lexer
     if(checkCodeBalance(tokens)) {
@@ -37,25 +56,29 @@ bool Compiler::compileCode(std::string code) {
     std::cout << "\n\n\nSemanticAnalyzer\n\n\n";
     
     semanticAnalyzer->generateSymbolTable(root);
-
+    
     std::cout << "\n\nIR;\n\n";
     
     intermediateRepresentation->generateIR(root, nullptr);
     
     for(IR* ir : intermediateRepresentation->commands)
         std::cout << "(" << ir->command << ", " << ir->temp1 << ", " << ir->temp2 << ", " << ir->temp3 << ")" << '\n';
-
-    std::cout << "\n\nTAC;\n\n";
     
-    tacGenerator->generateTAC(root);
+    std::cout << "\n\nEVALUATOR;\n\n";
     
-    for(std::string f : tacGenerator->tac)
-        std::cout << f << '\n';
+    evaluator->Evaluate(intermediateRepresentation->commands);
+    
+    //std::cout << "\n\nTAC;\n\n";
+    
+    //tacGenerator->generateTAC(root);
+    
+    //for(std::string f : tacGenerator->tac)
+    //    std::cout << f << '\n';
     
     //TACEvaluation* evaluation = new TACEvaluation();
     //evaluation->interpretTAC(tac->tac);
     
-    //assemblyGenerator->generateAssembly("generated_code.asm");
+    assemblyGenerator->generateCode(intermediateRepresentation->commands);
     
     std::cout << "\n\n\n\n";
     

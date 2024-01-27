@@ -120,9 +120,10 @@ int main() {
             std::cout << "Hello world from compiler!!" << std::endl; 
         }
     )";
-
+    
     std::string expression = R"(
         int main() {
+            int x = 1;
             int total = 2 + 4 / 4 * 8;
         }
     )";

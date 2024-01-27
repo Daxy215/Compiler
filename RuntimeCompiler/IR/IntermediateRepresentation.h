@@ -7,7 +7,7 @@
 #include "../Parser.h"
 
 // https://cs.lmu.edu/~ray/notes/ir/
-
+/*
 class IRNode {
 public:
     virtual ~IRNode() {}
@@ -29,7 +29,7 @@ public:
     std::string name;
     std::string type;
     size_t bytes;
-};
+};*/
 
 class IR {
 public:

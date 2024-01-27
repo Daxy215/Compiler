@@ -7,8 +7,9 @@
 
 class AssemblyGenerator : public IRVisitor {
 public:
-    void visit(IRVariableDeclaration* node) override;
-    
+    //void visit(IRVariableDeclaration* node) override;
+
+    void generateCode(const std::vector<IR*>& irCommands);
 private:
     std::vector<std::string> splitString(const std::string &s, char delimiter) {
         std::vector<std::string> tokens;

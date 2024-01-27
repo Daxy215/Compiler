@@ -136,6 +136,7 @@ enum class TokenType {
 struct Token {
     TokenType type;
     std::string value;
+    size_t startPos, endPos, line, column;
 };
 
 class Lexer {
@@ -148,7 +149,9 @@ private:
     std::string extractNamespaceName(const std::string& input);
     
 private:
-    std::string currentToken;
+    std::string code, currentToken;
+    size_t currentPos, currentLine, currentColumn;
+    
     Token prevToken = {};
     
     std::vector<Token> tokens;
