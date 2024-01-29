@@ -63,7 +63,7 @@ void TACGenerator::generateTAC(ASTNode* node, ASTNode* parent) {
     case NodeType::DO_WHILE_LOOP:
         handleControlFlow(node);
         break;
-    case NodeType::COUT_STATEMENT: {
+    /*case NodeType::COUT_STATEMENT: {
             // Access the children of the COUT_STATEMENT node
             auto children = node->children;
             
@@ -73,7 +73,7 @@ void TACGenerator::generateTAC(ASTNode* node, ASTNode* parent) {
             tac.push_back(tempString + " = \"" + children[1]->value + "\"");
             
             break;
-        }
+        }*/
     default:
         for(auto child : node->children) {
             generateTAC(child, parent);

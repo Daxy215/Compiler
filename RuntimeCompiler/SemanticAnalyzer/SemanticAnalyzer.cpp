@@ -71,9 +71,14 @@ void SemanticAnalyzer::traverseNodes(ASTNode* node, std::string currentScope, Sy
             
             if(parent)
                 parent->properties->addFunction(symbolTable[funcName]->properties);
+
+            for (auto child : node->children) {
+                traverseNodes(child, currentScope, symbolTable[funcName]);
+            }
             
             break;
     }
+    case NodeType::LOCAL_VARIABLE_DECLARATION:
     case NodeType::MEMBER_VARIABLE: {
             std::string varName = node->value;
             std::string varType = node->getChildByType(NodeType::VARIABLE_TYPE)->getValue();
@@ -97,25 +102,16 @@ void SemanticAnalyzer::traverseNodes(ASTNode* node, std::string currentScope, Sy
 
 void SemanticAnalyzer::performSemanticChecks() {
     for (const auto& entry : symbolTable) {
-        // Check for each entry in the symbol table
-        const std::string& variable = entry.first;
-        const std::string& type = entry.second->identifier;
+        const std::string& member = entry.first;
+        const SymbolTable* type = entry.second;
         
-        // Perform checks (e.g., type checking, scope checking, etc.)
-        if (!checkVariableDeclaration(variable)) {
-            std::cout << "Error: Variable '" << variable << "' used without declaration" << std::endl;
-            // Handle undeclared variable error
-        }
         
-        // Perform other checks...
-        // Type checking, scope checking, etc.
     }
 }
 
 bool SemanticAnalyzer::isFunctionOverloaded(const std::string& functionName, const std::string& scope) {
     int count = 0;
     
-    // Iterate through the symbol table to count occurrences of the function name
     for (const auto& entry : symbolTable) {
         if(entry.second == nullptr) {
             std::cout << "Heh? " << entry.first << std::endl;
@@ -124,13 +120,11 @@ bool SemanticAnalyzer::isFunctionOverloaded(const std::string& functionName, con
         
         std::string identifier = entry.second->identifier;
         
-        // Check if the identifier matches the function name
         size_t found = identifier.find(functionName);
         if (found != std::string::npos && found == 0) {
             count++;
         }
     }
     
-    // If more than one occurrence, function is overloaded
     return count > 0;
 }

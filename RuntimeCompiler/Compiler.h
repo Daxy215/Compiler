@@ -3,7 +3,7 @@
 
 #include "AssemblyGenerator.h"
 #include "IR/IntermediateRepresentation.h"
-#include "Lexer.h"
+#include "Lexer/Lexer.h"
 #include "Parser.h"
 #include "IR/Evaluator.h"
 #include "SemanticAnalyzer/SemanticAnalyzer.h"
@@ -17,7 +17,7 @@ public:
     bool compileCode(std::string code);
 
 public:
-    bool checkBalance(std::vector<Token>& tokens, TokenType left, TokenType right) {
+    bool checkBalance(std::vector<Token>& tokens, LexerNameSpace::TokenType left, LexerNameSpace::TokenType right) {
         int leftBraceCount = 0;
         int rightBraceCount = 0;
     
@@ -40,10 +40,10 @@ public:
     }
 
     bool checkCodeBalance(std::vector<Token>& tokens) {
-        bool braces = checkBalance(tokens, TokenType::LEFT_BRACE, TokenType::RIGHT_BRACE);
-        bool parens = checkBalance(tokens, TokenType::LEFT_PAREN, TokenType::RIGHT_PAREN);
-        bool squareBraces = checkBalance(tokens, TokenType::LEFT_SQUARE_BRACE, TokenType::RIGHT_SQUARE_BRACE);
-        //bool angleBrackets = checkBalance(tokens, TokenType::LEFT_ANGLE_BRACE, TokenType::RIGHT_ANGLE_BRACE);
+        bool braces = checkBalance(tokens, LexerNameSpace::TokenType::LEFT_BRACE, LexerNameSpace::TokenType::RIGHT_BRACE);
+        bool parens = checkBalance(tokens, LexerNameSpace::TokenType::LEFT_PAREN, LexerNameSpace::TokenType::RIGHT_PAREN);
+        bool squareBraces = checkBalance(tokens, LexerNameSpace::TokenType::LEFT_SQUARE_BRACE, LexerNameSpace::TokenType::RIGHT_SQUARE_BRACE);
+        //bool angleBrackets = checkBalance(tokens, LexerNameSpace::TokenType::LEFT_ANGLE_BRACE, LexerNameSpace::TokenType::RIGHT_ANGLE_BRACE);
     
         if(braces && parens && squareBraces/* && angleBrackets*/) {
             return true;
@@ -51,7 +51,8 @@ public:
     
         return false;
     }
-    
+public:
+    static std::string code;
 private:
     Lexer* lexer = new Lexer();
     Parser* parser = new Parser();

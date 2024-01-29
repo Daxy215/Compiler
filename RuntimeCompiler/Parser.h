@@ -5,13 +5,16 @@
 
 #include <iostream>
 #include <vector>
-#include "Lexer.h"
+#include "Lexer/Lexer.h"
 
 // Please make this tidier.........
 enum class NodeType {
     // Basic Types
     PROGRAM,
+    
     CLASS,
+    ENUM,
+    
     CLASS_BODY,
     MEMBER_FUNCTION,
     MEMBER_VARIABLE,
@@ -32,6 +35,7 @@ enum class NodeType {
     CONSTRUCTOR,
     CONDITIONS,
     BLOCK,
+    ACCESSTYPE,
     
     // Control Structures
     FOR_LOOP,
@@ -48,7 +52,6 @@ enum class NodeType {
     LOGICAL_AND,
     
     // Statements
-    COUT_STATEMENT,
     BREAK_STATEMENT,
     CONTINUE_STATEMENT,
     RETURN_STATEMENT,
@@ -221,19 +224,19 @@ private: // Helper functions
         return currentTokenIndex < tokens.size() && tokens[currentTokenIndex].value == value;
     }
     
-    auto match(TokenType type) -> bool {
+    auto match(LexerNameSpace::TokenType type) -> bool {
         return currentTokenIndex < tokens.size() && tokens[currentTokenIndex].type == type;    
     }
     
-    auto match(TokenType type, std::string value) -> bool {
+    auto match(LexerNameSpace::TokenType type, std::string value) -> bool {
         return currentTokenIndex < tokens.size() &&  tokens[currentTokenIndex].type == type && tokens[currentTokenIndex].value._Equal(value);
     }
     
-    auto matchNext(TokenType type) -> bool {
+    auto matchNext(LexerNameSpace::TokenType type) -> bool {
         return currentTokenIndex + 1 < tokens.size() - 1 && tokens[currentTokenIndex + 1].type == type;
     }
     
-    auto matchNext(TokenType type, std::string value) -> bool {
+    auto matchNext(LexerNameSpace::TokenType type, std::string value) -> bool {
         return currentTokenIndex + 1 < tokens.size() - 1 && tokens[currentTokenIndex + 1].type == type && tokens[currentTokenIndex + 1].value._Equal(value);
     }
     

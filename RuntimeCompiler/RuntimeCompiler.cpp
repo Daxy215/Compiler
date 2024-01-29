@@ -1,3 +1,5 @@
+
+
 #include <array>
 #include <iostream>
 #include <string>
@@ -45,7 +47,7 @@ int main() {
     //TODO; Parser don't support maps! Simply add a check for a ',' in the vector.
     
     //TODO; For the sentifmxi???????? thingy; Check if the overloaded function is within the same class.
-
+    
     /*
      * Dead Code Elimination: Removing code that doesn't affect the program's output.
      * Constant Folding: Simplifying expressions with constant operands.
@@ -71,7 +73,7 @@ int main() {
             Circle(double r) : radius(r) {}
             
             void draw() const override {
-                const int i = 1 + 2 * 4;
+                std::cout << "Drawing!" << std::endl;
             }
             
             double area() const override {
@@ -114,14 +116,34 @@ int main() {
     )";
     
     std::string helloworld = R"(
-        #include <iostream>        
+        #include <iostream>
+        
+        enum Test {
+            SomeValue,
+            SomeOtherValue
+        }
+        
+        int printHelloWorld() {
+            int x = 8;
+            std::cout << "Hello world from compiler!!" << std::endl;
+        }
         
         int main() {
-            std::cout << "Hello world from compiler!!" << std::endl; 
+            int x = printHelloWorld();
+            
+            if(x = 5) {
+                
+            }
         }
     )";
     
     std::string expression = R"(
+        #include <iostream>
+        
+        void testingFunction() {
+            std::cout << "Values; " << total << std::endl;
+        }
+        
         int main() {
             int x = 1;
             int total = 2 + 4 / 4 * 8;
@@ -307,7 +329,7 @@ int main() {
     )";
     
     Compiler* compiler = new Compiler();
-    compiler->compileCode(expression);
+    compiler->compileCode(helloworld);
     
     return 0;
     

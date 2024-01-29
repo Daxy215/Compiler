@@ -3,40 +3,40 @@
 #include <iostream>
 #include <map>
 
-std::map<std::string, TokenType> multiCharOps =
-    {{"<<", TokenType::OPERATOR}, // Can also be a bit shift operator
-    //{">>", TokenType::OPERATOR}, // Can also be a bit shift operator
-    {"::", TokenType::OPERATOR},
-    {"->", TokenType::OPERATOR},
-    {"++", TokenType::OPERATOR},
-    {"--", TokenType::OPERATOR},
-    {"+=", TokenType::OPERATOR},
-    {"-=", TokenType::OPERATOR},
-    {"*=", TokenType::OPERATOR},
-    {"/=", TokenType::OPERATOR},
-    {"&&", TokenType::LOGICAL_AND},
-    {"||", TokenType::LOGICAL_OR},
-    {"==", TokenType::EQUAL}, //OPERATOR?
-    {"!=", TokenType::NOT_EQUAL},
-    {"<=", TokenType::LESS_THAN_EQUAL},
-    {">=", TokenType::GREATER_THAN_EQUAL},
-    {"<<=", TokenType::LEFT_SHIFT_ASSIGN},
-    {">>=", TokenType::RIGHT_SHIFT_ASSIGN},
-    {"->*", TokenType::POINTER_MEMBER_ACCESS},
-    {"::*", TokenType::SCOPE_POINTER_MEMBER_ACCESS},
-    {"...", TokenType::ELLIPSIS},
-    {"//", TokenType::SINGLE_LINE_COMMENT},
-    {"/*", TokenType::MULTI_LINE_COMMENT_START},
-    {"*/", TokenType::MULTI_LINE_COMMENT_END},
-    {"%=", TokenType::MODULUS_ASSIGN},
-    {"^=", TokenType::BITWISE_XOR_ASSIGN},
-    {"|=", TokenType::BITWISE_OR_ASSIGN},
-    {"&=", TokenType::BITWISE_AND_ASSIGN},
-    {"^=", TokenType::BITWISE_XOR},
-    {"&=", TokenType::BITWISE_AND},
-    {"|=", TokenType::BITWISE_OR},
-    {"%=", TokenType::MODULUS},
-    {"~=", TokenType::BITWISE_NOT},
+std::map<std::string, LexerNameSpace::TokenType> multiCharOps =
+    {{"<<", LexerNameSpace::TokenType::OPERATOR}, // Can also be a bit shift operator
+    //{">>", LexerNameSpace::TokenType::OPERATOR}, // Can also be a bit shift operator
+    {"::", LexerNameSpace::TokenType::OPERATOR},
+    {"->", LexerNameSpace::TokenType::OPERATOR},
+    {"++", LexerNameSpace::TokenType::OPERATOR},
+    {"--", LexerNameSpace::TokenType::OPERATOR},
+    {"+=", LexerNameSpace::TokenType::OPERATOR},
+    {"-=", LexerNameSpace::TokenType::OPERATOR},
+    {"*=", LexerNameSpace::TokenType::OPERATOR},
+    {"/=", LexerNameSpace::TokenType::OPERATOR},
+    {"&&", LexerNameSpace::TokenType::LOGICAL_AND},
+    {"||", LexerNameSpace::TokenType::LOGICAL_OR},
+    {"==", LexerNameSpace::TokenType::EQUAL}, //OPERATOR?
+    {"!=", LexerNameSpace::TokenType::NOT_EQUAL},
+    {"<=", LexerNameSpace::TokenType::LESS_THAN_EQUAL},
+    {">=", LexerNameSpace::TokenType::GREATER_THAN_EQUAL},
+    {"<<=", LexerNameSpace::TokenType::LEFT_SHIFT_ASSIGN},
+    {">>=", LexerNameSpace::TokenType::RIGHT_SHIFT_ASSIGN},
+    {"->*", LexerNameSpace::TokenType::POINTER_MEMBER_ACCESS},
+    {"::*", LexerNameSpace::TokenType::SCOPE_POINTER_MEMBER_ACCESS},
+    {"...", LexerNameSpace::TokenType::ELLIPSIS},
+    {"//", LexerNameSpace::TokenType::SINGLE_LINE_COMMENT},
+    {"/*", LexerNameSpace::TokenType::MULTI_LINE_COMMENT_START},
+    {"*/", LexerNameSpace::TokenType::MULTI_LINE_COMMENT_END},
+    {"%=", LexerNameSpace::TokenType::MODULUS_ASSIGN},
+    {"^=", LexerNameSpace::TokenType::BITWISE_XOR_ASSIGN},
+    {"|=", LexerNameSpace::TokenType::BITWISE_OR_ASSIGN},
+    {"&=", LexerNameSpace::TokenType::BITWISE_AND_ASSIGN},
+    {"^=", LexerNameSpace::TokenType::BITWISE_XOR},
+    {"&=", LexerNameSpace::TokenType::BITWISE_AND},
+    {"|=", LexerNameSpace::TokenType::BITWISE_OR},
+    {"%=", LexerNameSpace::TokenType::MODULUS},
+    {"~=", LexerNameSpace::TokenType::BITWISE_NOT},
     };
 
 std::vector<Token> Lexer::generateTokens(std::string code) {
@@ -71,58 +71,58 @@ std::vector<Token> Lexer::generateTokens(std::string code) {
         
         switch(c) {
         case '(':
-            pushToken(c, TokenType::LEFT_PAREN);
+            pushToken(c, LexerNameSpace::TokenType::LEFT_PAREN);
             break;
         case ')':
-            pushToken(c, TokenType::RIGHT_PAREN);
+            pushToken(c, LexerNameSpace::TokenType::RIGHT_PAREN);
             break;
         case '{':
-            pushToken(c, TokenType::LEFT_BRACE);
+            pushToken(c, LexerNameSpace::TokenType::LEFT_BRACE);
             break;
         case '}':
-            pushToken(c, TokenType::RIGHT_BRACE);
+            pushToken(c, LexerNameSpace::TokenType::RIGHT_BRACE);
             break;
         case '[':
-            pushToken(c, TokenType::LEFT_SQUARE_BRACE);
+            pushToken(c, LexerNameSpace::TokenType::LEFT_SQUARE_BRACE);
             break;
         case ']':
-            pushToken(c, TokenType::RIGHT_SQUARE_BRACE);
+            pushToken(c, LexerNameSpace::TokenType::RIGHT_SQUARE_BRACE);
             break;
         case '<':
-            pushToken(c, TokenType::LEFT_ANGLE_BRACE);
+            pushToken(c, LexerNameSpace::TokenType::LEFT_ANGLE_BRACE);
             break;
         case '>':
-            pushToken(c, TokenType::RIGHT_ANGLE_BRACE);
+            pushToken(c, LexerNameSpace::TokenType::RIGHT_ANGLE_BRACE);
             break;
         case ';':
-            pushToken(c, TokenType::SEMICOLON);
+            pushToken(c, LexerNameSpace::TokenType::SEMICOLON);
             break;
         case ',':
-            pushToken(c, TokenType::COMMA);
+            pushToken(c, LexerNameSpace::TokenType::COMMA);
             break;
         case ':':
-            pushToken(c, TokenType::COLON);
+            pushToken(c, LexerNameSpace::TokenType::COLON);
             break;
         case '.':
-            pushToken(c, TokenType::DOT);
+            pushToken(c, LexerNameSpace::TokenType::DOT);
             continue;
         case '+': case '-': case '/': case '=':
-            pushToken(c, TokenType::OPERATOR);
+            pushToken(c, LexerNameSpace::TokenType::OPERATOR);
             break;
         case '*': case '&':
-            TokenType type;
+            LexerNameSpace::TokenType type;
             
-            if (prevToken.type == TokenType::OPERATOR || prevToken.type == TokenType::REFERENCE ||
-                prevToken.type == TokenType::POINTER || prevToken.type == TokenType::STRUCT ||
-                prevToken.type == TokenType::CLASS || prevToken.type == TokenType::IDENTIFIER) {
+            if (prevToken.type == LexerNameSpace::TokenType::OPERATOR || prevToken.type == LexerNameSpace::TokenType::REFERENCE ||
+                prevToken.type == LexerNameSpace::TokenType::POINTER || prevToken.type == LexerNameSpace::TokenType::STRUCT ||
+                prevToken.type == LexerNameSpace::TokenType::CLASS || prevToken.type == LexerNameSpace::TokenType::IDENTIFIER) {
                 std::string s = code.substr(currentPos, (currentPos + 1) - currentPos);
                 
                 if(c == '*')
-                    type = TokenType::POINTER;
+                    type = LexerNameSpace::TokenType::POINTER;
                 else if(c == '&')
-                    type = TokenType::REFERENCE;
+                    type = LexerNameSpace::TokenType::REFERENCE;
             } else
-                type = TokenType::OPERATOR;
+                type = LexerNameSpace::TokenType::OPERATOR;
             
             tokens.push_back({type, std::string(1, c), currentPos, currentPos + 1, currentLine, currentColumn});
             
@@ -151,7 +151,7 @@ std::vector<Token> Lexer::generateTokens(std::string code) {
                 literal += code[i++];
             }
             
-            TokenType type;
+            LexerNameSpace::TokenType type;
             
             if (hasDecimal) {
                 //TODO; Handle missing ';' after "float i = 5.0f"
@@ -159,9 +159,9 @@ std::vector<Token> Lexer::generateTokens(std::string code) {
                     literal += code[i++];
                 }
 
-                type = TokenType::FLOATING_POINT_LITERAL;
+                type = LexerNameSpace::TokenType::FLOATING_POINT_LITERAL;
             } else {
-                type = TokenType::INTEGER_LITERAL;
+                type = LexerNameSpace::TokenType::INTEGER_LITERAL;
             }
             
             std::string s = code.substr(currentPos, (currentPos + literal.length()) - currentPos);
@@ -180,7 +180,7 @@ std::vector<Token> Lexer::generateTokens(std::string code) {
                 literal += code[i++];
             }
             
-            tokens.push_back({TokenType::STRING_LITERAL,
+            tokens.push_back({LexerNameSpace::TokenType::STRING_LITERAL,
                 literal, currentPos, currentPos + literal.length(), currentLine, currentColumn});
             currentPos += literal.length();
             
@@ -206,14 +206,14 @@ std::vector<Token> Lexer::generateTokens(std::string code) {
         }
         
         if (!currentToken.empty()) {
-            TokenType type;
+            LexerNameSpace::TokenType type;
             
             // TODO; Use a map instead.
             
             if (keywords.find(currentToken) != keywords.end()) {
-                type = TokenType::KEYWORD;
+                type = LexerNameSpace::TokenType::KEYWORD;
             } else if(currentToken == "include") {
-                type = TokenType::PREPROCESSOR_DIRECTIVE;
+                type = LexerNameSpace::TokenType::PREPROCESSOR_DIRECTIVE;
                 
                 while (i + 1 < code.size() && code[i + 1] != '>') {
                     currentToken += code[++i];
@@ -228,7 +228,7 @@ std::vector<Token> Lexer::generateTokens(std::string code) {
                     return tokens;
                 }
             } else if (currentToken == "using") {
-                type = TokenType::NAMESPACE;
+                type = LexerNameSpace::TokenType::NAMESPACE;
                 
                 while (i + 1 < code.size() && code[i + 1] != ';') {
                     currentToken += code[++i];
@@ -237,29 +237,29 @@ std::vector<Token> Lexer::generateTokens(std::string code) {
                 currentToken = extractNamespaceName(currentToken);
                 i++; // Skip ';'
             } else if (currentToken == "struct") {
-                type = TokenType::STRUCT;
+                type = LexerNameSpace::TokenType::STRUCT;
             } else if (currentToken == "class") {
-                type = TokenType::CLASS;
+                type = LexerNameSpace::TokenType::CLASS;
             } else if (currentToken == "enum") {
-                type = TokenType::ENUM;
+                type = LexerNameSpace::TokenType::ENUM;
             } else if(currentToken == "for") {
-                type = TokenType::FOR_LOOP;
+                type = LexerNameSpace::TokenType::FOR_LOOP;
             } else if(currentToken == "while") {
-                type = TokenType::WHILE_LOOP;
+                type = LexerNameSpace::TokenType::WHILE_LOOP;
             } else if(currentToken == "do") {
-                type = TokenType::DO_WHILE_LOOP;
+                type = LexerNameSpace::TokenType::DO_WHILE_LOOP;
             } else if(currentToken == "if") {
-                type = TokenType::IF_STATEMENT;
+                type = LexerNameSpace::TokenType::IF_STATEMENT;
             } else if(currentToken == "else") {
-                type = TokenType::ELSE_STATEMENT;
+                type = LexerNameSpace::TokenType::ELSE_STATEMENT;
             } else if(currentToken == "return") {
-                type = TokenType::RETURN_STATEMENT;
+                type = LexerNameSpace::TokenType::RETURN_STATEMENT;
             } else if(currentToken == "break") {
-                type = TokenType::BREAK_STATEMENT;
+                type = LexerNameSpace::TokenType::BREAK_STATEMENT;
             } else if(currentToken == "continue") {
-                type = TokenType::CONTINUE_STATEMENT;
+                type = LexerNameSpace::TokenType::CONTINUE_STATEMENT;
             } else {
-                type = TokenType::IDENTIFIER;
+                type = LexerNameSpace::TokenType::IDENTIFIER;
             }
             
             size_t startPos = i - currentToken.length();
@@ -281,7 +281,7 @@ std::vector<Token> Lexer::generateTokens(std::string code) {
     return tokens;
 }
 
-void Lexer::pushToken(char c, TokenType type) {
+void Lexer::pushToken(char c, LexerNameSpace::TokenType type) {
     size_t startPos = currentPos;
     size_t endPos = currentPos + 1;
     size_t line = currentLine;

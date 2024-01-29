@@ -33,20 +33,30 @@ public:
 
 class IR {
 public:
+    // (FUNCTION_CALL, "std::cout")
+    IR(std::string command, std::string temp1, std::string parent)
+        : command(command), temp1(temp1), parent(parent) {
+        
+    }
+    
     // (ALLOC, 4, total)
-    IR(std::string command, std::string temp1, std::string temp2)
-        : command(command), temp1(temp1), temp2(temp2) {
+    IR(std::string command, std::string temp1, std::string temp2, std::string parent)
+        : command(command), temp1(temp1), temp2(temp2), parent(parent) {
         
     }
     
     // (MUL, temp1, temp2, temp3)
-    IR(std::string command, std::string temp1, std::string temp2, std::string temp3)
-        : command(command), temp1(temp1), temp2(temp2), temp3(temp3) {
+    IR(std::string command, std::string temp1, std::string temp2, std::string temp3, std::string parent)
+        : command(command), temp1(temp1), temp2(temp2), temp3(temp3), parent(parent) {
         
     }
     
+    bool hasParent() {
+        return !parent.empty();
+    }
+    
 public:
-    std::string command, temp1, temp2, temp3;
+    std::string command, temp1, temp2, temp3, parent = "";
 };
 
 /*
@@ -89,13 +99,17 @@ public:
 class IntermediateRepresentation {
 public:
     void generateIR(ASTNode* node, ASTNode* parent);
-
-    void addCommand(std::string command, std::string temp1, std::string temp2) {
-        commands.push_back(new IR(command, temp1, temp2));
+    
+    void addCommand(std::string command, std::string temp1, std::string parent) {
+        commands.push_back(new IR(command, temp1, parent));
     }
     
-    void addCommand(std::string command, std::string temp1, std::string temp2, std::string temp3) {
-        commands.push_back(new IR(command, temp1, temp2, temp3));
+    void addCommand(std::string command, std::string temp1, std::string temp2, std::string parent) {
+        commands.push_back(new IR(command, temp1, temp2, parent));
+    }
+    
+    void addCommand(std::string command, std::string temp1, std::string temp2, std::string temp3, std::string parent) {
+        commands.push_back(new IR(command, temp1, temp2, temp3, parent));
     }
     
 public:

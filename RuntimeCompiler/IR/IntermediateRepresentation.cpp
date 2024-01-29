@@ -45,15 +45,70 @@ void IntermediateRepresentation::generateIR(ASTNode* node, ASTNode* parent) {
     if(node == nullptr)
         return;
     
+    std::string parentValue = parent ? parent->value : "";
+    
     switch (node->getType()) {
     //case NodeType::CLASS:
-    //ase NodeType::MEMBER_FUNCTION: {
-            //for (auto child : node->children) {
-            //    std::unique_ptr<IRNode> c = generateIR(child);
-            //}
+        //ase NodeType::MEMBER_FUNCTION: {
+        //for (auto child : node->children) {
+        //    std::unique_ptr<IRNode> c = generateIR(child);
+        //}
             
-            //break;
-         //}
+        //break;
+        //}
+        //case
+    case NodeType::INCLUDE_DIRECTIVE: {
+            addCommand("INCLUDE", node->value, node->children[0]->value, parentValue);
+            
+            break;
+    }
+    case NodeType::MEMBER_FUNCTION: {
+            ASTNode* returnType = node->getChildByType(NodeType::RETURN_TYPE);
+            addCommand("FUNCTION", node->value, returnType->value, parentValue);
+            
+            ASTNode* functionBody = node->getChildByType(NodeType::BLOCK);
+            for(auto child : functionBody->children) {
+                generateIR(child, node);
+            }
+            
+            break;
+        }
+    case NodeType::FUNCTION_CALL: {
+            /**
+            * (FUNCTION_CALL, "std::cout")
+            * (OPERATOR, "<<")
+            * (STRING, "Values; ")
+            * (VARIABLE, "total")
+            * (OPERATOR, "<<")
+            * (FUNCTION_CALL, "std::endl")
+            */
+            ASTNode* accessType = node->getChildByType(NodeType::ACCESSTYPE);
+            
+            if(accessType == nullptr) {
+                addCommand("FUNCTION_CALL", node->value, parentValue);
+                
+                return;
+            }
+            
+            std::string name = node->value + (accessType->value == "STATIC" ? "::" : ".")
+            + accessType->children[0]->value;
+            std::string paramaters = name + " ";
+            
+            for(auto child : accessType->children[0]->children) {
+                if(child->isTypeOf(NodeType::FUNCTION_CALL)) {
+                    accessType = child->getChildByType(NodeType::ACCESSTYPE);
+                    
+                    paramaters += child->value + (accessType->value == "STATIC" ? "::" : ".")
+                        + accessType->children[0]->value + " ";
+                } else {
+                    paramaters += child->value + " ";
+                }
+            }
+            
+            addCommand("FUNCTION_CALL", name, paramaters, parentValue);
+            
+            break;
+        }
     case NodeType::MEMBER_VARIABLE:
     case NodeType::LOCAL_VARIABLE_DECLARATION: {
             /*
@@ -71,12 +126,16 @@ void IntermediateRepresentation::generateIR(ASTNode* node, ASTNode* parent) {
             //IRVariableDeclaration var(node->value, varType->value, variableSize);
             
             // (ALLOC, 4, x)
-            addCommand("ALLOC", std::to_string(variableSize), node->value);
+            addCommand("ALLOC", std::to_string(variableSize), node->value, parentValue);
             
             ASTNode* assignment = node->getChildByType(NodeType::COMPOUND_ASSIGNMENT);
-            generateIR(assignment->children[0], node);
             
-            addCommand("STORE", assignment->children[0]->value, node->value);
+            if(assignment) {
+                generateIR(assignment->children[0], node);
+                addCommand("STORE", assignment->children[0]->value, node->value, parentValue);
+            } else {
+                addCommand("STORE", "0",node->value, parentValue);
+            }
             
             break;
         }
@@ -104,10 +163,10 @@ void IntermediateRepresentation::generateIR(ASTNode* node, ASTNode* parent) {
             std::string rightOperand = "temp" + std::to_string(tempCounter++);
             generateIR(node->children[1], node);
             
-            addCommand("STORE", node->children[0]->value, leftOperand);
-            addCommand("STORE", node->children[1]->value, rightOperand);
+            addCommand("STORE", node->children[0]->value, leftOperand, parentValue);
+            addCommand("STORE", node->children[1]->value, rightOperand, parentValue);
             
-            addCommand(node->value,  leftOperand, rightOperand, "temp" + std::to_string(tempCounter));
+            addCommand(node->value,  leftOperand, rightOperand, "temp" + std::to_string(tempCounter), parentValue);
             tempCounter++;
             
             node->value = "temp" + std::to_string(tempCounter - 1);
@@ -119,7 +178,7 @@ void IntermediateRepresentation::generateIR(ASTNode* node, ASTNode* parent) {
             generateIR(assignment->children[0], node);
             // (ADD, temp1, temp5, total)
             // (INT, 1, X) <- Assign an integer value of 1 to x.
-            addCommand("INT", "temp" + std::to_string(tempCounter - 1), parent->value);
+            addCommand("INT", "temp" + std::to_string(tempCounter - 1), parentValue);
             
             break;
         }
@@ -127,10 +186,6 @@ void IntermediateRepresentation::generateIR(ASTNode* node, ASTNode* parent) {
             std::cout << "NO WAY MAn" << std::endl;
             
             
-            
-            break;
-        }
-    case NodeType::COUT_STATEMENT: {
             
             break;
         }

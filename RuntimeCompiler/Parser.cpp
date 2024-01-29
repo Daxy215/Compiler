@@ -2,6 +2,8 @@
 
 #include <map>
 
+#include "Diagnosis/Diagnoser.h"
+
 std::map<std::string, NodeType> modifiersTypes =
     {
         // Normal modifiers
@@ -23,20 +25,20 @@ ASTNode* Parser::parseCode(const std::vector<Token>& t) {
     while (currentTokenIndex < tokens.size() - 1) {
         ASTNode* node = nullptr;
         
-        if(match(TokenType::SEMICOLON))
+        if(match(LexerNameSpace::TokenType::SEMICOLON))
             consumeToken();
         
         Token toekziao = tokens[currentTokenIndex];
         
-        if (match(TokenType::PREPROCESSOR_DIRECTIVE)) {
+        if (match(LexerNameSpace::TokenType::PREPROCESSOR_DIRECTIVE)) {
             node = parseIncludeDirective();
-        } else if(match(TokenType::NAMESPACE)) { //TODO; Not detecting namespace.
+        } else if(match(LexerNameSpace::TokenType::NAMESPACE)) { //TODO; Not detecting namespace.
             node = parseNameSpace();
-        } else if(match(TokenType::ENUM)) {
+        } else if(match(LexerNameSpace::TokenType::ENUM)) {
             node = parseEnumDeclaration();
-        } else if(match(TokenType::STRUCT)) {
+        } else if(match(LexerNameSpace::TokenType::STRUCT)) {
             node = parseStructDeclaration();
-        } else if (match(TokenType::CLASS)) {
+        } else if (match(LexerNameSpace::TokenType::CLASS)) {
             isInClass = true;
             
             node = parseClassDeclaration();
@@ -60,12 +62,19 @@ ASTNode* Parser::parseCode(const std::vector<Token>& t) {
 }
 
 ASTNode* Parser::parseIncludeDirective() {
-    if (match(TokenType::PREPROCESSOR_DIRECTIVE)) {
-        std::string includeValue = tokens[currentTokenIndex].value;
+    if (match(LexerNameSpace::TokenType::PREPROCESSOR_DIRECTIVE)) {
+        std::string includeValue = tokens[currentTokenIndex].value, includeName;
         consumeToken(); // Consume the '#include' directive
         
-        // Create an AST node representing the include directive
+        size_t startPos = includeValue.find_first_of("<");
+        size_t endPos = includeValue.find_first_of(">");
+        
+        if (startPos != std::string::npos && endPos != std::string::npos) {
+            includeName = includeValue.substr(startPos + 1, endPos - startPos - 1);
+        }
+        
         ASTNode* includeNode = new ASTNode(NodeType::INCLUDE_DIRECTIVE, includeValue);
+        includeNode->addChild(NodeType::INCLUDE_DIRECTIVE, includeName);
         
         return includeNode;
     }
@@ -74,11 +83,10 @@ ASTNode* Parser::parseIncludeDirective() {
 }
 
 ASTNode* Parser::parseNameSpace() {
-    if (match(TokenType::NAMESPACE)) {
+    if (match(LexerNameSpace::TokenType::NAMESPACE)) {
         std::string namespaceValue = tokens[currentTokenIndex].value;
         consumeToken(); // Consume the '#include' directive
         
-        // Create an AST node representing the include directive
         ASTNode* namespaceNode = new ASTNode(NodeType::NAMESPACE, namespaceValue);
         
         return namespaceNode;
@@ -88,6 +96,48 @@ ASTNode* Parser::parseNameSpace() {
 }
 
 ASTNode* Parser::parseEnumDeclaration() {
+    if(match(LexerNameSpace::ENUM)) {
+        consumeToken(); // Consume 'enum'
+        
+        std::string enumName = tokens[currentTokenIndex].value;
+        ASTNode* enumNode = new ASTNode(NodeType::ENUM, enumName);
+        consumeToken(); // Consume enum name
+        
+        Token t = tokens[currentTokenIndex];
+        
+        if(!match(LexerNameSpace::LEFT_BRACE)) { // '{'
+            Diagnoser::logError("Missing semicolon after enum", tokens[currentTokenIndex - 1]);
+        }
+        
+        consumeToken(); // Consume '{'
+        
+        while(!match(LexerNameSpace::RIGHT_BRACE)) { // '}'
+            Token zt = tokens[currentTokenIndex];
+            Token ztz = tokens[currentTokenIndex+1];
+            
+            if(match(LexerNameSpace::COMMA)) {
+                consumeToken(); // Consume ',' 
+                continue;
+            } else if (match(LexerNameSpace::IDENTIFIER)
+                && !matchNext(LexerNameSpace::COMMA) && !matchNext(LexerNameSpace::RIGHT_BRACE)) {
+                Diagnoser::logError("Missing a comma before", tokens[currentTokenIndex ]);
+            }
+            
+            ASTNode* enumValueNode = new ASTNode(NodeType::VALUE, tokens[currentTokenIndex].value);
+            enumNode->addChild(enumValueNode);
+            
+            consumeToken();
+        }
+        
+        if(!match(LexerNameSpace::RIGHT_BRACE)) { // '{'
+            Diagnoser::logError("Missing semicolon after enum", tokens[currentTokenIndex - 2]);
+        }
+        
+        consumeToken(); // Consume '}'
+        
+        return enumNode;
+    }
+    
     return nullptr;
 }
 
@@ -96,12 +146,12 @@ ASTNode* Parser::parseStructDeclaration() {
 }
 
 ASTNode* Parser::parseClassDeclaration() {
-    if (match(TokenType::CLASS)) {
+    if (match(LexerNameSpace::TokenType::CLASS)) {
         Token t = tokens[currentTokenIndex];
         
         consumeToken(); // Consume 'class' keyword
         
-        if (match(TokenType::IDENTIFIER)) {
+        if (match(LexerNameSpace::TokenType::IDENTIFIER)) {
             std::string className = tokens[currentTokenIndex].value;
             consumeToken(); // Consume class name token
             
@@ -112,7 +162,7 @@ ASTNode* Parser::parseClassDeclaration() {
             Token g = tokens[currentTokenIndex];
             
             // Check for inheritance
-            if (match(TokenType::COLON)) {
+            if (match(LexerNameSpace::TokenType::COLON)) {
                 consumeToken(); // Consume ':' token
                 
                 Token h = tokens[currentTokenIndex];
@@ -124,7 +174,7 @@ ASTNode* Parser::parseClassDeclaration() {
                  */
                 std::string accessSpecifier = "";
                 
-                if (match(TokenType::KEYWORD)) {
+                if (match(LexerNameSpace::TokenType::KEYWORD)) {
                     accessSpecifier = tokens[currentTokenIndex].value;
                     
                     consumeToken(); // Consume access specifier (public/private/protected)
@@ -133,7 +183,7 @@ ASTNode* Parser::parseClassDeclaration() {
                 Token f = tokens[currentTokenIndex];
                 
                 // Move on normally
-                if (match(TokenType::IDENTIFIER)) {
+                if (match(LexerNameSpace::TokenType::IDENTIFIER)) {
                     std::string baseClassName = tokens[currentTokenIndex].value;
                     consumeToken(); // Consume base class name token
                     
@@ -147,7 +197,7 @@ ASTNode* Parser::parseClassDeclaration() {
                 }
             }
             
-            if (match(TokenType::LEFT_BRACE)) {
+            if (match(LexerNameSpace::TokenType::LEFT_BRACE)) {
                 consumeToken(); // Consume '{' for class body start
                 
                 Token ts = tokens[currentTokenIndex];
@@ -159,10 +209,10 @@ ASTNode* Parser::parseClassDeclaration() {
                     
                     Token tsz = tokens[currentTokenIndex];
                     
-                    if (match(TokenType::RIGHT_BRACE)) { // }
+                    if (match(LexerNameSpace::TokenType::RIGHT_BRACE)) { // }
                         consumeToken(); // Consume '}' for class body end
                         
-                        if(match(TokenType::SEMICOLON)) // ';'
+                        if(match(LexerNameSpace::TokenType::SEMICOLON)) // ';'
                             consumeToken(); // Consume ';'
                         
                         isInClass = false;
@@ -185,11 +235,11 @@ ASTNode* Parser::parseClassBody(std::string className) {
     
     Token t = tokens[currentTokenIndex];
     
-    while (currentTokenIndex < tokens.size() && !match(TokenType::RIGHT_BRACE)) {
-        if(match(TokenType::SEMICOLON))
+    while (currentTokenIndex < tokens.size() && !match(LexerNameSpace::TokenType::RIGHT_BRACE)) {
+        if(match(LexerNameSpace::TokenType::SEMICOLON))
             consumeToken(); // Consume ';'
         
-        if(match(TokenType::KEYWORD) && (tokens[currentTokenIndex].value == "public" || tokens[currentTokenIndex].value == "private") && matchNext(TokenType::COLON)) {
+        if(match(LexerNameSpace::TokenType::KEYWORD) && (tokens[currentTokenIndex].value == "public" || tokens[currentTokenIndex].value == "private") && matchNext(LexerNameSpace::TokenType::COLON)) {
             consumeToken(); // Consume ?
             consumeToken(); // Consume ':'
         }
@@ -202,7 +252,7 @@ ASTNode* Parser::parseClassBody(std::string className) {
             if (constructorNode) {
                 classBodyNode->children.push_back(constructorNode);
                 
-                if(match(TokenType::RIGHT_BRACE))
+                if(match(LexerNameSpace::TokenType::RIGHT_BRACE))
                     consumeToken(); // Consume '}'
             } else {
                 // Handle error: Failed to parse constructor
@@ -242,7 +292,7 @@ ASTNode* Parser::parseConstructor() {
     
     ASTNode* constructor = new ASTNode(NodeType::CONSTRUCTOR, constructorName);
     
-    while (!match(TokenType::RIGHT_PAREN)) {
+    while (!match(LexerNameSpace::TokenType::RIGHT_PAREN)) {
         Token t = tokens[currentTokenIndex];
          
         // Parameters handling
@@ -259,15 +309,15 @@ ASTNode* Parser::parseConstructor() {
     Token tt = tokens[currentTokenIndex];
     
     // Circle(double r) -> this : radius(r) {}
-    if (match(TokenType::COLON)) {
+    if (match(LexerNameSpace::TokenType::COLON)) {
         consumeToken(); // Consume ':'
         
-        while (!match(TokenType::LEFT_BRACE)) {
+        while (!match(LexerNameSpace::TokenType::LEFT_BRACE)) {
             // {
             //: radius(r), test(t)..
             
             // Skip comma
-            if (match(TokenType::COMMA))
+            if (match(LexerNameSpace::TokenType::COMMA))
                 consumeToken(); // Consume ','
             
             Token t = tokens[currentTokenIndex];
@@ -295,7 +345,7 @@ ASTNode* Parser::parseConstructor() {
 ASTNode* Parser::parseMember(NodeType memberDeclarationType) {
     Token token = tokens[currentTokenIndex];
     
-    if(match(TokenType::INTEGER_LITERAL) || match(TokenType::FLOATING_POINT_LITERAL) || match(TokenType::STRING_LITERAL)) {
+    if(match(LexerNameSpace::TokenType::INTEGER_LITERAL) || match(LexerNameSpace::TokenType::FLOATING_POINT_LITERAL) || match(LexerNameSpace::TokenType::STRING_LITERAL)) {
         consumeToken();
         return new ASTNode(NodeType::VALUE, tokens[currentTokenIndex - 1].value);
     }
@@ -312,7 +362,7 @@ ASTNode* Parser::parseMember(NodeType memberDeclarationType) {
     
     ASTNode* modifiers = new ASTNode(NodeType::MODIFIERS, "Modifiers; ");
     
-    while(match(TokenType::KEYWORD)) {
+    while(match(LexerNameSpace::TokenType::KEYWORD)) {
         std::string type = tokens[currentTokenIndex].value;
         
         // Does type exist
@@ -326,7 +376,7 @@ ASTNode* Parser::parseMember(NodeType memberDeclarationType) {
     std::string memberType;
     
     // Ik junky code shush
-    if(token.type == TokenType::IDENTIFIER) {
+    if(token.type == LexerNameSpace::TokenType::IDENTIFIER) {
         memberType = tokens[currentTokenIndex - 1].value;
         //consumeToken();
     } else {
@@ -336,12 +386,12 @@ ASTNode* Parser::parseMember(NodeType memberDeclarationType) {
             memberType = tokens[currentTokenIndex - 1].value;
     }
     
-    /*if(match(TokenType::POINTER) || match(TokenType::REFERENCE)) {
+    /*if(match(LexerNameSpace::TokenType::POINTER) || match(LexerNameSpace::TokenType::REFERENCE)) {
         // Check if it's a pointer/reference
         std::string pointerType = tokens[currentTokenIndex].value;
         
         NodeType nodeType = NodeType::POINTER;
-        if(tokens[currentTokenIndex].type == TokenType::REFERENCE)
+        if(tokens[currentTokenIndex].type == LexerNameSpace::TokenType::REFERENCE)
             nodeType = NodeType::REFERENCE;
         
         consumeToken(); // Consume reference
@@ -357,7 +407,7 @@ ASTNode* Parser::parseMember(NodeType memberDeclarationType) {
     Token t = tokens[currentTokenIndex];
     
     // Function
-    if(matchNext(TokenType::LEFT_PAREN)) {
+    if(matchNext(LexerNameSpace::TokenType::LEFT_PAREN)) {
         std::string memberName = tokens[currentTokenIndex].value;
         consumeToken(); // Consume member
         
@@ -371,7 +421,7 @@ ASTNode* Parser::parseMember(NodeType memberDeclarationType) {
     
     // Perhaps a variable usage?
     //TODO; So this is the current problem.. Cant even remember what this was :)
-    /*if(match(TokenType::IDENTIFIER) && (!matchNext(TokenType::KEYWORD) && !matchNext(TokenType::REFERENCE) && !matchNext(TokenType::POINTER))) {
+    /*if(match(LexerNameSpace::TokenType::IDENTIFIER) && (!matchNext(LexerNameSpace::TokenType::KEYWORD) && !matchNext(LexerNameSpace::TokenType::REFERENCE) && !matchNext(LexerNameSpace::TokenType::POINTER))) {
         ASTNode* variableNode = parseVariable(memberDeclarationType, "None");
         variableNode->children.push_back(modifiers);
         
@@ -380,7 +430,7 @@ ASTNode* Parser::parseMember(NodeType memberDeclarationType) {
     
     Token z = tokens[currentTokenIndex];
     
-    if (match(TokenType::REFERENCE) || match(TokenType::POINTER)) {
+    if (match(LexerNameSpace::TokenType::REFERENCE) || match(LexerNameSpace::TokenType::POINTER)) {
         //consumeToken(); // Consume reference
         
         ASTNode* variableNode = parseReference(memberDeclarationType, memberType);
@@ -394,7 +444,7 @@ ASTNode* Parser::parseMember(NodeType memberDeclarationType) {
         return variableNode;
     }
     
-    if(!match(TokenType::IDENTIFIER) && !match(TokenType::KEYWORD)) {
+    if(!match(LexerNameSpace::TokenType::IDENTIFIER) && !match(LexerNameSpace::TokenType::KEYWORD)) {
         consumeToken();
         return nullptr;
     }
@@ -409,7 +459,7 @@ ASTNode* Parser::parseMember(NodeType memberDeclarationType) {
     if(!modifiers->children.empty())
         variableNode->children.push_back(modifiers);
     
-    if(match(TokenType::RIGHT_PAREN))
+    if(match(LexerNameSpace::TokenType::RIGHT_PAREN))
         consumeToken(); // Consume ')'
     
     if(!isInClass)
@@ -420,11 +470,11 @@ ASTNode* Parser::parseMember(NodeType memberDeclarationType) {
 }
 
 ASTNode* Parser::parseFunction(const std::string& returnType, const std::string& functionName) {
-    ASTNode* memberFunction = new ASTNode(NodeType::MEMBER_FUNCTION, "Function: " + functionName);
-    memberFunction->children.push_back(new ASTNode(NodeType::RETURN_TYPE, "ReturnType: " + returnType));
+    ASTNode* memberFunction = new ASTNode(NodeType::MEMBER_FUNCTION, functionName);
+    memberFunction->children.push_back(new ASTNode(NodeType::RETURN_TYPE, returnType));
     
     // Parse function parameters
-    if (match(TokenType::LEFT_PAREN)) { // '('
+    if (match(LexerNameSpace::TokenType::LEFT_PAREN)) { // '('
         consumeToken(); // Consume '('
         
         // Parse parameters (if any)
@@ -441,7 +491,7 @@ ASTNode* Parser::parseFunction(const std::string& returnType, const std::string&
          * Use while loop instead for;
          * void draw() const override
          */
-        if(match(TokenType::KEYWORD) && (matchNext(TokenType::OPERATOR, "=") || matchNext(TokenType::RIGHT_BRACE))) { //TODO; FOR virtual void draw() const = 0;
+        if(match(LexerNameSpace::TokenType::KEYWORD) && (matchNext(LexerNameSpace::TokenType::OPERATOR, "=") || matchNext(LexerNameSpace::TokenType::RIGHT_BRACE))) { //TODO; FOR virtual void draw() const = 0;
             std::string type = tokens[currentTokenIndex].value;
             
             consumeToken(); // Consume 'const' token
@@ -449,14 +499,14 @@ ASTNode* Parser::parseFunction(const std::string& returnType, const std::string&
             Token dd = tokens[currentTokenIndex];
             
             // Has a body?
-            if(match(TokenType::OPERATOR, "=")) {
+            if(match(LexerNameSpace::TokenType::OPERATOR, "=")) {
                 // No body
                 
                 consumeToken(); // Consume '=' token
                 
                 Token d = tokens[currentTokenIndex];
                 
-                if (match(TokenType::INTEGER_LITERAL) && tokens[currentTokenIndex].value == "0") {
+                if (match(LexerNameSpace::TokenType::INTEGER_LITERAL) && tokens[currentTokenIndex].value == "0") {
                     consumeToken(); // Consume '0' token
                     consumeToken(); // Consume ';' token
                     
@@ -474,16 +524,16 @@ ASTNode* Parser::parseFunction(const std::string& returnType, const std::string&
         
         // Check for modifiers
         // TODO; Make this as a function. I'm too lazy :D
-        while(!match(TokenType::LEFT_BRACE)) { // '{'
+        while(!match(LexerNameSpace::TokenType::LEFT_BRACE)) { // '{'
             std::string type = tokens[currentTokenIndex].value;
             
-            if(match(TokenType::KEYWORD, "const")) {
+            if(match(LexerNameSpace::TokenType::KEYWORD, "const")) {
                 memberFunction->children.push_back(new ASTNode(NodeType::ConstModifier, type + ": true"));
-            } else if(match(TokenType::KEYWORD, "override")) {
+            } else if(match(LexerNameSpace::TokenType::KEYWORD, "override")) {
                 memberFunction->children.push_back(new ASTNode(NodeType::OverrideModifier, type + ": true"));
-            } else if(match(TokenType::KEYWORD, "final")) {
+            } else if(match(LexerNameSpace::TokenType::KEYWORD, "final")) {
                 memberFunction->children.push_back(new ASTNode(NodeType::FinalModifier, type + ": true"));
-            } else if(match(TokenType::KEYWORD, "protected")) {
+            } else if(match(LexerNameSpace::TokenType::KEYWORD, "protected")) {
                 memberFunction->children.push_back(new ASTNode(NodeType::ProtectedModifier, type + ": true"));
             }
             
@@ -522,7 +572,7 @@ ASTNode* Parser::parseFunctionBody() {
     
     Token t = tokens[currentTokenIndex];
     
-    while (currentTokenIndex < tokens.size() && !match(TokenType::RIGHT_BRACE)) { // '}'
+    while (currentTokenIndex < tokens.size() && !match(LexerNameSpace::TokenType::RIGHT_BRACE)) { // '}'
         Token d = tokens[currentTokenIndex];
         
         ASTNode* statement = parseStatement(); // Parse individual statements within the function body
@@ -539,7 +589,7 @@ ASTNode* Parser::parseFunctionBody() {
         }
     }
     
-    if(match(TokenType::RIGHT_BRACE) && isInClass)
+    if(match(LexerNameSpace::TokenType::RIGHT_BRACE) && isInClass)
         consumeToken(); // Consume '}'
     
     return functionBodyNode;
@@ -548,12 +598,12 @@ ASTNode* Parser::parseFunctionBody() {
 ASTNode* Parser::parseStatement() {
     Token fz = tokens[currentTokenIndex];
     
-    if (match(TokenType::LEFT_BRACE)) {
+    if (match(LexerNameSpace::TokenType::LEFT_BRACE)) {
         consumeToken(); // Consume '{'
         
         ASTNode* blockNode = new ASTNode(NodeType::BLOCK, "Block");
-        while (!match(TokenType::RIGHT_BRACE)) {
-            if(match(TokenType::SEMICOLON)) {
+        while (!match(LexerNameSpace::TokenType::RIGHT_BRACE)) {
+            if(match(LexerNameSpace::TokenType::SEMICOLON)) {
                 consumeToken();
                 continue;
             }
@@ -568,13 +618,13 @@ ASTNode* Parser::parseStatement() {
                 currentTokenIndex++;
             }
             
-            if(match(TokenType::SEMICOLON))
+            if(match(LexerNameSpace::TokenType::SEMICOLON))
                 consumeToken(); // Consume ';'
             
             Token fxz = tokens[currentTokenIndex];
             
             // Function ended?
-            if(match(TokenType::RIGHT_BRACE)) { // '}'
+            if(match(LexerNameSpace::TokenType::RIGHT_BRACE)) { // '}'
                 //THIS WAS THE PROBLEM?
                 //consumeToken(); // Consume '};
                 return blockNode;
@@ -582,12 +632,12 @@ ASTNode* Parser::parseStatement() {
         }
         
         // Function ended?
-        if(match(TokenType::RIGHT_BRACE))
+        if(match(LexerNameSpace::TokenType::RIGHT_BRACE))
             return blockNode;
         
         Token dd = tokens[currentTokenIndex];
         
-        if(currentTokenIndex < tokens.size() - 1 && match(TokenType::RIGHT_BRACE)) { // '}'
+        if(currentTokenIndex < tokens.size() - 1 && match(LexerNameSpace::TokenType::RIGHT_BRACE)) { // '}'
             Token dsd = tokens[currentTokenIndex];
             consumeToken(); // Consume '}' at the end of the block
         }
@@ -598,20 +648,20 @@ ASTNode* Parser::parseStatement() {
     Token tz = tokens[currentTokenIndex];
     
     // Warning.. junky code..
-    if(match(TokenType::BREAK_STATEMENT)) {
+    if(match(LexerNameSpace::TokenType::BREAK_STATEMENT)) {
         consumeToken(); // Consume statement
         return new ASTNode(NodeType::BREAK_STATEMENT, "Break statement");
-    } else if(match(TokenType::CONTINUE_STATEMENT)) {
+    } else if(match(LexerNameSpace::TokenType::CONTINUE_STATEMENT)) {
         consumeToken(); // Consume statement
         return new ASTNode(NodeType::CONTINUE_STATEMENT, "Continue statement");
-    }/* else if(match(TokenType::RETURN_STATEMENT)) {
+    }/* else if(match(LexerNameSpace::TokenType::RETURN_STATEMENT)) {
         consumeToken(); // Consume statement
         return new ASTNode(NodeType::RETURN_STATEMENT, "Return statement");
     }*/
     
     Token f = tokens[currentTokenIndex];
     
-    if(match(TokenType::RIGHT_BRACE)) // '}'
+    if(match(LexerNameSpace::TokenType::RIGHT_BRACE)) // '}'
         return new ASTNode(NodeType::FUNCTION_BODY, "EmptyFunctionBody");
     
     // Check if it's a function call
@@ -621,7 +671,7 @@ ASTNode* Parser::parseStatement() {
     }*/
     
     // Handle return statement:
-    if(match(TokenType::KEYWORD)) {
+    if(match(LexerNameSpace::TokenType::KEYWORD)) {
         if(tokens[currentTokenIndex].value == "return") {
             consumeToken(); // Consume 'return'
             
@@ -654,7 +704,7 @@ ASTNode* Parser::parseStatement() {
     }
     
     switch (tokens[currentTokenIndex].type) {
-    case TokenType::FOR_LOOP: {
+    case LexerNameSpace::TokenType::FOR_LOOP: {
             // Idk if there are other types of "for loops"
             if (tokens[currentTokenIndex].value == "for") {
                 /**
@@ -666,17 +716,17 @@ ASTNode* Parser::parseStatement() {
                 
                 ASTNode* forLoopNode = new ASTNode(NodeType::FOR_LOOP, "ForLoop");
                 
-                if(!match(TokenType::LEFT_PAREN)) {
+                if(!match(LexerNameSpace::TokenType::LEFT_PAREN)) {
                     std::cerr << "Syntax Error: Missing ')' after 'for' in for loop initialization.\n";
                 } else
                     consumeToken(); // Consume '('
                 
                 // Parse initialization
-                if(!match(TokenType::SEMICOLON)) {
+                if(!match(LexerNameSpace::TokenType::SEMICOLON)) {
                     ASTNode* initNode = parseMember(NodeType::MEMBER_VARIABLE); // Assuming you have a function to parse expressions
                     forLoopNode->children.push_back(initNode);
                     
-                    if(!match(TokenType::SEMICOLON)) {
+                    if(!match(LexerNameSpace::TokenType::SEMICOLON)) {
                         std::cerr << "Syntax Error: Missing semicolon after '" << initNode->value << "' in for loop initialization.\n";
                     } else
                         consumeToken(); // Consume ';'
@@ -688,7 +738,7 @@ ASTNode* Parser::parseStatement() {
                 ASTNode* conditionNode = parseConditions(); // Assuming you have a function to parse expressions
                 forLoopNode->children.push_back(conditionNode);
                 
-                if(!match(TokenType::SEMICOLON)) {
+                if(!match(LexerNameSpace::TokenType::SEMICOLON)) {
                     std::cerr << "Syntax Error: Missing semicolon after '" << conditionNode->value << "' in for loop condition.\n";
                 } else
                     consumeToken(); // Consume ';'
@@ -697,7 +747,7 @@ ASTNode* Parser::parseStatement() {
                 ASTNode* iterationNode = expression(); // Assuming you have a function to parse expressions
                 forLoopNode->children.push_back(iterationNode);
                 
-                if(tokens[currentTokenIndex - 1].type != TokenType::RIGHT_PAREN) {
+                if(tokens[currentTokenIndex - 1].type != LexerNameSpace::TokenType::RIGHT_PAREN) {
                     std::cerr << "Syntax Error: Missing ')' after '" << iterationNode->value << "' in for loop iteration.\n";
                 }/* else
                     consumeToken(); // Consume ')'*/
@@ -709,7 +759,7 @@ ASTNode* Parser::parseStatement() {
                 
                 Token za = tokens[currentTokenIndex];
                 
-                if(match(TokenType::RIGHT_BRACE)) { // '}'
+                if(match(LexerNameSpace::TokenType::RIGHT_BRACE)) { // '}'
                     consumeToken(); // Consume '}'
                 }
                 
@@ -718,13 +768,13 @@ ASTNode* Parser::parseStatement() {
             
             break;
         }
-    case TokenType::WHILE_LOOP: {
+    case LexerNameSpace::TokenType::WHILE_LOOP: {
             if(tokens[currentTokenIndex].value == "while") {
                 consumeToken(); // Consume 'while'
                 
                 ASTNode* whileloopNode = new ASTNode(NodeType::WHILE_LOOP, "While Loop");
                 
-                if(!match(TokenType::LEFT_PAREN)) {
+                if(!match(LexerNameSpace::TokenType::LEFT_PAREN)) {
                     std::cout << "Missing '(' after while loop\n";
                 } else
                     consumeToken(); // Consume '('
@@ -737,7 +787,7 @@ ASTNode* Parser::parseStatement() {
                 
                 Token tfd = tokens[currentTokenIndex];
                 
-                if(!match(TokenType::RIGHT_BRACE)) {
+                if(!match(LexerNameSpace::TokenType::RIGHT_BRACE)) {
                     std::cout << "Missing '}' after while loop\n";
                 } else
                     consumeToken(); // Consume '}'
@@ -747,7 +797,7 @@ ASTNode* Parser::parseStatement() {
             
             break;
         }
-    case TokenType::DO_WHILE_LOOP: {
+    case LexerNameSpace::TokenType::DO_WHILE_LOOP: {
             if(tokens[currentTokenIndex].value == "do") {
                 consumeToken(); // Consume 'do'
                 
@@ -756,7 +806,7 @@ ASTNode* Parser::parseStatement() {
                 
                 Token tfjjd = tokens[currentTokenIndex];
                 
-                if(!match(TokenType::RIGHT_BRACE)) {
+                if(!match(LexerNameSpace::TokenType::RIGHT_BRACE)) {
                     std::cout << "Missing '}' after do while loop\n";
                 } else
                     consumeToken(); // Consume '}'
@@ -765,7 +815,7 @@ ASTNode* Parser::parseStatement() {
                 
                 consumeToken(); // Consume 'while'
                 
-                if(!match(TokenType::LEFT_PAREN)) {
+                if(!match(LexerNameSpace::TokenType::LEFT_PAREN)) {
                     std::cout << "Missing '( after while in do while loop\n";
                 } else
                     consumeToken(); // Consume '('
@@ -780,11 +830,11 @@ ASTNode* Parser::parseStatement() {
             
             break;
         }
-    case TokenType::IF_STATEMENT: {
+    case LexerNameSpace::TokenType::IF_STATEMENT: {
             return parseIfStatement();
         }
-    case TokenType::ELSE_STATEMENT: {
-            if(matchNext(TokenType::IF_STATEMENT)) {
+    case LexerNameSpace::TokenType::ELSE_STATEMENT: {
+            if(matchNext(LexerNameSpace::TokenType::IF_STATEMENT)) {
                 consumeToken(); // Consume 'else'
                 
                 ASTNode* ifStatement = parseIfStatement();
@@ -799,8 +849,8 @@ ASTNode* Parser::parseStatement() {
     }
     
     Token hghg = tokens[currentTokenIndex];
-
-    if(match(TokenType::OPERATOR))
+    
+    if(match(LexerNameSpace::TokenType::OPERATOR))
         return expression();
     
     return parseMember(NodeType::LOCAL_VARIABLE_DECLARATION);
@@ -809,31 +859,31 @@ ASTNode* Parser::parseStatement() {
 ASTNode* Parser::parseFunctionCall() {
     Token t = tokens[currentTokenIndex];
     
-    if (match(TokenType::IDENTIFIER)) {
+    if (match(LexerNameSpace::TokenType::IDENTIFIER)) {
         std::string functionName = tokens[currentTokenIndex].value;
         consumeToken(); // Consume function name.
         
         // Handling things like "shape.somefunction();"
         
         /*
-        if(match(TokenType::DOT) || match(TokenType::OPERATOR, "->")) {
+        if(match(LexerNameSpace::TokenType::DOT) || match(LexerNameSpace::TokenType::OPERATOR, "->")) {
             
         }
         */
         
-        if(match(TokenType::LEFT_PAREN)) {
+        if(match(LexerNameSpace::TokenType::LEFT_PAREN)) {
             ASTNode* functionCallNode = new ASTNode(NodeType::FUNCTION_CALL, functionName);
             Token txx = tokens[currentTokenIndex];
             
-            if (match(TokenType::LEFT_PAREN)) {
+            if (match(LexerNameSpace::TokenType::LEFT_PAREN)) {
                 consumeToken(); // Consume '('
                 
                 Token z = tokens[currentTokenIndex];
                 
                 ASTNode* parameters = new ASTNode(NodeType::PARAMETER, "PARAMETERS;");
                 
-                while(!match(TokenType::RIGHT_PAREN)) { // ')'
-                    if(match(TokenType::COMMA))
+                while(!match(LexerNameSpace::TokenType::RIGHT_PAREN)) { // ')'
+                    if(match(LexerNameSpace::TokenType::COMMA))
                         consumeToken();
                     
                     Token zzaToken = tokens[currentTokenIndex];
@@ -845,7 +895,7 @@ ASTNode* Parser::parseFunctionCall() {
                 if(parameters)
                     functionCallNode->children.push_back(parameters);
                 
-                if (match(TokenType::RIGHT_PAREN)) {
+                if (match(LexerNameSpace::TokenType::RIGHT_PAREN)) {
                     consumeToken(); // Consume ')'
                 } else {
                     std::cerr << "Error; Missing ')' after function call\n";
@@ -853,12 +903,12 @@ ASTNode* Parser::parseFunctionCall() {
                 
                 return functionCallNode;
             }
-        } else if(match(TokenType::LEFT_SQUARE_BRACE)) {
+        } else if(match(LexerNameSpace::TokenType::LEFT_SQUARE_BRACE)) {
             ASTNode* arrayCall = new ASTNode(NodeType::ARRAY_CALL, "Array call: " + functionName);
             
             Token tokenz = tokens[currentTokenIndex];
             
-            while(match(TokenType::LEFT_SQUARE_BRACE)) {
+            while(match(LexerNameSpace::TokenType::LEFT_SQUARE_BRACE)) {
                 Token token = tokens[currentTokenIndex];
                 consumeToken(); // Consume '['
                 
@@ -866,7 +916,7 @@ ASTNode* Parser::parseFunctionCall() {
                 ASTNode* indexNode = expression();
                 arrayCall->children.push_back(indexNode);
                 
-                if(match(TokenType::RIGHT_SQUARE_BRACE)) {
+                if(match(LexerNameSpace::TokenType::RIGHT_SQUARE_BRACE)) {
                     consumeToken(); // Consume ']'
                 } else {
                     std::cerr << "Error; Forgot ']' after array calling\n";
@@ -875,13 +925,14 @@ ASTNode* Parser::parseFunctionCall() {
             
             Token z = tokens[currentTokenIndex];
             
-            if(match(TokenType::DOT)) {
+            if(match(LexerNameSpace::TokenType::DOT)) {
                 ASTNode* statement = parseStatement();
                 arrayCall->children.push_back(statement);
-            } else if(match(TokenType::OPERATOR)) {
-                if(match(TokenType::OPERATOR, "+")) {
+            } else if(match(LexerNameSpace::TokenType::OPERATOR)) {
+                if(match(LexerNameSpace::TokenType::OPERATOR, "+")) {
                     std::cout << "Yahoo\n";
                 }
+                
                 ASTNode* assignment = new ASTNode(NodeType::ASSIGNMENT, tokens[currentTokenIndex].value);
                 
                 consumeToken(); // Consume 'operator'
@@ -895,21 +946,30 @@ ASTNode* Parser::parseFunctionCall() {
             
             Token tzzz = tokens[currentTokenIndex];
 
-            if(match(TokenType::SEMICOLON))
+            if(match(LexerNameSpace::TokenType::SEMICOLON))
                 consumeToken(); // Consume ';'
             
             return arrayCall;
+        } else {
+            Token curToken = tokens[currentTokenIndex];
+            ASTNode* functionNode = new ASTNode(NodeType::FUNCTION_CALL, functionName);
+            
+            while(!match(LexerNameSpace::SEMICOLON)) {
+                ASTNode* statement = parseStatement();
+                functionNode->addChild(statement);
+            }
+            
+            return functionNode;
         }
     }
     
-    // Handle other cases or return nullptr for invalid or unexpected tokens
     return nullptr;
 }
 
 ASTNode* Parser::parseIfStatement() {
     consumeToken(); // Consume 'if'
     
-    if(!match(TokenType::LEFT_PAREN)) {
+    if(!match(LexerNameSpace::TokenType::LEFT_PAREN)) {
         std::cerr << "Error: Missing '(' after if statement.\n";
         
         return nullptr;
@@ -922,13 +982,15 @@ ASTNode* Parser::parseIfStatement() {
     ASTNode* conditionsNode = parseConditions();
     ASTNode* ifBodyNode = parseStatement(); // Parse the body of 'if'
     
-    // Create an 'if' statement node and attach the condition and body
+    // Create an 'if' statement node
     ASTNode* ifStatementNode = new ASTNode(NodeType::IF_STATEMENT, "If Statement");
     ifStatementNode->children.push_back(conditionsNode);
     ifStatementNode->children.push_back(ifBodyNode);
+
+    Token zaOne = tokens[currentTokenIndex];
     
     // Should be at the end of the if statement.
-    if(match(TokenType::RIGHT_BRACE)) {
+    if(match(LexerNameSpace::TokenType::RIGHT_BRACE)) {
         consumeToken(); // '}'
     }
     
@@ -947,7 +1009,7 @@ ASTNode* Parser::parseElseStatement() {
     elseStatementNode->children.push_back(elseBodyNode);
     
     // Should be at the end of the else statement.
-    if(match(TokenType::RIGHT_BRACE)) {
+    if(match(LexerNameSpace::TokenType::RIGHT_BRACE)) {
         consumeToken(); // '}'
     }
     
@@ -957,14 +1019,14 @@ ASTNode* Parser::parseElseStatement() {
 ASTNode* Parser::parseConditions() {
     ASTNode* conditionsNode = new ASTNode(NodeType::CONDITIONS, "CONDITIONS;");
     
-    while(!match(TokenType::LEFT_BRACE) && !match(TokenType::SEMICOLON)) {
+    while(!match(LexerNameSpace::TokenType::LEFT_BRACE) && !match(LexerNameSpace::TokenType::SEMICOLON)) {
         Token z = tokens[currentTokenIndex];
         
-        if(match(TokenType::LEFT_PAREN)) {
+        if(match(LexerNameSpace::TokenType::LEFT_PAREN)) {
             consumeToken(); // Consume '('
             conditionsNode->children.push_back(parseConditions());
             
-            if(match(TokenType::LEFT_BRACE))
+            if(match(LexerNameSpace::TokenType::LEFT_BRACE))
                 break;
         }
         
@@ -973,8 +1035,8 @@ ASTNode* Parser::parseConditions() {
         conditionsNode->children.push_back(parseCondition());
         Token tzz = tokens[currentTokenIndex];
         
-        if(match(TokenType::LOGICAL_OR) || match(TokenType::LOGICAL_AND)) {
-            conditionsNode->children.push_back(new ASTNode(match(TokenType::LOGICAL_OR) ? NodeType::LOGICAL_OR : NodeType::LOGICAL_AND, tokens[currentTokenIndex].value));
+        if(match(LexerNameSpace::TokenType::LOGICAL_OR) || match(LexerNameSpace::TokenType::LOGICAL_AND)) {
+            conditionsNode->children.push_back(new ASTNode(match(LexerNameSpace::TokenType::LOGICAL_OR) ? NodeType::LOGICAL_OR : NodeType::LOGICAL_AND, tokens[currentTokenIndex].value));
             
             consumeToken(); // Consume logical gate.
         }
@@ -987,7 +1049,7 @@ ASTNode* Parser::parseCondition() {
     // Parse the condition
     ASTNode* condition = expression();
     
-    if(match(TokenType::RIGHT_PAREN)) { // ')'
+    if(match(LexerNameSpace::TokenType::RIGHT_PAREN)) { // ')'
         consumeToken(); // Consume ')'
     } else {
         std::cerr << "Error: Missing ')' after if statement condition.\n";
@@ -997,11 +1059,11 @@ ASTNode* Parser::parseCondition() {
     
     // Assuming this will be for conditions such as:
     // (i > 5 && i < 10)
-    //if(match(TokenType::RIGHT_PAREN))
+    //if(match(LexerNameSpace::TokenType::RIGHT_PAREN))
         //consumeToken(); // Consume ')'
     
     // Check for '{' symbol
-    if (!match(TokenType::SEMICOLON) && !match(TokenType::RIGHT_PAREN) && !match(TokenType::LEFT_BRACE) && (!match(TokenType::LOGICAL_AND) && !match(TokenType::LOGICAL_OR))) {
+    if (!match(LexerNameSpace::TokenType::SEMICOLON) && !match(LexerNameSpace::TokenType::RIGHT_PAREN) && !match(LexerNameSpace::TokenType::LEFT_BRACE) && (!match(LexerNameSpace::TokenType::LOGICAL_AND) && !match(LexerNameSpace::TokenType::LOGICAL_OR))) {
         throw std::runtime_error("Expected '{' after 'if' condition");
     }
     
@@ -1013,19 +1075,19 @@ ASTNode* Parser::parseNamespacesUsage(int counter) {
     Token t = tokens[currentTokenIndex];
     
     //.someFunction();
-    if(match(TokenType::DOT)) {
+    if(match(LexerNameSpace::TokenType::DOT)) {
         consumeToken(); // Consume '.'
         
         return parseStatement();
     }
     
     // Possible namespace or class.somefunction;
-    if(match(TokenType::IDENTIFIER) && (matchNext(TokenType::DOT) || matchNext(TokenType::OPERATOR, "->") || matchNext(TokenType::OPERATOR, "::"))) {
+    if(match(LexerNameSpace::TokenType::IDENTIFIER) && (matchNext(LexerNameSpace::TokenType::DOT) || matchNext(LexerNameSpace::TokenType::OPERATOR, "->") || matchNext(LexerNameSpace::TokenType::OPERATOR, "::"))) {
         consumeToken(); // Consume namespace/class.
         
         std::string referenceType = "";
         
-        if(match(TokenType::OPERATOR, "::")) {
+        if(match(LexerNameSpace::TokenType::OPERATOR, "::")) {
             referenceType = "STATIC";
         } else {
             referenceType = "LOCAL";
@@ -1037,7 +1099,7 @@ ASTNode* Parser::parseNamespacesUsage(int counter) {
         
         // Just a functioncall.
         //shape.draw(5);
-        if(matchNext(TokenType::LEFT_PAREN)) {
+        if(matchNext(LexerNameSpace::TokenType::LEFT_PAREN)) {
             ASTNode* functionCallNode = new ASTNode(NodeType::FUNCTION_CALL, functionName);
             functionCallNode->addChild(NodeType::RETURN_TYPE, referenceType);
             functionCallNode->addChild(parseFunctionCall());
@@ -1045,14 +1107,14 @@ ASTNode* Parser::parseNamespacesUsage(int counter) {
             return functionCallNode;
         }
         
-        if(matchNext(TokenType::LEFT_ANGLE_BRACE, "<")) {
+        if(matchNext(LexerNameSpace::TokenType::LEFT_ANGLE_BRACE, "<")) {
         //if (match("vector")) {
             std::string vectorType = tokens[currentTokenIndex].value;
             consumeToken(); // Consume "vector"
             
             Token ddtzz = tokens[currentTokenIndex];
             
-            if (!match(TokenType::LEFT_ANGLE_BRACE)) {
+            if (!match(LexerNameSpace::TokenType::LEFT_ANGLE_BRACE)) {
                 std::cerr << "Expected '<' after 'vector'\n";
             } else
                 consumeToken(); // Consume "<"
@@ -1063,7 +1125,7 @@ ASTNode* Parser::parseNamespacesUsage(int counter) {
             ASTNode* vectorTypeNode = new ASTNode(NodeType::VECTOR_TYPE, "Vector Type: " + vectorType);
             
             // std::vector<std::vector<int>> pascalTriangle(n);
-            while(!match(TokenType::RIGHT_ANGLE_BRACE)) {
+            while(!match(LexerNameSpace::TokenType::RIGHT_ANGLE_BRACE)) {
                 // Parse type.
                 ASTNode* type = parseNamespacesUsage(++counter);
                 
@@ -1080,18 +1142,18 @@ ASTNode* Parser::parseNamespacesUsage(int counter) {
             
             Token tsz = tokens[currentTokenIndex];
             
-            if(match(TokenType::RIGHT_ANGLE_BRACE))
+            if(match(LexerNameSpace::TokenType::RIGHT_ANGLE_BRACE))
                 consumeToken(); // Consume '>'
             else
                 std::cerr << "Missing '>' after vector\n";
             
             return vectorTypeNode;
-        } else if(match("cout")) {
+        } /*else if(match("cout")) {
             ASTNode* coutStatementNode = new ASTNode(NodeType::COUT_STATEMENT, "cout");
             consumeToken(); // Consume cout
             Token za = tokens[currentTokenIndex];
             
-            while(!match(TokenType::SEMICOLON)) {
+            while(!match(LexerNameSpace::TokenType::SEMICOLON)) {
                 if(match("<<")) {
                     coutStatementNode->children.push_back(new ASTNode(NodeType::OPERATOR, "<<"));
                     
@@ -1100,10 +1162,10 @@ ASTNode* Parser::parseNamespacesUsage(int counter) {
                 
                 Token ss = tokens[currentTokenIndex];
                 
-                if(match(TokenType::STRING_LITERAL)) {
+                if(match(LexerNameSpace::TokenType::STRING_LITERAL)) {
                     coutStatementNode->children.push_back(new ASTNode(NodeType::STRING, tokens[currentTokenIndex].value));
                     consumeToken();
-                } else if(match(TokenType::IDENTIFIER) && matchNext(TokenType::OPERATOR, "<<")) {
+                } else if(match(LexerNameSpace::TokenType::IDENTIFIER) && matchNext(LexerNameSpace::TokenType::OPERATOR, "<<")) {
                     coutStatementNode->children.push_back(new ASTNode(NodeType::STRING, tokens[currentTokenIndex].value));
                     consumeToken();
                 } else {
@@ -1117,10 +1179,14 @@ ASTNode* Parser::parseNamespacesUsage(int counter) {
         } else if(match("endl")) {
             consumeToken(); // Consume 'endl'
             return new ASTNode(NodeType::STRING, tokens[currentTokenIndex - 1].value);
-        } else {
+        }*/ else {
+            ASTNode* functionCall = new ASTNode(NodeType::FUNCTION_CALL, functionName);
+            ASTNode* accessType   = new ASTNode(NodeType::ACCESSTYPE, referenceType);
             ASTNode* statementNode = parseStatement();
-            return statementNode;
-            //std::cerr << "Unknown type..; " << tokens[currentTokenIndex].value << "\n";
+            accessType->addChild(statementNode);
+            functionCall->addChild(accessType);
+            
+            return functionCall;
         }
     }
     
@@ -1133,7 +1199,7 @@ ASTNode* Parser::parseVariable(NodeType memberDeclarationType, const std::string
     
     Token t = tokens[currentTokenIndex];
     
-    if (match(TokenType::LEFT_PAREN)) { // '('
+    if (match(LexerNameSpace::TokenType::LEFT_PAREN)) { // '('
         return parseFunction(memberType, memberName);
     }
     
@@ -1142,7 +1208,7 @@ ASTNode* Parser::parseVariable(NodeType memberDeclarationType, const std::string
     memberVariable->children.push_back(new ASTNode(NodeType::VARIABLE_TYPE, memberType));
     
     // If variable has no assignment.
-    if (match(TokenType::SEMICOLON)) {
+    if (match(LexerNameSpace::TokenType::SEMICOLON)) {
         return memberVariable;
     }
     
@@ -1163,7 +1229,7 @@ ASTNode* Parser::parseReference(NodeType memberDeclarationType, const std::strin
     
     NodeType pointerType;
     
-    if(tokens[currentTokenIndex].type == TokenType::POINTER)
+    if(tokens[currentTokenIndex].type == LexerNameSpace::TokenType::POINTER)
         pointerType = NodeType::POINTER;
     else
         pointerType = NodeType::REFERENCE;
@@ -1180,7 +1246,7 @@ ASTNode* Parser::parseReference(NodeType memberDeclarationType, const std::strin
     Token t = tokens[currentTokenIndex];
     
     // If variable has no assignment.
-    if (match(TokenType::SEMICOLON)) {
+    if (match(LexerNameSpace::TokenType::SEMICOLON)) {
         return memberReference;
     }
     
@@ -1192,7 +1258,7 @@ ASTNode* Parser::parseReference(NodeType memberDeclarationType, const std::strin
     compoundAssignNode->children.push_back(expressionNode);
     memberReference->children.push_back(compoundAssignNode);
     
-    if(match(TokenType::RIGHT_PAREN))
+    if(match(LexerNameSpace::TokenType::RIGHT_PAREN))
         consumeToken(); // Consume ')'
     
     Token z = tokens[currentTokenIndex];
@@ -1205,10 +1271,10 @@ std::vector<std::string> Parser::parseFunctionParameters() {
     
     Token t = tokens[currentTokenIndex];
     
-    while (!match(TokenType::RIGHT_PAREN)) {
+    while (!match(LexerNameSpace::TokenType::RIGHT_PAREN)) {
         Token t = tokens[currentTokenIndex];
         
-        if(match(TokenType::COMMA))
+        if(match(LexerNameSpace::TokenType::COMMA))
             consumeToken();
 
         std::string paramType = tokens[currentTokenIndex].value;
@@ -1216,7 +1282,7 @@ std::vector<std::string> Parser::parseFunctionParameters() {
 
         Token zzaToken = tokens[currentTokenIndex];
 
-        if (match(TokenType::IDENTIFIER)) {
+        if (match(LexerNameSpace::TokenType::IDENTIFIER)) {
             std::string paramName = tokens[currentTokenIndex].value;
             //parameters.push_back(paramType + " " + paramName);
             parameters.push_back(paramName);
@@ -1224,7 +1290,7 @@ std::vector<std::string> Parser::parseFunctionParameters() {
             
             consumeToken(); // Consume parameter name token
             
-            if (!match(TokenType::COMMA)) {
+            if (!match(LexerNameSpace::TokenType::COMMA)) {
                 break; // Last parameter, exit loop
             }
 
@@ -1255,14 +1321,14 @@ ASTNode* Parser::expression() {
     
     Token t = tokens[currentTokenIndex];
     
-    while (currentTokenIndex < tokens.size() - 2 && (!match(TokenType::OPERATOR, "*") || !match(TokenType::OPERATOR, "/"))  && tokens[currentTokenIndex].type == TokenType::OPERATOR &&
+    while (currentTokenIndex < tokens.size() - 2 && (!match(LexerNameSpace::TokenType::OPERATOR, "*") || !match(LexerNameSpace::TokenType::OPERATOR, "/"))  && tokens[currentTokenIndex].type == LexerNameSpace::TokenType::OPERATOR &&
            (tokens[currentTokenIndex].value == "+" || tokens[currentTokenIndex].value == "-") ||
            (tokens[currentTokenIndex].value == "<" || tokens[currentTokenIndex].value == ">") ||
-           match(TokenType::OPERATOR) ||
-           /*(match(TokenType::INCREMENT) || match(TokenType::DECREMENT)) ||
-           (match(TokenType::INCREMENT_EQUAL) || match(TokenType::DECREMENT_EQUAL)) ||*/
-           (match(TokenType::LESS_THAN_EQUAL) || match(TokenType::GREATER_THAN_EQUAL)) ||
-           (match(TokenType::EQUAL) || match(TokenType::NOT_EQUAL))) {
+           match(LexerNameSpace::TokenType::OPERATOR) ||
+           /*(match(LexerNameSpace::TokenType::INCREMENT) || match(LexerNameSpace::TokenType::DECREMENT)) ||
+           (match(LexerNameSpace::TokenType::INCREMENT_EQUAL) || match(LexerNameSpace::TokenType::DECREMENT_EQUAL)) ||*/
+           (match(LexerNameSpace::TokenType::LESS_THAN_EQUAL) || match(LexerNameSpace::TokenType::GREATER_THAN_EQUAL)) ||
+           (match(LexerNameSpace::TokenType::EQUAL) || match(LexerNameSpace::TokenType::NOT_EQUAL))) {
         std::string op = tokens[currentTokenIndex++].value;
         
         ASTNode* right = term();
@@ -1277,15 +1343,22 @@ ASTNode* Parser::expression() {
         newOpNode->children.push_back(right);
         left = newOpNode;
     }
+
+    if(left == nullptr) {
+        
+    }
     
     return left;
 }
 
+//TODO; So for:
+//"std::cout << "somevalue" << std::endl;
+//This doesn't return anything for a "<<".
 ASTNode* Parser::term() {
     std::string assignmentType = "";
     std::vector<std::string> parameters;
     
-    if(match(TokenType::KEYWORD, "new")) {
+    if(match(LexerNameSpace::TokenType::KEYWORD, "new")) {
         assignmentType = "new";
         consumeToken();
     }
@@ -1295,26 +1368,26 @@ ASTNode* Parser::term() {
     Token t = tokens[currentTokenIndex];
     
     // Points to a class, perhaps?
-    if(match(TokenType::IDENTIFIER) && matchNext(TokenType::LEFT_PAREN)) {
+    if(match(LexerNameSpace::TokenType::IDENTIFIER) && matchNext(LexerNameSpace::TokenType::LEFT_PAREN)) {
         consumeToken(); // Consume type
         
-        if(match(TokenType::SEMICOLON)) {
+        if(match(LexerNameSpace::TokenType::SEMICOLON)) {
             return left;
         }
         
         consumeToken(); // Consume '('
         
-        while (!match(TokenType::RIGHT_PAREN)) { // ')'
+        while (!match(LexerNameSpace::TokenType::RIGHT_PAREN)) { // ')'
             Token tz = tokens[currentTokenIndex];
             
-            if (match(TokenType::COMMA)) {
+            if (match(LexerNameSpace::TokenType::COMMA)) {
                 //Skip
                 consumeToken(); // Consume ','
                 
                 continue;
             }
             
-            if (match(TokenType::SEMICOLON)) {
+            if (match(LexerNameSpace::TokenType::SEMICOLON)) {
                 return left;
             }
             
@@ -1331,7 +1404,7 @@ ASTNode* Parser::term() {
     
     Token zzzt = tokens[currentTokenIndex];
     
-    while (currentTokenIndex < tokens.size() && (match(TokenType::POINTER) || match(TokenType::OPERATOR)) &&
+    while (currentTokenIndex < tokens.size() && (match(LexerNameSpace::TokenType::POINTER) || match(LexerNameSpace::TokenType::OPERATOR)) &&
            (tokens[currentTokenIndex].value == "*" || tokens[currentTokenIndex].value == "/")) {
         
         std::string op = tokens[currentTokenIndex++].value;
@@ -1342,6 +1415,10 @@ ASTNode* Parser::term() {
         newOpNode->children.push_back(right);
         left = newOpNode;
     }
+
+    if(left == nullptr) {
+        return new ASTNode(NodeType::OPERATOR, type);
+    }
     
     return left;
 }
@@ -1349,10 +1426,11 @@ ASTNode* Parser::term() {
 ASTNode* Parser::factor() {
     Token currentToken = tokens[currentTokenIndex++];
     
-    if (currentToken.type == TokenType::INTEGER_LITERAL ||
-        currentToken.type == TokenType::FLOATING_POINT_LITERAL ||
-        currentToken.type == TokenType::IDENTIFIER ||
-        currentToken.type == TokenType::KEYWORD) {
+    if (currentToken.type == LexerNameSpace::TokenType::INTEGER_LITERAL ||
+        currentToken.type == LexerNameSpace::TokenType::FLOATING_POINT_LITERAL ||
+        currentToken.type == LexerNameSpace::TokenType::IDENTIFIER ||
+        currentToken.type == LexerNameSpace::TokenType::KEYWORD ||
+        currentToken.type == LexerNameSpace::TokenType::STRING_LITERAL) {
         return new ASTNode(NodeType::EXPRESSION, currentToken.value);
     }
     
