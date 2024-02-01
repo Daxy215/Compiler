@@ -126,8 +126,6 @@ int main() {
         int printHelloWorld() {
             int x = 8;
             std::cout << "Hello world from compiler!!" << std::endl;
-            
-            return 0;
         }
         
         int main() {

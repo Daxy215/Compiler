@@ -395,10 +395,10 @@ ASTNode* Parser::parseMember(NodeType memberDeclarationType) {
     // Function
     if(matchNext(LexerNameSpace::TokenType::LEFT_PAREN)) {
         Token memberNameToken = currentToken();
-        std::string memberName = memberTypeToken.value;
+        std::string memberName = memberNameToken.value;
         consumeToken(); // Consume member
         
-        ASTNode* functionNode = parseFunction(memberType, memberTypeToken, memberName, memberTypeToken);
+        ASTNode* functionNode = parseFunction(memberType, memberTypeToken, memberName, memberNameToken);
         
         if(!isInClass)
             functionNode->isGlobal = true;

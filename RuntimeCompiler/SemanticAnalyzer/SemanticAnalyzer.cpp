@@ -73,7 +73,7 @@ void SemanticAnalyzer::traverseNodes(ASTNode* node, std::string currentScope, Sy
             
             if(parent)
                 parent->properties->addFunction(symbolTable[funcName]->properties);
-
+            
             for (auto child : node->children) {
                 traverseNodes(child, currentScope, symbolTable[funcName]);
             }
@@ -116,10 +116,10 @@ void SemanticAnalyzer::performSemanticChecks() {
                 const std::string returnType = table->returnType;
                 
                 if(returnType != "void") {
-                    ASTNode* returnTypeNode = node->getChildByType(NodeType::RETURN_TYPE);
-
-                    if(returnTypeNode == nullptr) {
-                        Diagnoser::logError("Couldn't find ", node->token);
+                    ASTNode* returnStatementNode = node->getChildByType(NodeType::RETURN_STATEMENT);
+                    
+                    if(returnStatementNode == nullptr) {
+                        Diagnoser::logError("Couldn't find a return type for the function " + node->value, node->token);
                     }
                 }
                 
