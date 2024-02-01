@@ -66,6 +66,20 @@ private:
     //    return symbolTable[identifier] = new SymbolTable(returnType, identifier, fullName, scope, node);
     //}
     
+    bool functionReturnsSomething(ASTNode* node) {
+        if(node->type == NodeType::RETURN_STATEMENT)
+            return true;
+        
+        if(node->type == NodeType::IF_STATEMENT)
+            return functionReturnsSomething(node->children[0]);
+        
+        for (auto& child : node->children) {
+            functionReturnsSomething(child);
+        }
+        
+        return false;
+    }
+    
     std::string generateUniqueFunctionName(const std::string& functionName) {
         static std::unordered_map<std::string, int> functionCount;
         

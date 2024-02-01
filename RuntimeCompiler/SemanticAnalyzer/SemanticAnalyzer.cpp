@@ -32,7 +32,6 @@ void SemanticAnalyzer::traverseNodes(ASTNode* node, std::string currentScope, Sy
     case NodeType::NAMESPACE: {
             std::string namespaceType = node->value;
             symbolTable[namespaceType] = new SymbolTable("Namespace", namespaceType, namespaceType, currentScope, node);
-            //symbolTable[namespaceType]->isFunction = true;
             
             break;
         }
@@ -43,7 +42,7 @@ void SemanticAnalyzer::traverseNodes(ASTNode* node, std::string currentScope, Sy
             symbolTable[className]->properties = new Properties();
             
             if(className._Equal("Circle")) {
-                std::cout << "class;  " << className << " ; " << symbolTable[className]->identifier << std::endl;
+                std::cout << "class;  " << className << " ; " << symbolTable[className]->identifier << '\n';
             }
             
             currentScope += "::" + className;
@@ -106,17 +105,18 @@ void SemanticAnalyzer::performSemanticChecks() {
     for (const auto& entry : symbolTable) {
         const std::string& member = entry.first;
         const SymbolTable* table  = entry.second;
-              ASTNode*     node   = table->node;
+        ASTNode* node             = table->node;
         
         switch(table->type) {
         case NodeType::CLASS:
-        
+            
             break;
         case NodeType::MEMBER_FUNCTION: {
                 const std::string returnType = table->returnType;
                 
                 if(returnType != "void") {
-                    ASTNode* returnStatementNode = node->getChildByType(NodeType::RETURN_STATEMENT);
+                    const ASTNode* returnStatementNode = node->getChildByType(NodeType::RETURN_STATEMENT);
+                    bool returns = functionReturnsSomething(node);
                     
                     if(returnStatementNode == nullptr) {
                         Diagnoser::logError("Couldn't find a return type for the function " + node->value, node->token);
@@ -137,7 +137,7 @@ bool SemanticAnalyzer::isFunctionOverloaded(const std::string& functionName, con
     
     for (const auto& entry : symbolTable) {
         if(entry.second == nullptr) {
-            std::cout << "Heh? " << entry.first << std::endl;
+            std::cout << "Heh? " << entry.first << '\n';
             continue;
         }
         

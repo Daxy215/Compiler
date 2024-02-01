@@ -124,12 +124,17 @@ int main() {
         }
         
         int printHelloWorld() {
-            int x = 8;
-            std::cout << "Hello world from compiler!!" << std::endl;
+            if(x == 4) {
+                return 0;
+            }
+            
+            return 0;
         }
         
         int main() {
             int x = printHelloWorld();
+            
+            return 0;
         }
     )";
     

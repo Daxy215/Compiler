@@ -156,6 +156,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="AssemblyGenerator.cpp" />
+    <ClCompile Include="CFG\ControlFlowGraph.cpp" />
     <ClCompile Include="Compiler.cpp" />
     <ClCompile Include="Diagnosis\Diagnoser.cpp" />
     <ClCompile Include="IR\Evaluator.cpp" />
@@ -465,6 +466,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AssemblyGenerator.h" />
+    <ClInclude Include="CFG\ControlFlowGraph.h" />
     <ClInclude Include="Compiler.h" />
     <ClInclude Include="Diagnosis\Diagnoser.h" />
     <ClInclude Include="IR\Evaluator.h" />

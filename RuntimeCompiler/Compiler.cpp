@@ -36,6 +36,13 @@ bool Compiler::compileCode(std::string code) {
     
     std::cout << "\n\nAbstract Syntax Tree:" << "\n";
     parser->printAST(root);
+    
+    std::cout << "\n\nControl Flow Graph:" << "\n\n";
+    std::map<ASTNode*, CFGNode*> cfgNodes;
+    
+    cfg->generateCFG(root, cfgNodes);
+    //cfg->printCFG(cfgNodes[root], cfgNodes);
+    
     std::cout << "\n\n\nSemanticAnalyzer\n\n\n";
     
     semanticAnalyzer->generateSymbolTable(root);
