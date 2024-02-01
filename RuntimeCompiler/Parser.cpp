@@ -736,7 +736,8 @@ ASTNode* Parser::parseStatement() {
                     consumeToken(); // Consume '('
                 
                 ASTNode* conditionsNode = parseConditions();
-                ASTNode* bodyNode = parseStatement();
+                ASTNode* bodyNode = new ASTNode({}, NodeType::TRUE_BRANCH, "TRUE BRANCH:");
+                bodyNode->addChild(parseStatement());
                 
                 whileloopNode->children.push_back(conditionsNode);
                 whileloopNode->children.push_back(bodyNode);
@@ -756,7 +757,8 @@ ASTNode* Parser::parseStatement() {
                 consumeToken(); // Consume 'do'
                 
                 ASTNode* doWhileloopNode = new ASTNode(curToken, NodeType::WHILE_LOOP, "Do While Loop");
-                ASTNode* bodyNode = parseStatement();
+                ASTNode* bodyNode = new ASTNode({}, NodeType::TRUE_BRANCH, "TRUE BRANCH:");
+                bodyNode->addChild(parseStatement());
                 
                 if(!match(LexerNameSpace::TokenType::RIGHT_BRACE)) {
                     std::cout << "Missing '}' after do while loop\n";
@@ -850,8 +852,6 @@ ASTNode* Parser::parseFunctionCall() {
         } else if(match(LexerNameSpace::TokenType::LEFT_SQUARE_BRACE)) {
             ASTNode* arrayCall = new ASTNode(currentToken(), NodeType::ARRAY_CALL, "Array call: " + functionName);
             
-            Token tokenz = tokens[currentTokenIndex];
-            
             while(match(LexerNameSpace::TokenType::LEFT_SQUARE_BRACE)) {
                 Token token = tokens[currentTokenIndex];
                 consumeToken(); // Consume '['
@@ -866,8 +866,6 @@ ASTNode* Parser::parseFunctionCall() {
                     std::cerr << "Error; Forgot ']' after array calling\n";
                 }
             }
-            
-            Token z = tokens[currentTokenIndex];
             
             if(match(LexerNameSpace::TokenType::DOT)) {
                 ASTNode* statement = parseStatement();
@@ -924,7 +922,8 @@ ASTNode* Parser::parseIfStatement() {
     consumeToken(); // '('
     
     ASTNode* conditionsNode = parseConditions();
-    ASTNode* ifBodyNode = parseStatement(); // Parse the body of 'if'
+    ASTNode* ifBodyNode = new ASTNode({}, NodeType::TRUE_BRANCH, "TRUE BRANCH:"); // Parse the body of 'if'
+    ifBodyNode->addChild(parseStatement());
     
     // Create an 'if' statement node
     ASTNode* ifStatementNode = new ASTNode(curToken, NodeType::IF_STATEMENT, "If Statement");

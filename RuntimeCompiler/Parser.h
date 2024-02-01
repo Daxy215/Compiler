@@ -42,6 +42,8 @@ enum class NodeType {
     FOR_LOOP,
     WHILE_LOOP,
     DO_WHILE_LOOP,
+
+    TRUE_BRANCH,
     
     POINTER,
     REFERENCE,

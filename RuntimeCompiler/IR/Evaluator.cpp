@@ -19,9 +19,7 @@ bool is_number(const std::string &s) {
     std::cout << "Function with double parameters: " << a << " and " << b << "\n";
 }*/
 
-void ErrorExit(LPCTSTR lpszFunction) 
-{ 
-    // Retrieve the system error message for the last-error code
+void ErrorExit(LPCTSTR lpszFunction) { 
     LPVOID lpMsgBuf;
     LPVOID lpDisplayBuf;
     DWORD dw = GetLastError(); 
@@ -73,7 +71,7 @@ void Evaluator::Evaluate(const std::vector<IR*>& instructions) {
     
     HMODULE hMod = LoadLibrary(reinterpret_cast<LPCWSTR>("dll\\libstdc++-6.dll"));
     if(hMod == NULL) {
-        //ErrorExit(TEXT("LoadLibrary"));
+        //gErrorExit(TEXT("LoadLibrary"));
     }
     
     FreeLibrary(hMod);

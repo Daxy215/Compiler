@@ -116,25 +116,19 @@ int main() {
     )";
     
     std::string helloworld = R"(
-        #include <iostream>
-        
-        enum Test {
-            SomeValue,
-            SomeOtherValue
-        }
-        
         int printHelloWorld() {
             if(x == 4) {
-                return 0;
+                int x = 76;
+                return x;
             }
             
-            return 0;
+            return 4;
         }
         
         int main() {
             int x = printHelloWorld();
             
-            return 0;
+            return 8;
         }
     )";
     
