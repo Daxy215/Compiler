@@ -926,7 +926,7 @@ ASTNode* Parser::parseIfStatement() {
     ifBodyNode->addChild(parseStatement());
     
     // Create an 'if' statement node
-    ASTNode* ifStatementNode = new ASTNode(curToken, NodeType::IF_STATEMENT, "If Statement");
+    ASTNode* ifStatementNode = new ASTNode(curToken, NodeType::IF_STATEMENT, "if");
     ifStatementNode->children.push_back(conditionsNode);
     ifStatementNode->children.push_back(ifBodyNode);
     

@@ -117,16 +117,18 @@ int main() {
     
     std::string helloworld = R"(
         int printHelloWorld() {
+            int x = 4;
+            
             if(x == 4) {
                 int x = 76;
                 return x;
             }
             
-            return 4;
+            return 6;
         }
         
         int main() {
-            int x = printHelloWorld();
+            printHelloWorld();
             
             return 8;
         }

@@ -56,7 +56,7 @@ public:
     }
     
 public:
-    std::string command, temp1, temp2, temp3, parent = "";
+    std::string command, temp1, temp2, temp3, parent = "", moveToParent = "";
 };
 
 /*
@@ -99,6 +99,9 @@ public:
 class IntermediateRepresentation {
 public:
     void generateIR(ASTNode* node, ASTNode* parent);
+    void handleControlFlow(ASTNode* nod, ASTNode* parent);
+
+    std::string handleConditions(ASTNode* node, ASTNode* parent);
     
     void addCommand(std::string command, std::string temp1, std::string parent) {
         commands.push_back(new IR(command, temp1, parent));

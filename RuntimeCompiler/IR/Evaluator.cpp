@@ -78,7 +78,16 @@ void Evaluator::Evaluate(const std::vector<IR*>& instructions) {
     
     for(auto& instruction : instructions) {
         if(instruction->hasParent()) {
-            functionPointers[instruction->parent]->addToBody(instruction);
+            // TODO; Make this as a map;
+            if(instruction->command == "FUNCTION" || instruction->command == "IF_STATEMENT")
+                pointers[instruction->temp1] = new Pointer();
+            
+            if(!pointers.contains(instruction->parent)) {
+                std::cout << "Couldn't find parent\n";
+                continue;
+            }
+            
+            pointers[instruction->parent]->addToBody(instruction);
             
             // Remove parent
             instruction->parent = "";
@@ -97,16 +106,24 @@ void Evaluator::Evaluate(const std::vector<IR*>& instructions) {
             }
             
             loadedLibs[libName] = lib;
-        } else if(instruction->command == "FUNCTION") {
-            std::string functionName = instruction->temp1;
-            
-            functionPointers[functionName] = new Function();
         } else if(instruction->command == "FUNCTION_CALL") {
             std::string functionName = instruction->temp1;
             
-            if(functionPointers.contains(functionName)) {
+            if(pointers.contains(functionName)) {
                 // Call the function.
-                functionPointers[functionName]->call(*this);
+                pointers[functionName]->call(*this);
+            }
+        } else if(instruction->command == "IF_STATEMENT") {
+            std::string name = instruction->temp1;
+            
+            if(pointers.contains(name)) {
+                // If the condition is correct.
+                if(memory[instruction->temp2]) {
+                    pointers[name]->call(*this);
+                } else {
+                    //Condition is not met.
+                    continue;
+                }
             }
         } else if (instruction->command == "ALLOC") {
             memory[instruction->temp2] = 0;
@@ -162,6 +179,17 @@ void Evaluator::Evaluate(const std::vector<IR*>& instructions) {
             int result = operand1 / operand2;
             tempStack.push(result);
             memory[instruction->temp3] = result;
+        } else if (instruction->command == "==") {
+            const int operand2 = tempStack.top();
+            tempStack.pop();
+            const int operand1 = tempStack.top();
+            tempStack.pop();
+            
+            int result = operand1 == operand2;
+            tempStack.push(result);
+            memory[instruction->temp3] = result;
+        } else {
+            std::cerr << "Couldn't find command; " << instruction->command << "\n";
         }
     }
 }

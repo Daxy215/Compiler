@@ -109,6 +109,16 @@ void IntermediateRepresentation::generateIR(ASTNode* node, ASTNode* parent) {
             
             break;
         }
+    case NodeType::IF_STATEMENT:
+    case NodeType::ELSEIF_STATEMENT:
+    case NodeType::ELSE_STATEMENT:
+    case NodeType::FOR_LOOP:
+    case NodeType::WHILE_LOOP:
+    case NodeType::DO_WHILE_LOOP: {
+            handleControlFlow(node, parent);
+            
+            break;
+        }
     case NodeType::MEMBER_VARIABLE:
     case NodeType::LOCAL_VARIABLE_DECLARATION: {
             /*
@@ -186,6 +196,46 @@ void IntermediateRepresentation::generateIR(ASTNode* node, ASTNode* parent) {
         for(auto& c : node->children)
             generateIR(c, parent);
     }
+}
+
+void IntermediateRepresentation::handleControlFlow(ASTNode* node, ASTNode* parent) {
+    switch(node->type) {
+    case NodeType::IF_STATEMENT: {
+            ASTNode* conditionsNode = node->getChildByType(NodeType::CONDITIONS);
+            const std::string combinedCondition = handleConditions(conditionsNode, parent);
+            const ASTNode* trueBranch = node->getChildByType(NodeType::TRUE_BRANCH);
+            
+            addCommand("IF_STATEMENT", "if", combinedCondition, parent->value);
+            
+            for(auto& child : trueBranch->children)
+                generateIR(child, node);
+        }
+    }
+}
+
+std::string IntermediateRepresentation::handleConditions(ASTNode* node, ASTNode* parent) {
+    std::string combinedCondition = "";
+    
+    for(size_t i = 0; i < node->children.size(); i++) {
+        if(node->children[i]->type == NodeType::CONDITIONS) {
+            combinedCondition += "(" + handleConditions(node->children[i], parent) + ")";
+        } else {
+            generateIR(node->children[i], parent);
+            combinedCondition += node->children[i]->value;
+        }
+        
+        if(i < node->children.size() - 1) {
+            combinedCondition += " ";
+            
+            if(i+1 < node->children.size() && node->children[i+1] != nullptr) {
+                combinedCondition += " " + node->children[i+1]->value + " ";
+            }
+            
+            i++;
+        }
+    }
+    
+    return combinedCondition;
 }
 
 /*

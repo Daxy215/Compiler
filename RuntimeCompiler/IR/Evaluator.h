@@ -14,7 +14,7 @@
 
 class IR;
 
-class Function;
+class Pointer;
 
 class Evaluator {
 public:
@@ -28,12 +28,12 @@ public:
     
     std::unordered_map<std::string, HMODULE> loadedLibs;
     //std::unordered_map<std::string, FARPROC> functionPointers;
-    std::unordered_map<std::string, Function*> functionPointers;
+    std::unordered_map<std::string, Pointer*> pointers;
 };
 
-class Function {
+class Pointer {
 public:
-    Function() {}
+    Pointer() {}
     
     void call(Evaluator& evaluator) const {
         evaluator.Evaluate(bodyInstructions);
