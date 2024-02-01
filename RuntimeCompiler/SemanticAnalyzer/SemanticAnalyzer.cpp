@@ -1,5 +1,7 @@
 #include "SemanticAnalyzer.h"
 
+#include "../Diagnosis/Diagnoser.h"
+
 SemanticAnalyzer::SemanticAnalyzer() {
     
 }
@@ -29,14 +31,14 @@ void SemanticAnalyzer::traverseNodes(ASTNode* node, std::string currentScope, Sy
     switch (node->type) {
     case NodeType::NAMESPACE: {
             std::string namespaceType = node->value;
-            symbolTable[namespaceType] = new SymbolTable("Namespace", namespaceType, namespaceType, currentScope, node->type);
+            symbolTable[namespaceType] = new SymbolTable("Namespace", namespaceType, namespaceType, currentScope, node);
             //symbolTable[namespaceType]->isFunction = true;
             
             break;
         }
     case NodeType::CLASS: {
             std::string className = node->value;
-            symbolTable[className] = new SymbolTable("class :D", className, "", currentScope, node->type);
+            symbolTable[className] = new SymbolTable("class :D", className, "", currentScope, node);
             symbolTable[className]->isClass = true;
             symbolTable[className]->properties = new Properties();
             
@@ -54,7 +56,7 @@ void SemanticAnalyzer::traverseNodes(ASTNode* node, std::string currentScope, Sy
     }
     case NodeType::CONSTRUCTOR: {
             std::string constructorName = node->value;
-            symbolTable[currentScope + "::" + constructorName] = new SymbolTable("Constructor", constructorName, currentScope + "::" + constructorName, currentScope, node->type);
+            symbolTable[currentScope + "::" + constructorName] = new SymbolTable("Constructor", constructorName, currentScope + "::" + constructorName, currentScope, node);
             symbolTable[currentScope + "::" + constructorName]->isConstructor = true;
             
             if(parent) {
@@ -66,7 +68,7 @@ void SemanticAnalyzer::traverseNodes(ASTNode* node, std::string currentScope, Sy
     case NodeType::MEMBER_FUNCTION: {
             std::string funcName = node->value;
             std::string returnType = node->getChildByType(NodeType::RETURN_TYPE)->getValue();
-            symbolTable[funcName] = new SymbolTable(returnType, funcName, currentScope + "::" + funcName, currentScope, node->type);
+            symbolTable[funcName] = new SymbolTable(returnType, funcName, currentScope + "::" + funcName, currentScope, node);
             symbolTable[funcName]->isFunction = true;
             
             if(parent)
@@ -82,7 +84,7 @@ void SemanticAnalyzer::traverseNodes(ASTNode* node, std::string currentScope, Sy
     case NodeType::MEMBER_VARIABLE: {
             std::string varName = node->value;
             std::string varType = node->getChildByType(NodeType::VARIABLE_TYPE)->getValue();
-            symbolTable[varName] = new SymbolTable(varType, varName, currentScope + "::" + varName, currentScope, node->type);
+            symbolTable[varName] = new SymbolTable(varType, varName, currentScope + "::" + varName, currentScope, node);
             symbolTable[varName]->isVariable = true;
             
             if(parent)
@@ -103,9 +105,30 @@ void SemanticAnalyzer::traverseNodes(ASTNode* node, std::string currentScope, Sy
 void SemanticAnalyzer::performSemanticChecks() {
     for (const auto& entry : symbolTable) {
         const std::string& member = entry.first;
-        const SymbolTable* type = entry.second;
+        const SymbolTable* table  = entry.second;
+              ASTNode*     node   = table->node;
         
+        switch(table->type) {
+        case NodeType::CLASS:
         
+            break;
+        case NodeType::MEMBER_FUNCTION: {
+                const std::string returnType = table->returnType;
+                
+                if(returnType != "void") {
+                    ASTNode* returnTypeNode = node->getChildByType(NodeType::RETURN_TYPE);
+
+                    if(returnTypeNode == nullptr) {
+                        Diagnoser::logError("Couldn't find ", node->token);
+                    }
+                }
+                
+                break;
+            }
+        default:
+            
+            break;
+        }
     }
 }
 

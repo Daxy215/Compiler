@@ -14,6 +14,7 @@ enum class NodeType {
     
     CLASS,
     ENUM,
+    ENUM_VALUE,
     
     CLASS_BODY,
     MEMBER_FUNCTION,
@@ -89,6 +90,7 @@ enum class NodeType {
 // };
 
 struct ASTNode {
+    Token token;
     NodeType type;
     //DataType dataType;
     
@@ -98,7 +100,7 @@ struct ASTNode {
     std::vector<ASTNode*> children;
     
     //ASTNode(const std::string& val) : type(NodeType::ConstModifier), value(val) {}
-    ASTNode(NodeType t, const std::string& val) : type(t), value(val) {}
+    ASTNode(Token token, NodeType t, const std::string& val) : token(token), type(t), value(val) {}
     ~ASTNode() {
         for (auto child : children) {
             delete child;
@@ -148,8 +150,8 @@ struct ASTNode {
         return type == other;
     }
     
-    void addChild(const NodeType& nodeType, const std::string& nodeValue) {
-        children.push_back(new ASTNode(nodeType, nodeValue));
+    void addChild(Token token, const NodeType& nodeType, const std::string& nodeValue) {
+        children.push_back(new ASTNode(token, nodeType, nodeValue));
     }
 
     void addChild(ASTNode* node) {
@@ -250,6 +252,10 @@ private: // Helper functions
         return {};
     }
 
+    Token currentToken() {
+        return tokens[currentTokenIndex];
+    }
+
 public:
     void printAST(ASTNode* node, int depth = 0) {
         if (!node) {
@@ -268,7 +274,7 @@ public:
     }
 private:
     bool isInClass;
-    std::string className;
+    //std::string className;
     
     size_t currentTokenIndex;
     std::vector<Token> tokens;

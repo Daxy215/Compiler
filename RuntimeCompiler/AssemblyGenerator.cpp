@@ -52,7 +52,6 @@ void AssemblyGenerator::generateCode(const std::vector<IR*>& instructions) {
     std::cout << "int 0x80\n";
 }
 
-
 /*
 void AssemblyGenerator::generateAssembly(std::string fileName) {
     std::ofstream outputFile(fileName);

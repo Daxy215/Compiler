@@ -13,13 +13,14 @@ public:
     SymbolTable() {}
     SymbolTable(const std::string& return_type, const std::string& identifier, const std::string& full_name,
                 const std::string& scope,
-                NodeType type)
+                ASTNode* node)
         : returnType(return_type),
           identifier(identifier),
           fullName(full_name),
           scope(scope),
-          type(type) {
-        properties = new Properties(identifier, returnType);;
+          node(node),
+          type(node->type) {
+        properties = new Properties(identifier, returnType);
     }
 
 // TODO; Make this private
@@ -30,7 +31,8 @@ public:
     bool hasConstructor = false;
     
     Properties* properties;
-    
+
+    ASTNode* node;
     NodeType type;
 };
 

@@ -479,6 +479,9 @@
     <ClInclude Include="TAC\TACEvaluation.h" />
     <ClInclude Include="TAC\TACGenerator.h" />
   </ItemGroup>
+  <ItemGroup>
+    <Content Include="IR\dll\libstdc++-6.dll" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

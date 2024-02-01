@@ -1,6 +1,8 @@
 #include "Evaluator.h"
 
 #include <algorithm>
+#include <strsafe.h>
+
 //#include <stringapiset.h>
 
 #include "IntermediateRepresentation.h"
@@ -16,6 +18,37 @@ bool is_number(const std::string &s) {
 /*void funcDoubleDouble(double a, double b) {
     std::cout << "Function with double parameters: " << a << " and " << b << "\n";
 }*/
+
+void ErrorExit(LPCTSTR lpszFunction) 
+{ 
+    // Retrieve the system error message for the last-error code
+    LPVOID lpMsgBuf;
+    LPVOID lpDisplayBuf;
+    DWORD dw = GetLastError(); 
+
+    FormatMessage(
+        FORMAT_MESSAGE_ALLOCATE_BUFFER | 
+        FORMAT_MESSAGE_FROM_SYSTEM |
+        FORMAT_MESSAGE_IGNORE_INSERTS,
+        NULL,
+        dw,
+        MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+        (LPTSTR) &lpMsgBuf,
+        0, NULL );
+    
+    // Display the error message and exit the process
+    lpDisplayBuf = (LPVOID)LocalAlloc(LMEM_ZEROINIT, 
+        (lstrlen((LPCTSTR)lpMsgBuf) + lstrlen((LPCTSTR)lpszFunction) + 40) * sizeof(TCHAR)); 
+    StringCchPrintf((LPTSTR)lpDisplayBuf, 
+        LocalSize(lpDisplayBuf) / sizeof(TCHAR),
+        TEXT("%s failed with error %d: %s"), 
+        lpszFunction, dw, lpMsgBuf); 
+    MessageBox(NULL, (LPCTSTR)lpDisplayBuf, TEXT("Error"), MB_OK); 
+    
+    LocalFree(lpMsgBuf);
+    LocalFree(lpDisplayBuf);
+    ExitProcess(dw); 
+}
 
 void Evaluator::Evaluate(const std::vector<IR*>& instructions) {
     /*functionPointers["std::cout << \"sometext\" << std::endl"] = [](){ std::cout << "sometext" << std::endl; };
@@ -38,10 +71,17 @@ void Evaluator::Evaluate(const std::vector<IR*>& instructions) {
     //auto& function = functionPointers["doubleDoubleFunction"] = std::bind(&funcDoubleDouble, 3.14, 2.718);
     //function();
     
+    HMODULE hMod = LoadLibrary(reinterpret_cast<LPCWSTR>("dll\\libstdc++-6.dll"));
+    if(hMod == NULL) {
+        //ErrorExit(TEXT("LoadLibrary"));
+    }
+    
+    FreeLibrary(hMod);
+    
     for(auto& instruction : instructions) {
         if(instruction->hasParent()) {
             functionPointers[instruction->parent]->addToBody(instruction);
-
+            
             // Remove parent
             instruction->parent = "";
             
@@ -73,11 +113,15 @@ void Evaluator::Evaluate(const std::vector<IR*>& instructions) {
         } else if (instruction->command == "ALLOC") {
             memory[instruction->temp2] = 0;
         } else if (instruction->command == "STORE") {
-            int value;
+            int value = 0;
             
             if (!is_number(instruction->temp1)) {
-                value = tempStack.top();
-                tempStack.pop();
+                if(!tempStack.empty()) {
+                    value = tempStack.top();
+                    tempStack.pop();
+                } else {
+                    std::cerr << "Error stack is empty and trying to retrive a value :D\n";
+                }
             } else {
                 value = std::stoi(instruction->temp1);
             }

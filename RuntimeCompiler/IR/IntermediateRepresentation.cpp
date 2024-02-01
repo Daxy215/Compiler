@@ -182,13 +182,15 @@ void IntermediateRepresentation::generateIR(ASTNode* node, ASTNode* parent) {
             
             break;
         }
-    case NodeType::ASSIGNMENT: {
+    /*case NodeType::ASSIGNMENT: {
             std::cout << "NO WAY MAn" << std::endl;
             
+            ASTNode* cur = node;
             
+            addCommand("STORE", node->value, parent->value, parentValue);
             
             break;
-        }
+        }*/
     default:
         for(auto& c : node->children)
             generateIR(c, parent);
