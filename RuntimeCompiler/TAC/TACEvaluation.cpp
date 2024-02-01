@@ -3,7 +3,7 @@
 #include <iostream>
 #include <sstream>
 
-// Node made by me, just copied but I am never using it anyways.
+// Not made by me, just copied but I am never using it anyways.
 void TACEvaluation::interpretTAC(const std::vector<std::string>& tac) {
     for (const auto &instruction : tac) {
         executeInstruction(instruction);

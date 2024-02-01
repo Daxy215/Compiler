@@ -56,7 +56,7 @@ public:
     }
     
 public:
-    std::string command, temp1, temp2, temp3, parent = "", moveToParent = "";
+    std::string command, temp1, temp2, temp3, parent = "";
 };
 
 /*
