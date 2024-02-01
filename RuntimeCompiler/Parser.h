@@ -205,7 +205,7 @@ private:
     /**
      * Handles function parameters
      */
-    ASTNode* parseFunction(const std::string& returnType, const std::string& functionName);
+    ASTNode* parseFunction(const std::string& returnType, Token returnTypeToken, const std::string& functionName, Token functionNameToken);
     ASTNode* parseFunctionBody();
     ASTNode* parseStatement();
     ASTNode* parseFunctionCall();
@@ -214,8 +214,8 @@ private:
     ASTNode* parseConditions();
     ASTNode* parseCondition();
     ASTNode* parseNamespacesUsage(int counter);
-    ASTNode* parseVariable(NodeType memberDeclarationType, const std::string& memberType);
-    ASTNode* parseReference(NodeType memberDeclarationType, const std::string& memberType);
+    ASTNode* parseVariable(NodeType memberDeclarationType, const std::string& memberType, Token memberTypeToken);
+    ASTNode* parseReference(NodeType memberDeclarationType, const std::string& memberType, Token memberTypeToken);
     std::vector<std::string> parseFunctionParameters();
     
     ASTNode* expression();

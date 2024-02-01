@@ -62,9 +62,9 @@ public:
         std::cout << "End of Symbol Table" << std::endl;
     }
 private:
-    SymbolTable* addToSymbolTable(const std::string& returnType, const std::string& identifier, const std::string& fullName, const std::string& scope,  NodeType type) {
-        return symbolTable[identifier] = new SymbolTable(returnType, identifier, fullName, scope, type);
-    }
+    //SymbolTable* addToSymbolTable(const std::string& returnType, const std::string& identifier, const std::string& fullName, const std::string& scope, ASTNode* node) {
+    //    return symbolTable[identifier] = new SymbolTable(returnType, identifier, fullName, scope, node);
+    //}
     
     std::string generateUniqueFunctionName(const std::string& functionName) {
         static std::unordered_map<std::string, int> functionCount;

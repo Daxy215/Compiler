@@ -355,18 +355,23 @@ ASTNode* Parser::parseMember(NodeType memberDeclarationType) {
         
         consumeToken(); // Consume modifier
     }
-    
+
+    Token memberTypeToken;
     std::string memberType;
     
     // Ik junky code shush
     if(token.type == LexerNameSpace::TokenType::IDENTIFIER) {
-        memberType = tokens[currentTokenIndex - 1].value;
+        memberTypeToken = tokens[currentTokenIndex - 1];
+        memberType = memberTypeToken.value;
         //consumeToken();
     } else {
-        if(currentTokenIndex == 0)
-            memberType = tokens[currentTokenIndex].value;
-        else
-            memberType = tokens[currentTokenIndex - 1].value;
+        if(currentTokenIndex == 0) {
+            memberTypeToken = currentToken();
+            memberType = memberTypeToken.value;
+        } else {
+            memberTypeToken = tokens[currentTokenIndex - 1];
+            memberType = memberTypeToken.value;
+        }
     }
     
     /*if(match(LexerNameSpace::TokenType::POINTER) || match(LexerNameSpace::TokenType::REFERENCE)) {
@@ -389,10 +394,11 @@ ASTNode* Parser::parseMember(NodeType memberDeclarationType) {
     
     // Function
     if(matchNext(LexerNameSpace::TokenType::LEFT_PAREN)) {
-        std::string memberName = tokens[currentTokenIndex].value;
+        Token memberNameToken = currentToken();
+        std::string memberName = memberTypeToken.value;
         consumeToken(); // Consume member
         
-        ASTNode* functionNode = parseFunction(memberType, memberName);
+        ASTNode* functionNode = parseFunction(memberType, memberTypeToken, memberName, memberTypeToken);
         
         if(!isInClass)
             functionNode->isGlobal = true;
@@ -412,7 +418,7 @@ ASTNode* Parser::parseMember(NodeType memberDeclarationType) {
     if (match(LexerNameSpace::TokenType::REFERENCE) || match(LexerNameSpace::TokenType::POINTER)) {
         //consumeToken(); // Consume reference
         
-        ASTNode* variableNode = parseReference(memberDeclarationType, memberType);
+        ASTNode* variableNode = parseReference(memberDeclarationType, memberType, memberTypeToken);
         
         if(!modifiers->children.empty())
             variableNode->children.push_back(modifiers);
@@ -431,7 +437,7 @@ ASTNode* Parser::parseMember(NodeType memberDeclarationType) {
     // Go back 1 index for, [MemberType] -> double radius
     //currentTokenIndex--;
     
-    ASTNode* variableNode = parseVariable(memberDeclarationType, memberType);
+    ASTNode* variableNode = parseVariable(memberDeclarationType, memberType, memberTypeToken);
     
     if(!modifiers->children.empty())
         variableNode->children.push_back(modifiers);
@@ -446,9 +452,9 @@ ASTNode* Parser::parseMember(NodeType memberDeclarationType) {
     //}
 }
 
-ASTNode* Parser::parseFunction(const std::string& returnType, const std::string& functionName) {
-    ASTNode* memberFunction = new ASTNode(NodeType::MEMBER_FUNCTION, functionName);
-    memberFunction->children.push_back(new ASTNode(NodeType::RETURN_TYPE, returnType));
+ASTNode* Parser::parseFunction(const std::string& returnType, Token returnTypeToken, const std::string& functionName, Token functionNameToken) {
+    ASTNode* memberFunction = new ASTNode(functionNameToken, NodeType::MEMBER_FUNCTION, functionName);
+    memberFunction->children.push_back(new ASTNode(returnTypeToken, NodeType::RETURN_TYPE, returnType));
     
     // Parse function parameters
     if (match(LexerNameSpace::TokenType::LEFT_PAREN)) { // '('
@@ -1115,18 +1121,18 @@ ASTNode* Parser::parseNamespacesUsage(int counter) {
     return nullptr;
 }
 
-ASTNode* Parser::parseVariable(NodeType memberDeclarationType, const std::string& memberType) {
+ASTNode* Parser::parseVariable(NodeType memberDeclarationType, const std::string& memberType, Token memberTypeToken) {
     Token curToken = currentToken();
     std::string memberName = curToken.value;
     consumeToken(); // Consume member name
     
     if (match(LexerNameSpace::TokenType::LEFT_PAREN)) { // '('
-        return parseFunction(memberType, memberName);
+        return parseFunction(memberType, memberTypeToken, memberName, curToken);
     }
     
     //TODO; global variable..? Can't remember what I meant by this...
     ASTNode* memberVariable = new ASTNode(curToken, memberDeclarationType, memberName);
-    memberVariable->children.push_back(new ASTNode(NodeType::VARIABLE_TYPE, memberType));
+    memberVariable->children.push_back(new ASTNode(memberTypeToken, NodeType::VARIABLE_TYPE, memberType));
     
     // If variable has no assignment.
     if (match(LexerNameSpace::TokenType::SEMICOLON)) {
@@ -1145,23 +1151,24 @@ ASTNode* Parser::parseVariable(NodeType memberDeclarationType, const std::string
     return memberVariable;
 }
 
-ASTNode* Parser::parseReference(NodeType memberDeclarationType, const std::string& memberType) {
+ASTNode* Parser::parseReference(NodeType memberDeclarationType, const std::string& memberType, Token memberTypeToken) {
+    Token pointerToken = currentToken();
     NodeType pointerType;
     
-    if(tokens[currentTokenIndex].type == LexerNameSpace::TokenType::POINTER)
+    if(pointerToken.type == LexerNameSpace::TokenType::POINTER)
         pointerType = NodeType::POINTER;
     else
         pointerType = NodeType::REFERENCE;
     
     consumeToken(); // Consume pointer
-
+    
     Token curToken = currentToken();
     std::string memberName = curToken.value;
     consumeToken(); // Consume memberName
     
     ASTNode* memberReference = new ASTNode(curToken, memberDeclarationType, memberName);
-    memberReference->children.push_back(new ASTNode(NodeType::VARIABLE_TYPE, memberType));
-    memberReference->children.push_back(new ASTNode(pointerType, memberType));
+    memberReference->children.push_back(new ASTNode(memberTypeToken, NodeType::VARIABLE_TYPE, memberType));
+    memberReference->children.push_back(new ASTNode(pointerToken, pointerType, memberType));
     
     // If variable has no assignment.
     if (match(LexerNameSpace::TokenType::SEMICOLON)) {
