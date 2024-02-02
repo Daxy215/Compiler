@@ -176,7 +176,7 @@ void IntermediateRepresentation::generateIR(ASTNode* node, ASTNode* parent) {
              * (ADD, temp1, temp5, total) <- Add temp1, temp5 and store the results total.
              */
             
-            if(tempCounter == 1) {
+            if(tempCounter == 4) {
                 std::cerr << "sa\n";
             }
             
@@ -189,7 +189,7 @@ void IntermediateRepresentation::generateIR(ASTNode* node, ASTNode* parent) {
             addCommand("STORE", node->children[0]->value, leftOperand, parentValue);
             addCommand("STORE", node->children[1]->value, rightOperand, parentValue);
             
-            addCommand(node->value,  leftOperand, rightOperand, parentValue, parentValue);
+            addCommand(node->value,  leftOperand, rightOperand, "temp" + std::to_string(tempCounter), parentValue);
             tempCounter++;
             
             node->value = "temp" + std::to_string(tempCounter - 1);
