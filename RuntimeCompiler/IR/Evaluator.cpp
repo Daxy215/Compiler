@@ -77,13 +77,13 @@ void Evaluator::Evaluate(const std::vector<IR*>& instructions) {
     FreeLibrary(hMod);
     
     for(auto& instruction : instructions) {
+        // TODO; Make this as a map;
+        if(instruction->command == "FUNCTION" || instruction->command == "IF_STATEMENT")
+            pointers[instruction->temp1] = new Pointer();
+        
         if(instruction->hasParent()) {
-            // TODO; Make this as a map;
-            if(instruction->command == "FUNCTION" || instruction->command == "IF_STATEMENT")
-                pointers[instruction->temp1] = new Pointer();
-            
             if(!pointers.contains(instruction->parent)) {
-                std::cout << "Couldn't find parent\n";
+                std::cout << "Couldn't find parent; " << instruction->parent <<  "\n";
                 continue;
             }
             

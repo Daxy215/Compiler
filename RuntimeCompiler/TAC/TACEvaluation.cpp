@@ -19,7 +19,7 @@ void TACEvaluation::interpretTAC(const std::vector<std::string>& tac) {
             // Evaluate the right-hand side of the assignment
             std::string expression = instruction.substr(instruction.find('=') + 1);
             double value = calculate<double>(expression);
-
+            
             // Store the result in the map
             variables[tokens[0]] = value;
         }

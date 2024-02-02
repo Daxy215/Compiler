@@ -48,12 +48,11 @@ void IntermediateRepresentation::generateIR(ASTNode* node, ASTNode* parent) {
     std::string parentValue = parent ? parent->value : "";
     
     switch (node->getType()) {
-    //case NodeType::CLASS:
-        //ase NodeType::MEMBER_FUNCTION: {
+    //case NodeType::CLASS: {
         //for (auto child : node->children) {
         //    std::unique_ptr<IRNode> c = generateIR(child);
         //}
-            
+        
         //break;
         //}
         //case
@@ -132,9 +131,6 @@ void IntermediateRepresentation::generateIR(ASTNode* node, ASTNode* parent) {
             ASTNode* varType = node->getChildByType(NodeType::VARIABLE_TYPE);
             const size_t variableSize = variablesSize[varType->value];
             
-            // TODO; Maybe remove this??
-            //IRVariableDeclaration var(node->value, varType->value, variableSize);
-            
             // (ALLOC, 4, x)
             addCommand("ALLOC", std::to_string(variableSize), node->value, parentValue);
             
@@ -146,6 +142,10 @@ void IntermediateRepresentation::generateIR(ASTNode* node, ASTNode* parent) {
             } else {
                 addCommand("STORE", "0",node->value, parentValue);
             }
+            
+            break;
+        }
+    case NodeType::RETURN_STATEMENT: {
             
             break;
         }
@@ -214,7 +214,7 @@ void IntermediateRepresentation::handleControlFlow(ASTNode* node, ASTNode* paren
 }
 
 std::string IntermediateRepresentation::handleConditions(ASTNode* node, ASTNode* parent) {
-    std::string combinedCondition = "";
+    std::string combinedCondition;
     
     for(size_t i = 0; i < node->children.size(); i++) {
         if(node->children[i]->type == NodeType::CONDITIONS) {
