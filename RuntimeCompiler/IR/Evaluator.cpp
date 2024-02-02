@@ -48,7 +48,7 @@ void ErrorExit(LPCTSTR lpszFunction) {
     ExitProcess(dw); 
 }
 
-void Evaluator::Evaluate(const std::vector<IR*>& instructions) {
+int Evaluator::Evaluate(const std::vector<IR*>& instructions) {
     /*functionPointers["std::cout << \"sometext\" << std::endl"] = [](){ std::cout << "sometext" << std::endl; };
     
     std::string functionName = "std::cout << \"sometext\" << std::endl";
@@ -77,22 +77,30 @@ void Evaluator::Evaluate(const std::vector<IR*>& instructions) {
     FreeLibrary(hMod);
     
     for(auto& instruction : instructions) {
+        std::string cmd = instruction->command;
+        std::string pr = instruction->parent;
+        
         // TODO; Make this as a map;
-        if(instruction->command == "FUNCTION" || instruction->command == "IF_STATEMENT")
+        if(instruction->command == "FUNCTION")
             pointers[instruction->temp1] = new Pointer();
         
         if(instruction->hasParent()) {
-            if(!pointers.contains(instruction->parent)) {
-                std::cout << "Couldn't find parent; " << instruction->parent <<  "\n";
+            if(instruction->command == "IF_STATEMENT")
+                pointers[instruction->temp1] = new Pointer();
+            
+            if(pointers.contains(instruction->parent)) {
+                pointers[instruction->parent]->addToBody(instruction);
+                
+                // Remove parent
+                instruction->parent = "";
+                
                 continue;
+            } else if(memory.contains(instruction->parent)) {
+                // Idk if I want to do anything else..
+                instruction->parent = "";
+            } else {
+                std::cout << "Couldn't find parent; " << instruction->parent <<  "\n";
             }
-            
-            pointers[instruction->parent]->addToBody(instruction);
-            
-            // Remove parent
-            instruction->parent = "";
-            
-            continue;
         }
         
         if (instruction->command == "INCLUDE") {
@@ -111,7 +119,12 @@ void Evaluator::Evaluate(const std::vector<IR*>& instructions) {
             
             if(pointers.contains(functionName)) {
                 // Call the function.
-                pointers[functionName]->call(*this);
+                int results = pointers[functionName]->call(*this);
+                
+                if(results != -1) {
+                    memory[functionName] = results;
+                    //return results;
+                }
             }
         } else if(instruction->command == "IF_STATEMENT") {
             std::string name = instruction->temp1;
@@ -119,12 +132,19 @@ void Evaluator::Evaluate(const std::vector<IR*>& instructions) {
             if(pointers.contains(name)) {
                 // If the condition is correct.
                 if(memory[instruction->temp2]) {
-                    pointers[name]->call(*this);
+                    int results = pointers[name]->call(*this);
+                    
+                    if(results != -1) {
+                        //results = 5;
+                        return results;
+                    }
                 } else {
                     //Condition is not met.
                     continue;
                 }
             }
+        } else if(instruction->command == "RETURN") {
+            return memory[instruction->temp1];
         } else if (instruction->command == "ALLOC") {
             memory[instruction->temp2] = 0;
         } else if (instruction->command == "STORE") {
@@ -192,4 +212,6 @@ void Evaluator::Evaluate(const std::vector<IR*>& instructions) {
             std::cerr << "Couldn't find command; " << instruction->command << "\n";
         }
     }
+    
+    return -1;
 }

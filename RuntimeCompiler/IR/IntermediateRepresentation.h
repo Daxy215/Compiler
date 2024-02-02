@@ -45,14 +45,17 @@ public:
     
     void addCommand(std::string command, std::string temp1, std::string parent) {
         commands.push_back(new IR(command, temp1, parent));
+        std::cerr << "(" << command << ", " << temp1 << ") " << parent << '\n';
     }
     
     void addCommand(std::string command, std::string temp1, std::string temp2, std::string parent) {
         commands.push_back(new IR(command, temp1, temp2, parent));
+        std::cerr << "(" << command << ", " << temp1 << ", " << temp2 << ") " << parent << '\n';
     }
     
     void addCommand(std::string command, std::string temp1, std::string temp2, std::string temp3, std::string parent) {
         commands.push_back(new IR(command, temp1, temp2, temp3, parent));
+        std::cerr << "(" << command << ", " << temp1 << ", " << temp2 << ", " << temp3 << ") " << parent << '\n';
     }
     
 public:

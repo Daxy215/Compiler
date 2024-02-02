@@ -20,7 +20,7 @@ class Evaluator {
 public:
     Evaluator();
     
-    void Evaluate(const std::vector<IR*>& instructions);
+    int Evaluate(const std::vector<IR*>& instructions);
 
 public:
     std::unordered_map<std::string, int> memory;
@@ -35,8 +35,8 @@ class Pointer {
 public:
     Pointer() {}
     
-    void call(Evaluator& evaluator) const {
-        evaluator.Evaluate(bodyInstructions);
+    int call(Evaluator& evaluator) const {
+        return evaluator.Evaluate(bodyInstructions);
     }
     
     void addToBody(IR* ir) {

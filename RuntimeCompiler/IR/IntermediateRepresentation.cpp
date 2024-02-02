@@ -137,7 +137,7 @@ void IntermediateRepresentation::generateIR(ASTNode* node, ASTNode* parent) {
             ASTNode* assignment = node->getChildByType(NodeType::COMPOUND_ASSIGNMENT);
             
             if(assignment) {
-                generateIR(assignment->children[0], node);
+                generateIR(assignment->children[0], parent);
                 addCommand("STORE", assignment->children[0]->value, node->value, parentValue);
             } else {
                 addCommand("STORE", "0",node->value, parentValue);
@@ -146,6 +146,15 @@ void IntermediateRepresentation::generateIR(ASTNode* node, ASTNode* parent) {
             break;
         }
     case NodeType::RETURN_STATEMENT: {
+            /*
+             * (LOAD, 76, temp_result) ; Load the value 76 into a temporary variable
+             * (RETURN, temp_result)    ; Return the value stored in temp_result
+             */
+            
+            addCommand("STORE", node->children[0]->value, "temp" + std::to_string(tempCounter), parentValue);
+            //generateIR(node->children[0], parent);
+            addCommand("RETURN", "temp" + std::to_string(tempCounter), parentValue);
+            tempCounter++;
             
             break;
         }
@@ -167,16 +176,20 @@ void IntermediateRepresentation::generateIR(ASTNode* node, ASTNode* parent) {
              * (ADD, temp1, temp5, total) <- Add temp1, temp5 and store the results total.
              */
             
+            if(tempCounter == 1) {
+                std::cerr << "sa\n";
+            }
+            
             std::string leftOperand = "temp" + std::to_string(tempCounter++);
-            generateIR(node->children[0], node);
+            generateIR(node->children[0], parent);
             
             std::string rightOperand = "temp" + std::to_string(tempCounter++);
-            generateIR(node->children[1], node);
+            generateIR(node->children[1], parent);
             
             addCommand("STORE", node->children[0]->value, leftOperand, parentValue);
             addCommand("STORE", node->children[1]->value, rightOperand, parentValue);
             
-            addCommand(node->value,  leftOperand, rightOperand, "temp" + std::to_string(tempCounter), parentValue);
+            addCommand(node->value,  leftOperand, rightOperand, parentValue, parentValue);
             tempCounter++;
             
             node->value = "temp" + std::to_string(tempCounter - 1);

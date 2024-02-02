@@ -118,9 +118,9 @@ int main() {
     std::string helloworld = R"(
         int printHelloWorld() {
             int x = 4;
+            int y = 10 + 76;
             
             if(x == 4) {
-                int x = 76;
                 return x;
             }
             
