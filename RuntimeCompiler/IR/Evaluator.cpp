@@ -77,9 +77,6 @@ int Evaluator::Evaluate(const std::vector<IR*>& instructions) {
     FreeLibrary(hMod);
     
     for(auto& instruction : instructions) {
-        std::string cmd = instruction->command;
-        std::string pr = instruction->parent;
-        
         // TODO; Make this as a map;
         if(instruction->command == "FUNCTION")
             pointers[instruction->temp1] = new Pointer();
@@ -144,19 +141,31 @@ int Evaluator::Evaluate(const std::vector<IR*>& instructions) {
                 }
             }
         } else if(instruction->command == "RETURN") {
-            return memory[instruction->temp1];
-        } else if (instruction->command == "ALLOC") {
-            memory[instruction->temp2] = 0;
-        } else if (instruction->command == "STORE") {
             int value = 0;
             
             if (!is_number(instruction->temp1)) {
-                if(!tempStack.empty()) {
-                    value = tempStack.top();
-                    tempStack.pop();
-                } else {
-                    std::cerr << "Error stack is empty and trying to retrive a value :D\n";
-                }
+                value = memory[instruction->temp1];
+            } else {
+                value = std::stoi(instruction->temp1);
+            }
+            
+            return value;
+        } else if (instruction->command == "ALLOC") {
+            memory[instruction->temp2] = 0;
+        } else if (instruction->command == "STORE") {
+            std::string cmd = instruction->command;
+            std::string pr = instruction->parent;
+            
+            int value = 0;
+            
+            if (!is_number(instruction->temp1)) {
+                value = memory[instruction->temp1];
+                //if(!tempStack.empty()) {
+                //    value = tempStack.top();
+                //    tempStack.pop();
+                //} else {
+                //    std::cerr << "Error stack is empty and trying to retrive a value :D\n";
+               // }
             } else {
                 value = std::stoi(instruction->temp1);
             }

@@ -120,7 +120,9 @@ int main() {
             int x = 4;
             
             if(x == 4) {
-                int y = 10 + 76;
+                int y = x;
+                int total = 2 + 4 / 4 * 8;
+                
                 return x;
             }
             

@@ -59,6 +59,15 @@ bool Compiler::compileCode(std::string code) {
     
     int value = evaluator->Evaluate(intermediateRepresentation->commands);
     
+    std::cerr << "\n";
+    
+    for(auto& val : evaluator->memory) {
+        //if(!val.first.find("temp"))
+        //    continue;
+        
+        std::cerr << "Variable: " << val.first << " = " << val.second << std::endl;
+    }
+    
     std::cout << "Compiled successfully!\n";
     
     //std::cout << "\n\nTAC;\n\n";

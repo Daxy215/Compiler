@@ -151,10 +151,8 @@ void IntermediateRepresentation::generateIR(ASTNode* node, ASTNode* parent) {
              * (RETURN, temp_result)    ; Return the value stored in temp_result
              */
             
-            addCommand("STORE", node->children[0]->value, "temp" + std::to_string(tempCounter), parentValue);
             //generateIR(node->children[0], parent);
-            addCommand("RETURN", "temp" + std::to_string(tempCounter), parentValue);
-            tempCounter++;
+            addCommand("RETURN", node->children[0]->value, parentValue);
             
             break;
         }
@@ -190,9 +188,9 @@ void IntermediateRepresentation::generateIR(ASTNode* node, ASTNode* parent) {
             addCommand("STORE", node->children[1]->value, rightOperand, parentValue);
             
             addCommand(node->value,  leftOperand, rightOperand, "temp" + std::to_string(tempCounter), parentValue);
-            tempCounter++;
+            node->value = "temp" + std::to_string(tempCounter);
             
-            node->value = "temp" + std::to_string(tempCounter - 1);
+            tempCounter++;
             
             break;
          }
