@@ -1278,7 +1278,7 @@ ASTNode* Parser::term() {
         assignmentType = "new";
         consumeToken();
     }*/
-
+    
     Token curToken = currentToken();
     std::string type = curToken.value;
     ASTNode* left = new ASTNode(curToken, NodeType::ASSIGNMENT,/* assignmentType + "; " + */type);

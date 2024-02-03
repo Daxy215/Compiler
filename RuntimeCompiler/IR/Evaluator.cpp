@@ -129,7 +129,7 @@ int Evaluator::Evaluate(const std::vector<IR*>& instructions) {
             if(pointers.contains(name)) {
                 // If the condition is correct.
                 if(memory[instruction->temp2]) {
-                    int results = pointers[name]->call(*this);
+                    const int results = pointers[name]->call(*this);
                     
                     if(results != -1) {
                         //results = 5;
@@ -141,7 +141,7 @@ int Evaluator::Evaluate(const std::vector<IR*>& instructions) {
                 }
             }
         } else if(instruction->command == "RETURN") {
-            int value = 0;
+            int value;
             
             if (!is_number(instruction->temp1)) {
                 value = memory[instruction->temp1];
@@ -156,7 +156,7 @@ int Evaluator::Evaluate(const std::vector<IR*>& instructions) {
             std::string cmd = instruction->command;
             std::string pr = instruction->parent;
             
-            int value = 0;
+            int value;
             
             if (!is_number(instruction->temp1)) {
                 value = memory[instruction->temp1];

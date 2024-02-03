@@ -130,9 +130,9 @@ int main() {
         }
         
         int main() {
-            printHelloWorld();
+            int x = printHelloWorld();
             
-            return 8;
+            return x;
         }
     )";
     

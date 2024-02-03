@@ -137,8 +137,13 @@ void IntermediateRepresentation::generateIR(ASTNode* node, ASTNode* parent) {
             ASTNode* assignment = node->getChildByType(NodeType::COMPOUND_ASSIGNMENT);
             
             if(assignment) {
-                generateIR(assignment->children[0], parent);
-                addCommand("STORE", assignment->children[0]->value, node->value, parentValue);
+                if(assignment->children.size() == 1) {
+                    addCommand("FUNCTION_CALL", assignment->children[0]->value, "", parentValue);
+                    addCommand("STORE", assignment->children[0]->value, node->value, parentValue);
+                } else {
+                    generateIR(assignment->children[0], parent);
+                    addCommand("STORE", assignment->children[0]->value, node->value, parentValue);
+                }
             } else {
                 addCommand("STORE", "0",node->value, parentValue);
             }
@@ -151,13 +156,15 @@ void IntermediateRepresentation::generateIR(ASTNode* node, ASTNode* parent) {
              * (RETURN, temp_result)    ; Return the value stored in temp_result
              */
             
+            //TODO; Somehow figure this out..
+            //You need to change parser to handle this future me :)
+            addCommand("FUNCTION_CALL", node->children[0]->value, "", parentValue);
+            
             //generateIR(node->children[0], parent);
             addCommand("RETURN", node->children[0]->value, parentValue);
             
             break;
         }
-    case NodeType::STRING:
-    case NodeType::VALUE:
     case NodeType::OPERATOR: {
             /*
              * int total = 2 + 4 / 4 * 8;
