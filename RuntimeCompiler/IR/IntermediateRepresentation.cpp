@@ -137,13 +137,13 @@ void IntermediateRepresentation::generateIR(ASTNode* node, ASTNode* parent) {
             ASTNode* assignment = node->getChildByType(NodeType::COMPOUND_ASSIGNMENT);
             
             if(assignment) {
-                if(assignment->children.size() == 1) {
-                    addCommand("FUNCTION_CALL", assignment->children[0]->value, "", parentValue);
-                    addCommand("STORE", assignment->children[0]->value, node->value, parentValue);
-                } else {
+                //if(assignment->children.size() == 1) {
+                    //addCommand("FUNCTION_CALL", assignment->children[0]->value, "", parentValue);
+                    //addCommand("STORE", assignment->children[0]->value, node->value, parentValue);
+                //} else {
                     generateIR(assignment->children[0], parent);
                     addCommand("STORE", assignment->children[0]->value, node->value, parentValue);
-                }
+                //}
             } else {
                 addCommand("STORE", "0",node->value, parentValue);
             }
@@ -158,9 +158,10 @@ void IntermediateRepresentation::generateIR(ASTNode* node, ASTNode* parent) {
             
             //TODO; Somehow figure this out..
             //You need to change parser to handle this future me :)
-            addCommand("FUNCTION_CALL", node->children[0]->value, "", parentValue);
+            // Got it :D Just being stupid lol
+            //addCommand("FUNCTION_CALL", node->children[0]->value, "", parentValue);
             
-            //generateIR(node->children[0], parent);
+            generateIR(node->children[0], parent);
             addCommand("RETURN", node->children[0]->value, parentValue);
             
             break;
@@ -225,8 +226,12 @@ void IntermediateRepresentation::handleControlFlow(ASTNode* node, ASTNode* paren
             
             addCommand("IF_STATEMENT", "if", combinedCondition, parent->value);
             
+            addCommand("LABEL", "StartLabel_" + std::to_string(labelCounter++), node->value);
+            
             for(auto& child : trueBranch->children)
                 generateIR(child, node);
+            
+            addCommand("LABEL", "EndLabel_" + std::to_string(labelCounter++), node->value);
         }
     }
 }

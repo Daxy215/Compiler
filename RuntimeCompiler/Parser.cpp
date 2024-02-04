@@ -1271,8 +1271,8 @@ ASTNode* Parser::expression() {
 
 //NEW; I think I fixed it?? Can't remember lol
 ASTNode* Parser::term() {
-    std::string assignmentType = "";
-    std::vector<std::string> parameters;
+    //std::string assignmentType = "";
+    //std::vector<std::string> parameters;
     
     /*if(match(LexerNameSpace::TokenType::KEYWORD, "new")) {
         assignmentType = "new";
@@ -1281,19 +1281,24 @@ ASTNode* Parser::term() {
     
     Token curToken = currentToken();
     std::string type = curToken.value;
-    ASTNode* left = new ASTNode(curToken, NodeType::ASSIGNMENT,/* assignmentType + "; " + */type);
-    Token t = tokens[currentTokenIndex];
-    
-    // Points to a class, perhaps?
+        
+    // Points to a class or a function call, perhaps?
     if(match(LexerNameSpace::TokenType::IDENTIFIER) && matchNext(LexerNameSpace::TokenType::LEFT_PAREN)) {
-        consumeToken(); // Consume type
+        ASTNode* functionCallNode = parseFunctionCall();
+        
+        /*consumeToken(); // Consume type
         
         if(match(LexerNameSpace::TokenType::SEMICOLON)) {
             return left;
         }
         
         consumeToken(); // Consume '('
+
+        if(match(LexerNameSpace::TokenType::RIGHT_PAREN)) { // ')'
+            
+        }
         
+        //TODO; Update this please..
         while (!match(LexerNameSpace::TokenType::RIGHT_PAREN)) { // ')'
             if (match(LexerNameSpace::TokenType::COMMA)) {
                 //Skip
@@ -1305,18 +1310,18 @@ ASTNode* Parser::term() {
             if (match(LexerNameSpace::TokenType::SEMICOLON)) {
                 return left;
             }
-
+            
             Token paraToken = currentToken();
             parameters.push_back(paraToken.value);
             left->children.push_back(new ASTNode(paraToken, NodeType::PARAMETER, paraToken.value));
             
             consumeToken(); // Consume parameter
-        }
+        }*/
         
-        return left;
+        return functionCallNode;
     }
     
-    left = factor();
+    ASTNode* left = factor();
     
     while (currentTokenIndex < tokens.size() && (match(LexerNameSpace::TokenType::POINTER) || match(LexerNameSpace::TokenType::OPERATOR)) &&
            (tokens[currentTokenIndex].value == "*" || tokens[currentTokenIndex].value == "/")) {

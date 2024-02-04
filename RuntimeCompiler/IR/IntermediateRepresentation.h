@@ -59,7 +59,7 @@ public:
     }
     
 public:
-    int tempCounter = 1;
+    int tempCounter = 1, labelCounter = 1;
     
     std::vector<IR*> commands;
 };

@@ -52,8 +52,8 @@ bool Compiler::compileCode(std::string code) {
     intermediateRepresentation->generateIR(root, nullptr);
     intermediateRepresentation->addCommand("FUNCTION_CALL", "main", "");
     
-    for(IR* ir : intermediateRepresentation->commands)
-        std::cout << "(" << ir->command << ", " << ir->temp1 << ", " << ir->temp2 << ", " << ir->temp3 << ") " << ir->parent << '\n';
+    //for(IR* ir : intermediateRepresentation->commands)
+        //std::cout << "(" << ir->command << ", " << ir->temp1 << ", " << ir->temp2 << ", " << ir->temp3 << ") " << ir->parent << '\n';
     
     std::cout << "\n\nEVALUATOR;\n\n";
     
@@ -62,10 +62,10 @@ bool Compiler::compileCode(std::string code) {
     std::cerr << "\n";
     
     for(auto& val : evaluator->memory) {
-        //if(!val.first.find("temp"))
-        //    continue;
+        if(!val.first.find("temp"))
+            continue;
         
-        std::cerr << "Variable: " << val.first << " = " << val.second << std::endl;
+        std::cerr << "Variable: " << val.first << " = " << val.second << '\n';
     }
     
     std::cout << "Compiled successfully!\n";
