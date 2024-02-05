@@ -10,46 +10,77 @@ void AssemblyGenerator::visit(IRVariableDeclaration* node) {
 }*/
 
 void AssemblyGenerator::generateCode(const std::vector<IR*>& instructions) {
-    std::cout << "section .data\n";
-
-    // Assuming total is a global variable, and it's 4 bytes
+    std::cout << "section .bss\n";
+    
     for (const IR* ir : instructions) {
-        if (ir->command == "ALLOC" && ir->temp3 == "total") {
-            std::cout << "total resb 4\n";
+        if (ir->command == "ALLOC") {
+            //std::cout << "\t" << ir->temp2 << " resb 4\n";
+            std::cout << "\t" << ir->temp2 << " resd " << ir->temp1 << "\n";
         }
-        // Add additional sections for other data if needed
     }
-
+    
+    std::cout << "section .data\n";
+    
+    // There shouldn't be any data.
+    
     std::cout << "\nsection .text\n";
-
+    
     std::cout << "global main\n";
-    std::cout << "main:\n";
-
+    std::cout << "extern ExitProcess\n";
+    
     for (const IR* ir : instructions) {
-        if (ir->command == "STORE") {
+        /*if (ir->command == "ALLOC") {
+            std::cout << "\t" << ir->temp2 << " resd " << ir->temp1 << "\n";
+        } else */if (ir->command == "STORE") {
+            std::cout << "\t;  " << ir->temp2 << "\n";
+            std::cout << "\tmov eax, [" << ir->temp2 << "]\n";
+            std::cout << "\tmov dword [" << ir->temp1 << "], eax\n";
+        } else if (ir->command == "==") {
+            std::cout << "\tmov eax, " << ir->temp1 << "\n";
+            std::cout << "\tcmp eax, " << ir->temp2 << "\n";
+            std::cout << "\tje " << ir->temp3 << "\n";
+        } else if (ir->command == "IF_STATEMENT") {
+            std::cout << "\tcmp byte [" << ir->temp2 << "], 1\n";
+            
+            // if true go to true branch
+            std::cout << "\tje START" << ir->temp3 << "\n";
+            // If false go to false branch
+            std::cout << "\tjmp END" << ir->temp3 << "\n";
+        } else if (ir->command == "LABEL") {
+            std::cout << ir->temp1 << ":\n";
+        } else if (ir->command == "FUNCTION") {
+            std::cout << ir->temp1 << ":\n";
+        } else if (ir->command == "FUNCTION_CALL") {
+            std::cout << "\tcall " << ir->temp1 << "\n";
+        } else if (ir->command == "RETURN") {
+            std::cout << "\tmov eax, [" << ir->temp1 << "]\n";
+            std::cout << "\tret\n";
+        }
+        
+        /*if (ir->command == "STORE") {
             std::cout << "mov eax, " << ir->temp2 << "\n";
             std::cout << "mov dword [" << ir->temp1 << "], eax\n";
         } else {
             std::cout << "mov eax, " << ir->temp1 << "\n";
             std::cout << "mov ebx, " << ir->temp2 << "\n";
-
+            
             if (ir->command == "/") {
                 std::cout << "cdq\n";
                 std::cout << "idiv ebx\n";
             } else if (ir->command == "*") {
                 std::cout << "imul eax, ebx\n";
             }
-
+            
             if (!ir->temp3.empty()) {
                 std::cout << "mov dword [" << ir->temp3 << "], eax\n";
             }
-        }
+        }*/
     }
-
+    
     // Additional code for program termination
-    std::cout << "\nmov eax, 1\n";
-    std::cout << "xor ebx, ebx\n";
-    std::cout << "int 0x80\n";
+    std::cout << "\n\t; Call ExitProcess with exit code 0\n";
+    std::cout << "\tpush 0\n";
+    std::cout << "\tcall ExitProcess\n";
 }
 
 /*

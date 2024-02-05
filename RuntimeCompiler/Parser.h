@@ -42,7 +42,7 @@ enum class NodeType {
     FOR_LOOP,
     WHILE_LOOP,
     DO_WHILE_LOOP,
-
+    
     TRUE_BRANCH,
     
     POINTER,
@@ -108,7 +108,7 @@ struct ASTNode {
             delete child;
         }
     }
-
+    
     ASTNode* getChildByType(NodeType nodeType) {
         return getChildByType(this, nodeType);
     }
@@ -138,16 +138,16 @@ struct ASTNode {
             setIsGlobal(child, cond);
         }
     }
-
+    
     // Getters & Setters
     std::string getValue() {
         return value;
     }
-
+    
     NodeType getType() {
         return type;
     }
-
+    
     bool isTypeOf(NodeType other) {
         return type == other;
     }
@@ -155,7 +155,7 @@ struct ASTNode {
     void addChild(Token token, const NodeType& nodeType, const std::string& nodeValue) {
         children.push_back(new ASTNode(token, nodeType, nodeValue));
     }
-
+    
     void addChild(ASTNode* node) {
         children.push_back(node);
     }
@@ -177,7 +177,7 @@ private:
      * className is used to check for constructor.
      */
     ASTNode* parseClassBody(std::string className);
-
+    
     /**
      * \brief
      * Currently supports;\n
@@ -253,23 +253,23 @@ private: // Helper functions
         
         return {};
     }
-
+    
     Token currentToken() {
         return tokens[currentTokenIndex];
     }
-
+    
 public:
     void printAST(ASTNode* node, int depth = 0) {
         if (!node) {
             return;
         }
-
+        
         for (int i = 0; i < depth; ++i) {
             std::cout << "  "; // Add indentation based on depth for better visualization
         }
-
+        
         std::cout << static_cast<int>(node->type) << " - " << node->value << '\n';
-
+        
         for (ASTNode* child : node->children) {
             printAST(child, depth + 1); // Recursively print child nodes with increased depth
         }

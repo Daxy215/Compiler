@@ -28,6 +28,8 @@ ASTNode* Parser::parseCode(const std::vector<Token>& t) {
         if(match(LexerNameSpace::TokenType::SEMICOLON))
             consumeToken();
         
+        Token z = currentToken();
+        
         if (match(LexerNameSpace::TokenType::PREPROCESSOR_DIRECTIVE)) {
             node = parseIncludeDirective();
         } else if(match(LexerNameSpace::TokenType::NAMESPACE)) { //TODO; Not detecting namespace.
@@ -812,7 +814,7 @@ ASTNode* Parser::parseFunctionCall() {
         std::string functionName = curToken.value;
         consumeToken(); // Consume function name.
         
-        // Handling things like "shape.somefunction();"
+        //TODO; Handling things like "shape.somefunction();" Idk if this is already handled or not..
         
         /*
         if(match(LexerNameSpace::TokenType::DOT) || match(LexerNameSpace::TokenType::OPERATOR, "->")) {
@@ -1265,7 +1267,7 @@ ASTNode* Parser::expression() {
     return left;
 }
 
-//TODO; So for:
+//TODO; So for: Well it's fixed now I guess
 //"std::cout << "somevalue" << std::endl;
 //This doesn't return anything for a "<<".
 

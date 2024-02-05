@@ -62,6 +62,9 @@ void IntermediateRepresentation::generateIR(ASTNode* node, ASTNode* parent) {
             break;
     }
     case NodeType::MEMBER_FUNCTION: {
+            ASTNode* parameter = node->getChildByType(NodeType::PARAMETER);
+            
+            
             ASTNode* returnType = node->getChildByType(NodeType::RETURN_TYPE);
             addCommand("FUNCTION", node->value, returnType->value, parentValue);
             
@@ -82,7 +85,8 @@ void IntermediateRepresentation::generateIR(ASTNode* node, ASTNode* parent) {
             * (FUNCTION_CALL, "std::endl")
             */
             ASTNode* accessType = node->getChildByType(NodeType::ACCESSTYPE);
-            
+
+            // ?????????
             if(accessType == nullptr) {
                 addCommand("FUNCTION_CALL", node->value, parentValue);
                 
@@ -192,7 +196,12 @@ void IntermediateRepresentation::generateIR(ASTNode* node, ASTNode* parent) {
             std::string rightOperand = "temp" + std::to_string(tempCounter++);
             generateIR(node->children[1], parent);
             
+            //ASTNode* varType = node->getChildByType(NodeType::VARIABLE_TYPE);
+            
+            addCommand("ALLOC", std::to_string(4), leftOperand, parentValue);
             addCommand("STORE", node->children[0]->value, leftOperand, parentValue);
+            
+            addCommand("ALLOC", std::to_string(4), rightOperand, parentValue);
             addCommand("STORE", node->children[1]->value, rightOperand, parentValue);
             
             addCommand(node->value,  leftOperand, rightOperand, "temp" + std::to_string(tempCounter), parentValue);
@@ -223,15 +232,17 @@ void IntermediateRepresentation::handleControlFlow(ASTNode* node, ASTNode* paren
             ASTNode* conditionsNode = node->getChildByType(NodeType::CONDITIONS);
             const std::string combinedCondition = handleConditions(conditionsNode, parent);
             const ASTNode* trueBranch = node->getChildByType(NodeType::TRUE_BRANCH);
+
+            //TODO; Make sure it's a unique label.
+            std::string label = "LABEL";// + std::to_string(labelCounter++);
+            addCommand("IF_STATEMENT", "if", combinedCondition, label, parent->value);
             
-            addCommand("IF_STATEMENT", "if", combinedCondition, parent->value);
-            
-            addCommand("LABEL", "StartLabel_" + std::to_string(labelCounter++), node->value);
+            addCommand("LABEL", "START" + label, node->value);
             
             for(auto& child : trueBranch->children)
                 generateIR(child, node);
             
-            addCommand("LABEL", "EndLabel_" + std::to_string(labelCounter++), node->value);
+            addCommand("LABEL", "END" + label, node->value);
         }
     }
 }

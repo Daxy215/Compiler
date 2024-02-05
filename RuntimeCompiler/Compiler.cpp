@@ -50,7 +50,7 @@ bool Compiler::compileCode(std::string code) {
     std::cout << "\n\nIR;\n\n";
     
     intermediateRepresentation->generateIR(root, nullptr);
-    intermediateRepresentation->addCommand("FUNCTION_CALL", "main", "");
+    //intermediateRepresentation->addCommand("FUNCTION_CALL", "main", "");
     
     //for(IR* ir : intermediateRepresentation->commands)
         //std::cout << "(" << ir->command << ", " << ir->temp1 << ", " << ir->temp2 << ", " << ir->temp3 << ") " << ir->parent << '\n';
@@ -68,7 +68,7 @@ bool Compiler::compileCode(std::string code) {
         std::cerr << "Variable: " << val.first << " = " << val.second << '\n';
     }
     
-    std::cout << "Compiled successfully!\n";
+    std::cout << "\n\n\n\n";
     
     //std::cout << "\n\nTAC;\n\n";
     
@@ -80,7 +80,7 @@ bool Compiler::compileCode(std::string code) {
     //TACEvaluation* evaluation = new TACEvaluation();
     //evaluation->interpretTAC(tac->tac);
     
-    //assemblyGenerator->generateCode(intermediateRepresentation->commands);
+    assemblyGenerator->generateCode(intermediateRepresentation->commands);
     
     //std::cout << "\n\n\n\n";
     

@@ -41,9 +41,9 @@ std::string execCommand(const char* cmd) {
 int main() {
     //TODO; having classes within classes...
     //TODO; Well it don't detect namespaces within class/function :)
-    //TODO; Making it so that it says EMPTY FUNCTION
-    //TODO; Expression doesn't work for '++i'
-    //TODO; No support for structs, enums.
+    //TODO; Making it so that it says EMPTY FUNCTION; no point really skipping this.
+    //TODO; Expression doesn't work for '++i' just why is this even a thing?
+    //TODO; No support for structs.
     //TODO; Parser don't support maps! Simply add a check for a ',' in the vector.
     
     //TODO; For the sentifmxi???????? thingy; Check if the overloaded function is within the same class.
@@ -54,7 +54,8 @@ int main() {
      * Loop Unrolling: Replicating the loop body to reduce overhead.
      * Function Inlining: Replacing a function call with the body of the called function.
      */
-    
+
+    //TODO; bool test is being reginionized???????? as a function call.
     std::string complexCode = R"(
         #include <iostream>
         using namespace std;
@@ -117,13 +118,13 @@ int main() {
     
     std::string helloworld = R"(
         int printHelloWorld() {
-            int x = 5;
+            int c = 5;
             
-            if(x == 4) {
-                int y = x;
+            if(c == 4) {
+                int y = c;
                 int total = 2 + 4 / 4 * 8;
                 
-                return x;
+                return c;
             }
             
             return 6;
@@ -276,6 +277,7 @@ int main() {
         }
     )";
     
+    //TODO; Check
     std::string test11 = R"(
             #include <iostream>
             #include <string>
@@ -303,13 +305,15 @@ int main() {
                return 0;
             }
     )";
-    
+
+    //TODO;
     std::string test12 = R"(
         int main() {
             Run(v + " " + boost::lexical_cast<std::string>(start), tgt - start, start + 1);
         }
     )";
-    
+
+    //TODO;
     std::string test13 = R"(
         #include <iostream>
         #include <string>
