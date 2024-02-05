@@ -57,7 +57,7 @@ bool Compiler::compileCode(std::string code) {
     
     std::cout << "\n\nEVALUATOR;\n\n";
     
-    int value = evaluator->Evaluate(intermediateRepresentation->commands);
+    //int value = evaluator->Evaluate(intermediateRepresentation->commands);
     
     std::cerr << "\n";
     

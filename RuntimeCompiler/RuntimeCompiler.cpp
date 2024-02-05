@@ -54,8 +54,7 @@ int main() {
      * Loop Unrolling: Replicating the loop body to reduce overhead.
      * Function Inlining: Replacing a function call with the body of the called function.
      */
-
-    //TODO; bool test is being reginionized???????? as a function call.
+    
     std::string complexCode = R"(
         #include <iostream>
         using namespace std;
@@ -118,11 +117,10 @@ int main() {
     
     std::string helloworld = R"(
         int printHelloWorld() {
-            int c = 5;
+            int c = 4;
             
             if(c == 4) {
                 int y = c;
-                int total = 2 + 4 / 4 * 8;
                 
                 return c;
             }
@@ -332,7 +330,7 @@ int main() {
     )";
     
     Compiler* compiler = new Compiler();
-    compiler->compileCode(helloworld);
+    compiler->compileCode(complexCode);
     
     return 0;
     

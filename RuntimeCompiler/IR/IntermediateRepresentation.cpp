@@ -69,9 +69,10 @@ void IntermediateRepresentation::generateIR(ASTNode* node, ASTNode* parent) {
             addCommand("FUNCTION", node->value, returnType->value, parentValue);
             
             ASTNode* functionBody = node->getChildByType(NodeType::BLOCK);
-            for(auto child : functionBody->children) {
-                generateIR(child, node);
-            }
+            if(functionBody)
+                for(auto child : functionBody->children) {
+                    generateIR(child, node);
+                }
             
             break;
         }
@@ -185,10 +186,6 @@ void IntermediateRepresentation::generateIR(ASTNode* node, ASTNode* parent) {
              * (MUL, temp3, temp4, temp5) <- Multiply temp3 by temp4 and store it in temp5.
              * (ADD, temp1, temp5, total) <- Add temp1, temp5 and store the results total.
              */
-            
-            if(tempCounter == 4) {
-                std::cerr << "sa\n";
-            }
             
             std::string leftOperand = "temp" + std::to_string(tempCounter++);
             generateIR(node->children[0], parent);

@@ -363,7 +363,8 @@ ASTNode* Parser::parseMember(NodeType memberDeclarationType) {
     
     // Ik junky code shush
     if(token.type == LexerNameSpace::TokenType::IDENTIFIER) {
-        memberTypeToken = tokens[currentTokenIndex - 1];
+        consumeToken();
+        memberTypeToken = tokens[currentTokenIndex]; //TODO - 1??
         memberType = memberTypeToken.value;
         //consumeToken();
     } else {
@@ -809,7 +810,7 @@ ASTNode* Parser::parseStatement() {
 }
 
 ASTNode* Parser::parseFunctionCall() {
-    if (match(LexerNameSpace::TokenType::IDENTIFIER)) {
+    if (match(LexerNameSpace::TokenType::IDENTIFIER) && !matchNext(LexerNameSpace::IDENTIFIER)) {
         Token curToken = currentToken();
         std::string functionName = curToken.value;
         consumeToken(); // Consume function name.
