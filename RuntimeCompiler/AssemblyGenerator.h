@@ -22,4 +22,7 @@ private:
         
         return tokens;
     }
+
+private:
+    std::vector<std::string> functions;
 };

@@ -1,35 +1,12 @@
 #include "AssemblyGenerator.h"
+
+#include <cstdlib> // For system function
+#include <Windows.h>
+
+#include <fstream>
+#include <thread>
+
 /*
-void AssemblyGenerator::visit(IRVariableDeclaration* node) {
-    // Allocate memory for the variable
-    std::cout << "sub rsp, " << node->bytes << "\n"; // Subtract bytes from ESP to allocate memory
-    std::cout << "mov rbp, [" << node->name << "]\n"; // Move the base pointer to the new variable
-    
-    // Assign a value to the variable
-    //std::cout << "mov [" << node->name << "], 1\n"; // Move the value 1 to the new variable
-}*/
-
-bool isNumber(const std::string& str) {
-    for (char const &c : str) {
-        if (!std::isdigit(c)) return false;
-    }
-    return !str.empty();
-}
-
-void AssemblyGenerator::generateCode(const std::vector<IR*>& instructions) {
-    std::cout << "section .bss\n";
-    
-    for (const IR* ir : instructions) {
-        if (ir->command == "ALLOC") {
-            std::cout << "\t" << ir->temp2 << ": resd " << ir->temp1 << "\n";
-        }
-    }
-    
-    std::cout << "\nsection .data\n";
-    
-    // There shouldn't be any data.
-    
-    /*
      * 64 OPERATIONS ignore this
      * RAX is a 64 bits register
      *
@@ -41,48 +18,99 @@ void AssemblyGenerator::generateCode(const std::vector<IR*>& instructions) {
      *  mov eax, [c]       ; Load the value of 'c' into eax
      *  mov [y], eax       ; Store the value of 'eax' into the variable 'y'
      */
+
+std::string mainFunction = "_main";
+std::string currentFunction = "";
+
+bool isNumber(const std::string& str) {
+    for (char const &c : str) {
+        if (!std::isdigit(c)) return false;
+    }
+    return !str.empty();
+}
+
+void AssemblyGenerator::generateCode(const std::vector<IR*>& instructions) {
+    // Create file
+    std::ofstream outputFile("Compiling/main.asm");
+
+    outputFile << "global _main\n\n";
     
-    std::cout << "\nsection .text\n";
-    
-    std::cout << "global main\n\n";
+    outputFile << "section .bss\n";
     
     for (const IR* ir : instructions) {
-        /*if (ir->command == "ALLOC") {
-            std::cout << "\t" << ir->temp2 << " resd " << ir->temp1 << "\n";
-        } else */if (ir->command == "STORE") {
-            // int x = 5;
-            std::cout << "\t; Store '" << ir->temp1 << "' into '" << ir->temp2 << "'\n";
-            
-            if(isNumber(ir->temp1)) {
-                std::cout << "\tmov eax, " << ir->temp1 << "\n";
-            } else {
-                std::cout << "\tmov eax, [" << ir->temp1 << "]\n";
-            }
-            
-            std::cout << "\tmov [" << ir->temp2 << "], eax\n\n";
-        } else if (ir->command == "==") {
-            std::cout << "\tcmp [" << ir->temp1 << "], [" << ir->temp2 << "]\n\n";
-        } else if (ir->command == "IF_STATEMENT") {
-            // if true go to true branch
-            std::cout << "\tje START" << ir->temp3 << "\n";
-            // If false go to false branch
-            std::cout << "\tjmp END" << ir->temp3 << "\n\n";
-        } else if (ir->command == "LABEL") {
-            std::cout << ir->temp1 << ":\n";
-        } else if (ir->command == "FUNCTION") {
-            std::cout << ir->temp1 << ":\n";
-        } else if (ir->command == "FUNCTION_CALL") {
-            std::cout << "\tcall " << ir->temp1 << "\n\n";
-        } else if (ir->command == "RETURN") {
-            std::cout << "\tmov eax, [" << ir->temp1 << "]\n";
-            std::cout << "\tret\n";
+        if (ir->command == "ALLOC") {
+            outputFile << "\t" << ir->temp2 << ": resd " << ir->temp1 << "\n";
         }
     }
     
-    // Additional code for program termination
-    std::cout << "\n\t; Exit Progam\n";
-    std::cout << "\tadd esp, 4\t; clear the stack\n";
-    std::cout << "\tret\t\t; return\n";
+    outputFile << "\nsection .data\n";
+    
+    // There shouldn't be any data.
+    
+    outputFile << "\nsection .text\n";
+    
+    for (const IR* ir : instructions) {
+        if (ir->command == "ALLOC") {
+            
+        } else if (ir->command == "STORE") {
+            // int x = 5;
+            outputFile << "\t; Store '" << ir->temp1 << "' into '" << ir->temp2 << "'\n";
+            
+            if(isNumber(ir->temp1)) {
+                outputFile << "\tmov eax, " << ir->temp1 << "\n";
+            } else {
+                // Check if NOT it's a function
+                if(std::find(functions.begin(), functions.end(), ir->temp1) == functions.end())
+                    outputFile << "\tmov eax, [" << ir->temp1 << "]\n";
+            }
+            
+            outputFile << "\tmov [" << ir->temp2 << "], eax\n\n";
+        } else if (ir->command == "IF_STATEMENT") {
+            // if true go to true branch
+            outputFile << "\tje START" << ir->temp3 << "\n";
+            // If false go to false branch
+            outputFile << "\tjmp END" << ir->temp3 << "\n\n";
+        } else if (ir->command == "LABEL") {
+            outputFile << ir->temp1 << ":\n";
+        } else if (ir->command == "FUNCTION") {
+            std::string functionName = ir->temp1;
+            
+            if(functionName == "main")
+                functionName = mainFunction;
+            
+            currentFunction = functionName;
+            outputFile << functionName << ":\n";
+        } else if (ir->command == "FUNCTION_CALL") {
+            functions.push_back(ir->temp1);
+            outputFile << "\tcall " << ir->temp1 << "\n\n";
+        } else if (ir->command == "RETURN") {
+            if(currentFunction == mainFunction) {
+                outputFile << "\n\t; Exit Progam\n";
+                outputFile << "\tmov eax, [" << ir->temp1 << "]\n";
+                outputFile << "\tadd esp, 4\t; clear the stack\n";
+                outputFile << "\tret\t\t; return\n";
+            } else {
+                outputFile << "\tmov eax, [" << ir->temp1 << "]\n";
+                outputFile << "\tret\n";
+            }
+        } else if (ir->command == "==") {
+            outputFile << "\tmov eax, [" << ir->temp1 << "]\n";
+            outputFile << "\tcmp [" << ir->temp2 << "], eax\n\n";
+        } else {
+            outputFile << "\n; couldn't find command: " << ir->command << "\n\n";
+        }
+    }
+
+    outputFile.close();
+
+    // Compile
+    int results = system("cd Compiling && build.bat");
+
+    if(results == 0) {
+        std::cout << "Compiled successfully!\n";
+    } else {
+        std::cerr << "Error while compiling: " << results << " \n";
+    }
 }
 
 /*

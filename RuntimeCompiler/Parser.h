@@ -114,6 +114,9 @@ struct ASTNode {
     }
     
     ASTNode* getChildByType(ASTNode* node, NodeType nodeType) {
+        if(node == nullptr)
+            return nullptr;
+        
         if (node->getType() == nodeType) {
             return node;
         }

@@ -275,7 +275,7 @@ int main() {
         }
     )";
     
-    //TODO; Check
+    //TODO; Check. Kind of works? Apparently vector support is gone?
     std::string test11 = R"(
             #include <iostream>
             #include <string>
@@ -303,14 +303,14 @@ int main() {
                return 0;
             }
     )";
-
-    //TODO;
+    
+    // Apparently it's being handled correctly! U thought so bud.. It's so wrong lol
     std::string test12 = R"(
         int main() {
             Run(v + " " + boost::lexical_cast<std::string>(start), tgt - start, start + 1);
         }
     )";
-
+    
     //TODO;
     std::string test13 = R"(
         #include <iostream>
@@ -320,6 +320,7 @@ int main() {
         void Run(const std::string& v, int tgt, int start) {
            for(; tgt >= 2 * start + 1; start++)
                Run(v + " " + boost::lexical_cast<std::string>(start), tgt - start, start + 1);
+            
            std::cout << v << ' ' << tgt << std::endl;
         }
         
@@ -330,7 +331,7 @@ int main() {
     )";
     
     Compiler* compiler = new Compiler();
-    compiler->compileCode(complexCode);
+    compiler->compileCode(helloworld);
     
     return 0;
     
