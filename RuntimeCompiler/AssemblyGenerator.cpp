@@ -95,7 +95,7 @@ void AssemblyGenerator::generateCode(const std::vector<IR*>& instructions) {
             functions.emplace(functionName, function);
             
             // Parameters handling
-            outputFile << "\n\t; Parameters\n";
+            outputFile << "\t; Parameters\n";
             
             size_t sizeIndex = 0;
             int j = i + 1;
@@ -104,22 +104,24 @@ void AssemblyGenerator::generateCode(const std::vector<IR*>& instructions) {
                 IR* para = instructions[j];
                 
                 if(para->command == "PARAMETER") {
-                    // Instead of doing size * variableSize, this is a tiny bit faster.
+                    // To keep track of the address
                     size_t varSize = std::stoi(para->temp1);
                     sizeIndex += varSize;
                     
+                    std::string address = "[ebp + " + std::to_string(varSize) + "]";
+                    
                     outputFile << "\t; Paramater " << para->temp2 << " " << para->temp3 << "\n";
                     outputFile << "\tsub esp, " << para->temp1 << "\n";
-                    outputFile << "\tmov eax, [ebp + " << varSize << "]\n\n";
+                    outputFile << "\tmov eax, " << address << "\n\n";
                     
-                    currentFunction->addParamater(para->temp3, varSize);
+                    currentFunction->addParamater(para->temp3, address, varSize);
                 } else
                     break;
             }
             
             // Update current index
             i = j;
-
+            
             // Update function size
             function->size = sizeIndex;
             
@@ -158,7 +160,7 @@ void AssemblyGenerator::generateCode(const std::vector<IR*>& instructions) {
             outputFile << "\t; Add " << temp1 << " by " << temp2 << "\n";
             outputFile << "\tmov eax, " << temp1 << "\n";
             outputFile << "\tmov ebx, " << temp2 << "\n";
-
+            
             if(ir->command == "+")
                 outputFile << "\tadd eax, ebx\t\t\t\t; Add ebx to eax\n";
             else if(ir->command == "-")
@@ -176,12 +178,12 @@ void AssemblyGenerator::generateCode(const std::vector<IR*>& instructions) {
             std::cout << "\n\t; couldn't find command: " << ir->command << "\n\n";
         }
     }
-
+    
     outputFile.close();
-
+    
     // Compile
     int results = system("cd Compiling && build.bat");
-
+    
     if(results == 0) {
         std::cout << "Compiled successfully!\n";
     } else {

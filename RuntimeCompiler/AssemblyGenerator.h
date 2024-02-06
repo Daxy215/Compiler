@@ -8,8 +8,12 @@
 #include "IR/IntermediateRepresentation.h"
 
 struct Variable {
-    std::string name;
+    std::string name, address;
     size_t size;
+
+    Variable(std::string name, std::string address, size_t size) : name(name), address(address), size(size) {
+        
+    }
 };
 
 struct Function {
@@ -20,12 +24,12 @@ struct Function {
     
     Function(std::string label, size_t size) : label(label), size(size) {}
     
-    void addParamater(std::string name, size_t size) {
-        parameters.push_back(new Variable(name, size));
+    void addParamater(std::string name, std::string address, size_t size) {
+        parameters.push_back(new Variable(name, address, size));
     }
     
-    void addVariable(std::string name, size_t size) {
-        variables.push_back(new Variable(name, size));
+    void addVariable(std::string name, std::string address, size_t size) {
+        variables.push_back(new Variable(name, address, size));
     }
     
     void cleanUp(std::ofstream& outputFile) {
