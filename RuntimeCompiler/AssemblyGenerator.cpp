@@ -2,8 +2,6 @@
 
 #include <cstdlib> // For system function
 #include <Windows.h>
-
-#include <fstream>
 #include <thread>
 
 /*
@@ -17,10 +15,12 @@
      *  int y = c;
      *  mov eax, [c]       ; Load the value of 'c' into eax
      *  mov [y], eax       ; Store the value of 'eax' into the variable 'y'
+     *
+     *  const int SIZE = 4;
+     *  SIZE equ 4  ; Define a constant
      */
 
 std::string mainFunction = "_main";
-std::string currentFunction = "";
 
 void AssemblyGenerator::generateCode(const std::vector<IR*>& instructions) {
     // Create file
@@ -42,7 +42,9 @@ void AssemblyGenerator::generateCode(const std::vector<IR*>& instructions) {
     
     outputFile << "\nsection .text\n";
     
-    for (const IR* ir : instructions) {
+    for (int i = 0; i < instructions.size(); i++) {
+        IR* ir = instructions[i];
+        
         if (ir->command == "ALLOC") {
             
         } else if (ir->command == "STORE") {
@@ -53,7 +55,7 @@ void AssemblyGenerator::generateCode(const std::vector<IR*>& instructions) {
                 outputFile << "\tmov eax, " << ir->temp1 << "\n";
             } else {
                 // Check if NOT it's a function
-                if(std::find(functions.begin(), functions.end(), ir->temp1) == functions.end())
+                if(!functions.contains(ir->temp1))
                     outputFile << "\tmov eax, [" << ir->temp1 << "]\n";
             }
             
@@ -64,21 +66,71 @@ void AssemblyGenerator::generateCode(const std::vector<IR*>& instructions) {
             // If false go to false branch
             outputFile << "\tjmp END" << ir->temp3 << "\n\n";
         } else if (ir->command == "LABEL") {
-            outputFile << ir->temp1 << ":\n";
+            outputFile << "\n" << ir->temp1 << ":\n";
         } else if (ir->command == "FUNCTION") {
+            // Was in a function?
+            if(currentFunction != nullptr) {
+                // Only clean up if function doesn't have a return
+                if(instructions[i - 1]->command != "RETURN")
+                    currentFunction->cleanUp(outputFile);
+            }
+            
             std::string functionName = ir->temp1;
             
-            if(functionName == "main")
+            if(functionName == "main") {
                 functionName = mainFunction;
+            }
             
-            currentFunction = functionName;
-            outputFile << functionName << ":\n";
+            outputFile << "\n" << functionName << ":\n";
+            
+            if(functionName == mainFunction) {
+                outputFile << "\t; Function prologue\n";
+                outputFile << "\tpush ebp\n";
+                outputFile << "\tmov ebp, esp\n";
+            }
+            
+            // Add the function to the map of functions
+            Function* function = new Function(functionName, 0);
+            currentFunction = function;
+            functions.emplace(functionName, function);
+            
+            // Parameters handling
+            outputFile << "\n\t; Parameters\n";
+            
+            size_t sizeIndex = 0;
+            int j = i + 1;
+            for(; j < instructions.size(); j++) {
+                // {command="PARAMETER", temp1="4", temp2="printHelloWorld", ...}
+                IR* para = instructions[j];
+                
+                if(para->command == "PARAMETER") {
+                    // Instead of doing size * variableSize, this is a tiny bit faster.
+                    size_t varSize = std::stoi(para->temp1);
+                    sizeIndex += varSize;
+                    
+                    outputFile << "\t; Paramater " << para->temp2 << " " << para->temp3 << "\n";
+                    outputFile << "\tsub esp, " << para->temp1 << "\n";
+                    outputFile << "\tmov eax, [ebp + " << varSize << "]\n\n";
+                    
+                    currentFunction->addParamater(para->temp3, varSize);
+                } else
+                    break;
+            }
+            
+            // Update current index
+            i = j;
+
+            // Update function size
+            function->size = sizeIndex;
+            
+            outputFile << "\t; Function body \n\n";
         } else if (ir->command == "FUNCTION_CALL") {
-            functions.push_back(ir->temp1);
             outputFile << "\tcall " << ir->temp1 << "\n\n";
         } else if (ir->command == "RETURN") {
-            if(currentFunction == mainFunction) {
-                outputFile << "\n\t; Exit Progam\n";
+            currentFunction->cleanUp(outputFile);
+            
+            if(currentFunction->label == mainFunction) {
+                outputFile << "\t; Exit Progam\n";
                 outputFile << "\tmov eax, [" << ir->temp1 << "]\n";
                 outputFile << "\tadd esp, 4\t; clear the stack\n";
                 outputFile << "\tret\t\t; return\n";
@@ -108,14 +160,14 @@ void AssemblyGenerator::generateCode(const std::vector<IR*>& instructions) {
             outputFile << "\tmov ebx, " << temp2 << "\n";
 
             if(ir->command == "+")
-                outputFile << "\tadd eax, ebx\t\t; Add ebx to eax\n";
+                outputFile << "\tadd eax, ebx\t\t\t\t; Add ebx to eax\n";
             else if(ir->command == "-")
-                outputFile << "\tsub eax, ebx\t\t; Subtract eax by ebx\n";
+                outputFile << "\tsub eax, ebx\t\t\t\t; Subtract eax by ebx\n";
             else if(ir->command == "*")
-                outputFile << "\tmul ebx\t\t; Multiply eax by ebx\n";
+                outputFile << "\tmul ebx\t\t\t\t; Multiply eax by ebx\n";
             else if(ir->command == "/") {
                 outputFile << "\txor edx, edx\t\t; Clear the high-order bits in edx\n";
-                outputFile << "\tdiv ebx\t\t; Divide ebx by eax\n";
+                outputFile << "\tdiv ebx\t\t\t\t; Divide ebx by eax\n";
             }
             
             outputFile << "\n\t; Store results in " << temp3 << "\n";

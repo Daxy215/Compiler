@@ -62,11 +62,20 @@ void IntermediateRepresentation::generateIR(ASTNode* node, ASTNode* parent) {
             break;
     }
     case NodeType::MEMBER_FUNCTION: {
-            ASTNode* parameters = node->getChildByType(NodeType::PARAMETERS);
-            
-            
             ASTNode* returnType = node->getChildByType(NodeType::RETURN_TYPE);
             addCommand("FUNCTION", node->value, returnType->value, parentValue);
+
+            ASTNode* parameters = node->getChildByType(NodeType::PARAMETERS);
+            
+            for(auto& child : parameters->children) {
+                ASTNode* variableNodeType = child->getChildByType(NodeType::VARIABLE_TYPE);
+                
+                std::string name = child->value;
+                std::string type = variableNodeType->value;
+                const size_t variableSize = variablesSize[type];
+                
+                addCommand("PARAMETER", std::to_string(variableSize), type, name, node->value);
+            }
             
             ASTNode* functionBody = node->getChildByType(NodeType::BLOCK);
             if(functionBody)

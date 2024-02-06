@@ -1,9 +1,41 @@
 #pragma once
+#include <map>
 #include <sstream>
 #include <string>
 #include <vector>
+#include <fstream>
 
 #include "IR/IntermediateRepresentation.h"
+
+struct Variable {
+    std::string name;
+    size_t size;
+};
+
+struct Function {
+    std::string label;
+    size_t size;
+    std::vector<Variable*> parameters;
+    std::vector<Variable*> variables;
+    
+    Function(std::string label, size_t size) : label(label), size(size) {}
+    
+    void addParamater(std::string name, size_t size) {
+        parameters.push_back(new Variable(name, size));
+    }
+    
+    void addVariable(std::string name, size_t size) {
+        variables.push_back(new Variable(name, size));
+    }
+    
+    void cleanUp(std::ofstream& outputFile) {
+        if(size == 0)
+            return;
+        
+        outputFile << "\t; Clean up " << label << " \n";
+        outputFile << "\tadd esp, " << size << "\n\n";
+    }
+};
 
 class AssemblyGenerator : public IRVisitor {
 public:
@@ -39,5 +71,6 @@ private:
     }
 
 private:
-    std::vector<std::string> functions;
+    Function* currentFunction = nullptr;
+    std::map<std::string, Function*> functions;
 };
