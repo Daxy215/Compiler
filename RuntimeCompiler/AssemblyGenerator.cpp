@@ -22,13 +22,6 @@
 std::string mainFunction = "_main";
 std::string currentFunction = "";
 
-bool isNumber(const std::string& str) {
-    for (char const &c : str) {
-        if (!std::isdigit(c)) return false;
-    }
-    return !str.empty();
-}
-
 void AssemblyGenerator::generateCode(const std::vector<IR*>& instructions) {
     // Create file
     std::ofstream outputFile("Compiling/main.asm");
@@ -96,8 +89,39 @@ void AssemblyGenerator::generateCode(const std::vector<IR*>& instructions) {
         } else if (ir->command == "==") {
             outputFile << "\tmov eax, [" << ir->temp1 << "]\n";
             outputFile << "\tcmp [" << ir->temp2 << "], eax\n\n";
-        } else {
-            outputFile << "\n; couldn't find command: " << ir->command << "\n\n";
+        } else if(ir->command == "+" || ir->command == "-" ||
+            ir->command == "*" || ir->command == "/") {
+            /*
+             * {command="+", temp1="temp4", temp2="temp5", ...}
+             *
+             * mov eax, 5        ; Operand 1
+             * mov ebx, 3        ; Operand 2
+             * add ebx           ; Add eax by ebx
+             */
+            
+            std::string temp1 = getVariable(ir->temp1);
+            std::string temp2 = getVariable(ir->temp2);
+            std::string temp3 = getVariable(ir->temp3);
+            
+            outputFile << "\t; Add " << temp1 << " by " << temp2 << "\n";
+            outputFile << "\tmov eax, " << temp1 << "\n";
+            outputFile << "\tmov ebx, " << temp2 << "\n";
+
+            if(ir->command == "+")
+                outputFile << "\tadd eax, ebx\t\t; Add ebx to eax\n";
+            else if(ir->command == "-")
+                outputFile << "\tsub eax, ebx\t\t; Subtract eax by ebx\n";
+            else if(ir->command == "*")
+                outputFile << "\tmul ebx\t\t; Multiply eax by ebx\n";
+            else if(ir->command == "/") {
+                outputFile << "\txor edx, edx\t\t; Clear the high-order bits in edx\n";
+                outputFile << "\tdiv ebx\t\t; Divide ebx by eax\n";
+            }
+            
+            outputFile << "\n\t; Store results in " << temp3 << "\n";
+            outputFile << "\tmov " << temp3 << ", eax\n\n";
+        }else {
+            std::cout << "\n\t; couldn't find command: " << ir->command << "\n\n";
         }
     }
 
@@ -112,98 +136,3 @@ void AssemblyGenerator::generateCode(const std::vector<IR*>& instructions) {
         std::cerr << "Error while compiling: " << results << " \n";
     }
 }
-
-/*
-void AssemblyGenerator::generateAssembly(std::string fileName) {
-    std::ofstream outputFile(fileName);
-    if (!outputFile.is_open()) {
-        std::cerr << "ERROR: Unable to open file for writing!" << '\n';
-        return;
-    }
-
-    // for (auto &node : IRNode) {
-    //     auto &op = node.;
-    //     auto &arg = node.second;
-    //
-    //     if (op == "ALLOC" || op == "ASSIGN") {
-    //         std::cout << opMap[op] << " " << arg << "\n";
-    //     } else if (op == "INT") {
-    //         std::cout << "mov " << arg << ", eax\n";
-    //     } else {
-    //         std::cout << opMap[op] << " eax, ebx\n";
-    //     }
-    // }
-    
-    // Variables
-    /*outputFile << "section .data" << '\n';
-    for (const auto& instruction : tac) {
-        std::string varName, op, arg1, arg2;
-        std::istringstream iss(instruction);
-        iss >> varName >> op >> arg1 >> arg2;
-        
-        // Handle string assignment
-        //TODO;
-        if (op == "=" && arg2[0] == 'w') {
-            std::string labelName = varName.substr(1); // Remove leading 't'
-            std::vector<std::string> variable = splitString(instruction, '"');
-            
-            outputFile << "\t" << varName << " db '" << variable[1] << "', " << labelName << "\n";
-            
-            continue;
-        }
-        
-        if(arg2._Equal("DEFINE"))
-            continue;
-        
-        if(!arg1.find('t')) {
-            //arg1 = "0";
-            continue;
-        }
-        
-        outputFile << "\t" << varName << " dd " << arg1 << '\n';
-    }
-    
-    // Tell program to start code:
-    outputFile << "\nsection .text\n";
-    
-    // Define main function
-    outputFile << "\tglobal main\n";
-    outputFile << "\textern puts\n";
-    
-    // Main function
-    outputFile << "main:" << '\n';
-    
-    for (const auto& instruction : tac) {
-        std::string varName, op, arg1, arg2;
-        std::istringstream iss(instruction);
-        iss >> varName >> op >> arg1 >> arg2;
-        
-        if(varName._Equal("GLOBAL::Function:"))
-            continue;
-        
-        // Print
-        /*outputFile << std::format(R"(
-        sub rsp, 28h                      ; Reserve the shadow space
-        mov rcx, {}                      ; First argument is address of message
-        call puts                          ; puts(message)
-        add rsp, 28h                      ; Remove shadow space)", varName);*//*
-        
-        // if (op == "=") {
-        //     outputFile << "\tmov eax, " << arg1 << '\n';
-        //     outputFile << "\tmov [" << varName << "], eax" << '\n';
-        // } else if (op == "+") {
-        //     outputFile << "\tmov eax, [" << arg1 << "]" << '\n';
-        //     outputFile << "\tadd eax, [" << arg2 << "]" << '\n';
-        //     outputFile << "\tmov [" << varName << "], eax" << '\n';
-        // } else if (op == "*") {
-        //     outputFile << "\tmov eax, [" << arg1 << "]" << '\n';
-        //     outputFile << "\timul eax, [" << arg2 << "]" << '\n';
-        //     outputFile << "\tmov [" << varName << "], eax" << '\n';
-        // }
-    }*//*
-    
-    // Exit the process
-    //outputFile << "\n\tret" << '\n';
-    
-    outputFile.close();
-}*/

@@ -86,7 +86,7 @@ void IntermediateRepresentation::generateIR(ASTNode* node, ASTNode* parent) {
             * (FUNCTION_CALL, "std::endl")
             */
             ASTNode* accessType = node->getChildByType(NodeType::ACCESSTYPE);
-
+            
             // ?????????
             if(accessType == nullptr) {
                 addCommand("FUNCTION_CALL", node->value, parentValue);
@@ -203,6 +203,8 @@ void IntermediateRepresentation::generateIR(ASTNode* node, ASTNode* parent) {
             
             addCommand(node->value,  leftOperand, rightOperand, "temp" + std::to_string(tempCounter), parentValue);
             node->value = "temp" + std::to_string(tempCounter);
+            
+            addCommand("ALLOC", std::to_string(4), node->value, parentValue);
             
             tempCounter++;
             

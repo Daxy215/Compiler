@@ -11,6 +11,13 @@ public:
 
     void generateCode(const std::vector<IR*>& irCommands);
 private:
+    bool isNumber(const std::string& str) {
+        for (char const &c : str) {
+            if (!std::isdigit(c)) return false;
+        }
+        return !str.empty();
+    }
+    
     std::vector<std::string> splitString(const std::string &s, char delimiter) {
         std::vector<std::string> tokens;
         std::istringstream iss(s);
@@ -21,6 +28,14 @@ private:
         }
         
         return tokens;
+    }
+    
+    std::string getVariable(std::string temp) {
+        if(isNumber(temp)) {
+            return temp;
+        }
+    
+        return "[" + temp + "]";
     }
 
 private:

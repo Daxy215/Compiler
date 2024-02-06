@@ -121,6 +121,7 @@ int main() {
             
             if(c == 4) {
                 int y = c;
+                int total = 2 + 4 / 4 * 8;
                 
                 return c;
             }
