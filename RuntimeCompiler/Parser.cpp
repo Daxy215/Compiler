@@ -526,6 +526,7 @@ ASTNode* Parser::parseFunction(const std::string& returnType, Token returnTypeTo
         ASTNode* functionBody = parseFunctionBody();
         
         if (functionBody) {
+            ASTNode* paramatersNode = new ASTNode({}, NodeType::PARAMETERS, "PARAMATERS");
             
             // Add parameters to the member function node
             for (int i = 0; !parameters.empty() && i < parameters.size() - 1; i+=2) {
@@ -535,10 +536,10 @@ ASTNode* Parser::parseFunction(const std::string& returnType, Token returnTypeTo
                 ASTNode* parameterNode = new ASTNode(currentToken(), NodeType::PARAMETER, paramName);
                 parameterNode->children.push_back(new ASTNode(currentToken(), NodeType::VARIABLE_TYPE, paramType));
                 
-                memberFunction->children.push_back(parameterNode);
+                paramatersNode->children.push_back(parameterNode);
             }
-            
-            //Empty function
+
+            memberFunction->children.push_back(paramatersNode);
             memberFunction->children.push_back(functionBody);
         }
     }

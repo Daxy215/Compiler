@@ -116,7 +116,7 @@ int main() {
     )";
     
     std::string helloworld = R"(
-        int printHelloWorld() {
+        int printHelloWorld(int g, int i) {
             int c = 4;
             
             if(c == 4) {

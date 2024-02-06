@@ -62,7 +62,7 @@ void IntermediateRepresentation::generateIR(ASTNode* node, ASTNode* parent) {
             break;
     }
     case NodeType::MEMBER_FUNCTION: {
-            ASTNode* parameter = node->getChildByType(NodeType::PARAMETER);
+            ASTNode* parameters = node->getChildByType(NodeType::PARAMETERS);
             
             
             ASTNode* returnType = node->getChildByType(NodeType::RETURN_TYPE);
