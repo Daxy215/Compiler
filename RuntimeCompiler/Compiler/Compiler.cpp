@@ -14,8 +14,7 @@ bool Compiler::compileClass(std::string classPath) {
 }
 
 bool Compiler::compileCode(std::string code) {
-    //Remove comments:
-    code = removeComments(code);
+    // TODO; Preproccess the code.
     
     Compiler::code = code;
     
@@ -24,7 +23,7 @@ bool Compiler::compileCode(std::string code) {
     std::cout << "Generated tokens: \n\n";
     
     for (const auto& token : tokens) {
-        //std::cout << "Token Type: " << static_cast<int>(token.type) << ", Value: " << token.value << "\n";
+        std::cout << "Token Type: " << static_cast<int>(token.type) << ", Value: " << token.value << "\n";
     }
     
     // TODO; Check make this a class.. Perhaps inside lexer
@@ -59,11 +58,11 @@ bool Compiler::compileCode(std::string code) {
     //for(IR* ir : intermediateRepresentation->commands)
         //std::cout << "(" << ir->command << ", " << ir->temp1 << ", " << ir->temp2 << ", " << ir->temp3 << ") " << ir->parent << '\n';
     
-    std::cout << "\n\nEVALUATOR;\n\n";
+    //std::cout << "\n\nEVALUATOR;\n\n";
     
     //int value = evaluator->Evaluate(intermediateRepresentation->commands);
     
-    std::cerr << "\n";
+    /*std::cerr << "\n";
     
     for(auto& val : evaluator->memory) {
         if(!val.first.find("temp"))
@@ -72,7 +71,7 @@ bool Compiler::compileCode(std::string code) {
         std::cerr << "Variable: " << val.first << " = " << val.second << '\n';
     }
     
-    std::cout << "\n\n\n\n";
+    std::cout << "\n\n\n\n";*/
     
     //std::cout << "\n\nTAC;\n\n";
     

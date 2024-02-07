@@ -830,7 +830,7 @@ ASTNode* Parser::parseFunctionCall() {
             if (match(LexerNameSpace::TokenType::LEFT_PAREN)) {
                 consumeToken(); // Consume '('
                 
-                ASTNode* parameters = new ASTNode(currentToken(), NodeType::PARAMETER, "PARAMETERS;");
+                ASTNode* parameters = new ASTNode(currentToken(), NodeType::PARAMETERS, "PARAMETERS;");
                 
                 while(!match(LexerNameSpace::TokenType::RIGHT_PAREN)) { // ')'
                     if(match(LexerNameSpace::TokenType::COMMA))

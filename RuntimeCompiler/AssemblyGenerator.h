@@ -36,8 +36,29 @@ struct Function {
         if(size == 0)
             return;
         
+        outputFile << "\t; Function prologue for " << label << "\n";
+        outputFile << "\tpush ebp\n";
+        outputFile << "\tmov ebp, esp\n\n";
+        
         outputFile << "\t; Clean up " << label << " \n";
         outputFile << "\tadd esp, " << size << "\n\n";
+    }
+    
+    Variable* getVariable(const std::string& temp) {
+        for(auto it = variables.begin(); it != variables.end(); it++) {
+            if((*it)->name == temp) {
+                return *it;
+            }
+        }
+
+        // Check if it's a parameter
+        for(auto it = parameters.begin(); it != parameters.end(); it++) {
+            if((*it)->name == temp) {
+                return *it;
+            }
+        }
+        
+        return nullptr; 
     }
 };
 
@@ -66,12 +87,26 @@ private:
         return tokens;
     }
     
-    std::string getVariable(std::string temp) {
-        if(isNumber(temp)) {
-            return temp;
+    std::string convertVariable(std::string var) {
+        if(isNumber(var)) {
+            return var;
         }
+        
+        return "[" + var + "]";
+    }
     
-        return "[" + temp + "]";
+    Variable* getVariable(std::string temp) {
+        if(isNumber(temp))
+            return new Variable(temp, temp, 4);
+        
+        Variable* variable = currentFunction->getVariable(temp);
+        
+        // Variable is found
+        if(variable) {
+            return variable;
+        }
+
+        return nullptr;
     }
 
 private:

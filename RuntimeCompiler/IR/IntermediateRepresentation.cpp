@@ -64,7 +64,7 @@ void IntermediateRepresentation::generateIR(ASTNode* node, ASTNode* parent) {
     case NodeType::MEMBER_FUNCTION: {
             ASTNode* returnType = node->getChildByType(NodeType::RETURN_TYPE);
             addCommand("FUNCTION", node->value, returnType->value, parentValue);
-
+            
             ASTNode* parameters = node->getChildByType(NodeType::PARAMETERS);
             
             for(auto& child : parameters->children) {
@@ -99,6 +99,12 @@ void IntermediateRepresentation::generateIR(ASTNode* node, ASTNode* parent) {
             // ?????????
             if(accessType == nullptr) {
                 addCommand("FUNCTION_CALL", node->value, parentValue);
+                
+                ASTNode* parameters = node->getChildByType(NodeType::PARAMETERS);
+                
+                for(auto& child : parameters->children) {
+                    addCommand("PARAMETER", child->value, parentValue);
+                }
                 
                 return;
             }
@@ -210,10 +216,9 @@ void IntermediateRepresentation::generateIR(ASTNode* node, ASTNode* parent) {
             addCommand("ALLOC", std::to_string(4), rightOperand, parentValue);
             addCommand("STORE", node->children[1]->value, rightOperand, parentValue);
             
+            addCommand("ALLOC", std::to_string(4), "temp" + std::to_string(tempCounter), parentValue);
             addCommand(node->value,  leftOperand, rightOperand, "temp" + std::to_string(tempCounter), parentValue);
             node->value = "temp" + std::to_string(tempCounter);
-            
-            addCommand("ALLOC", std::to_string(4), node->value, parentValue);
             
             tempCounter++;
             
@@ -240,9 +245,8 @@ void IntermediateRepresentation::handleControlFlow(ASTNode* node, ASTNode* paren
             ASTNode* conditionsNode = node->getChildByType(NodeType::CONDITIONS);
             const std::string combinedCondition = handleConditions(conditionsNode, parent);
             const ASTNode* trueBranch = node->getChildByType(NodeType::TRUE_BRANCH);
-
-            //TODO; Make sure it's a unique label.
-            std::string label = "LABEL";// + std::to_string(labelCounter++);
+            
+            std::string label = std::to_string(labelCounter++) + "LABEL";
             addCommand("IF_STATEMENT", "if", combinedCondition, label, parent->value);
             
             addCommand("LABEL", "START" + label, node->value);
@@ -251,7 +255,41 @@ void IntermediateRepresentation::handleControlFlow(ASTNode* node, ASTNode* paren
                 generateIR(child, node);
             
             addCommand("LABEL", "END" + label, node->value);
+
+            break;
         }
+    case NodeType::ELSEIF_STATEMENT: {
+            ASTNode* conditionsNode = node->getChildByType(NodeType::CONDITIONS);
+            const std::string combinedCondition = handleConditions(conditionsNode, parent);
+            const ASTNode* trueBranch = node->getChildByType(NodeType::TRUE_BRANCH);
+            
+            std::string label = std::to_string(labelCounter++) + "LABEL";
+            addCommand("ELSEIF_STATEMENT", "elseif", combinedCondition, label, parent->value);
+            
+            addCommand("LABEL", "START" + label, node->value);
+            
+            for(auto& child : trueBranch->children)
+                generateIR(child, node);
+            
+            addCommand("LABEL", "END" + label, node->value);
+            
+            break;
+        }
+    case NodeType::ELSE_STATEMENT: {
+             const ASTNode* trueBranch = node->getChildByType(NodeType::BLOCK);
+            
+            std::string label = std::to_string(labelCounter++) + "LABEL";
+            addCommand("ELSE_STATEMENT", "else", "", label, parent->value);
+            
+            addCommand("LABEL", "START" + label, node->value);
+            
+            for(auto& child : trueBranch->children)
+                generateIR(child, node);
+            
+            addCommand("LABEL", "END" + label, node->value);
+            
+            break;
+    }
     }
 }
 

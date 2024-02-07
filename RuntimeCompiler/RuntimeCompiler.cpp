@@ -172,16 +172,23 @@ int main() {
             
             if(c == 4) {
                 int y = c;
+                                
+                return c;
+            } else if(c == 6) {
                 int total = 2 + 4 / 4 * 8;
                 
-                return c;
+                return total;
+            } else {
+                int l = g;
+                
+                return l;
             }
             
             return 6;
         }
         
         int main() {
-            int x = printHelloWorld();
+            int x = printHelloWorld(5, 8);
             
             return x;
         }
