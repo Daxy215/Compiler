@@ -174,7 +174,7 @@ void AssemblyGenerator::generateCode(const std::vector<IR*>& instructions) {
             
             outputFile << "\n\t; Store results in " << temp3 << "\n";
             outputFile << "\tmov " << temp3 << ", eax\n\n";
-        }else {
+        } else {
             std::cout << "\n\t; couldn't find command: " << ir->command << "\n\n";
         }
     }

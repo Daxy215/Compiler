@@ -28,7 +28,7 @@ ASTNode* Parser::parseCode(const std::vector<Token>& t) {
         if(match(LexerNameSpace::TokenType::SEMICOLON))
             consumeToken();
         
-        Token z = currentToken();
+        Token z = tokens[currentTokenIndex];
         
         if (match(LexerNameSpace::TokenType::PREPROCESSOR_DIRECTIVE)) {
             node = parseIncludeDirective();

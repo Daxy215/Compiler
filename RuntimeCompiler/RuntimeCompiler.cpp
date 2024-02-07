@@ -1,42 +1,93 @@
-
-
 #include <array>
 #include <iostream>
 #include <string>
-#include <vector>
 #include <string>
 #include <sstream>
-#include <fstream>
-#include <unordered_map>
-#include <cstdio>
+#include <filesystem>
 #include <memory>
-#include <stdexcept>
 #include <iostream>
-
 #include <string>
 #include <iostream>
-#include <type_traits>
-#include <iomanip>
+#include <set>
 
-#include "Compiler.h"
+#include "Compiler/Compiler.h"
 
-std::string execCommand(const char* cmd) {
-    std::array<char, 128> buffer;
-    std::string result;
-    std::shared_ptr<FILE> pipe(_popen(cmd, "r"), _pclose);
-    
-    if (!pipe) {
-        throw std::runtime_error("_popen() failed!");
-    }
-    
-    while (!feof(pipe.get())) {
-        if (fgets(buffer.data(), 128, pipe.get()) != nullptr) {
-            result += buffer.data();
+/*std::unordered_map<std::string, bool> symbolTable;
+
+bool evaluateSimpleCondition(const std::string& simpleCondition) {
+    std::istringstream conditionStream(simpleCondition);
+    std::string token;
+    std::stack<std::string> operandStack;
+
+    while (conditionStream >> token) {
+        if (token == "&&") {
+            bool operand2 = (operandStack.top() == "1");
+            operandStack.pop();
+            bool operand1 = (operandStack.top() == "1");
+            operandStack.pop();
+            operandStack.push((operand1 && operand2) ? "1" : "0");
+        } else if (token == "||") {
+            bool operand2 = (operandStack.top() == "1");
+            operandStack.pop();
+            bool operand1 = (operandStack.top() == "1");
+            operandStack.pop();
+            operandStack.push((operand1 || operand2) ? "1" : "0");
+        } else {
+            if (symbolTable.find(token) != symbolTable.end()) {
+                operandStack.push(symbolTable[token] ? "1" : "0");
+            } else {
+                operandStack.push(token);
+            }
         }
     }
-    
-    return result;
+
+    return (operandStack.top() == "1");
 }
+
+bool evaluateCondition(const std::string& condition) {
+    std::stack<char> parenthesesStack;
+
+    std::string condensedCondition;
+    for (char c : condition) {
+        if (c != ' ') {
+            condensedCondition += c;
+        }
+    }
+
+    std::istringstream conditionStream(condensedCondition);
+    std::string token;
+
+    while (conditionStream >> token) {
+        if (token == "(") {
+            parenthesesStack.push('(');
+        } else if (token == ")") {
+            std::string nestedCondition;
+            while (!parenthesesStack.empty() && parenthesesStack.top() != '(') {
+                nestedCondition = parenthesesStack.top() + nestedCondition;
+                parenthesesStack.pop();
+            }
+            parenthesesStack.pop();  // Pop '('
+
+            bool result = evaluateSimpleCondition(nestedCondition);
+            parenthesesStack.push(result ? '1' : '0');
+        } else {
+            if (token == "!" && conditionStream >> token && token == "defined") {
+                std::string definedToken;
+                conditionStream >> definedToken;
+
+                if (symbolTable.find(definedToken) != symbolTable.end()) {
+                    parenthesesStack.push(symbolTable[definedToken] ? '0' : '1');
+                } else {
+                    parenthesesStack.push('0');
+                }
+            } else {
+                parenthesesStack.push(token[0]);
+            }
+        }
+    }
+
+    return (parenthesesStack.top() == '1');
+}*/
 
 int main() {
     //TODO; having classes within classes...
@@ -330,6 +381,29 @@ int main() {
            getchar();
         }
     )";
+
+    std::string namespaceUsageTest = R"(
+        #include <glm/vec3.hpp>
+        
+        int main() {
+            glm::vec3 pos = glm::vec3(1, 2, 5);
+
+            return 0;
+        }
+    )";
+
+    // Example usage:
+    //symbolTable["GLM_MESSAGES"] = true;
+    //symbolTable["GLM_ENABLE"] = true;
+    //symbolTable["GLM_EXT_INCLUDED"] = false;
+
+    //std::string condition = "GLM_MESSAGES == GLM_ENABLE && !defined(GLM_EXT_INCLUDED)";
+    //bool result = evaluateCondition(condition);
+
+    //std::cout << "Result: " << (result ? "true" : "false") << std::endl;
+    
+    // Was used for the "include" a library thing..
+    //std::string path = "C:\\Users\\smsmk\\Documents\\Anix\\Anix\\glm\\";
     
     Compiler* compiler = new Compiler();
     compiler->compileCode(helloworld);
@@ -348,8 +422,8 @@ int main() {
 #endif
     
     // Run the Executable
-    std::string output = execCommand("generated_code.exe");
-    std::cout << "Output:\n" << output << std::endl;
+    //std::string output = execCommand("generated_code.exe");
+    //std::cout << "Output:\n" << output << std::endl;
     
     return 0;
 }

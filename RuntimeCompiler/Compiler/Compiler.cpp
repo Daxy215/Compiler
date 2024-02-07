@@ -1,6 +1,7 @@
 #include "Compiler.h"
 
 #include <fstream>
+#include <regex>
 
 std::string Compiler::code = "";
 
@@ -13,6 +14,9 @@ bool Compiler::compileClass(std::string classPath) {
 }
 
 bool Compiler::compileCode(std::string code) {
+    //Remove comments:
+    code = removeComments(code);
+    
     Compiler::code = code;
     
     std::vector<Token> tokens = lexer->generateTokens(code);
@@ -20,7 +24,7 @@ bool Compiler::compileCode(std::string code) {
     std::cout << "Generated tokens: \n\n";
     
     for (const auto& token : tokens) {
-        std::cout << "Token Type: " << static_cast<int>(token.type) << ", Value: " << token.value << "\n";
+        //std::cout << "Token Type: " << static_cast<int>(token.type) << ", Value: " << token.value << "\n";
     }
     
     // TODO; Check make this a class.. Perhaps inside lexer

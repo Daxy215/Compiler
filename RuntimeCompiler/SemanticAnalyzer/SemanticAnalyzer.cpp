@@ -119,7 +119,7 @@ void SemanticAnalyzer::performSemanticChecks() {
                     bool returns = functionReturnsSomething(node);
                     
                     if(returnStatementNode == nullptr) {
-                        //Diagnoser::logError("Couldn't find a return type for the function " + node->value, node->token);
+                        Diagnoser::logError("Couldn't find a return type for the function " + node->value, node->token);
                     }
                 }
                 

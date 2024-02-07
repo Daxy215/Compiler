@@ -1,14 +1,14 @@
 #pragma once
+#include <filesystem>
 #include <string>
 
-#include "AssemblyGenerator.h"
-#include "IR/IntermediateRepresentation.h"
-#include "Lexer/Lexer.h"
-#include "Parser.h"
-#include "CFG/ControlFlowGraph.h"
-#include "IR/Evaluator.h"
-#include "SemanticAnalyzer/SemanticAnalyzer.h"
-#include "TAC/TACGenerator.h"
+#include "../AssemblyGenerator.h"
+#include "../IR/IntermediateRepresentation.h"
+#include "../Lexer/Lexer.h"
+#include "../CFG/ControlFlowGraph.h"
+#include "../IR/Evaluator.h"
+#include "../SemanticAnalyzer/SemanticAnalyzer.h"
+#include "../TAC/TACGenerator.h"
 
 class Compiler {
 public:
@@ -17,7 +17,9 @@ public:
     bool compileClass(std::string classPath);
     bool compileCode(std::string code);
 
-public:
+private:
+
+private:
     bool checkBalance(std::vector<Token>& tokens, LexerNameSpace::TokenType left, LexerNameSpace::TokenType right) {
         int leftBraceCount = 0;
         int rightBraceCount = 0;
@@ -52,6 +54,7 @@ public:
         
         return false;
     }
+    
 public:
     static std::string code;
 private:
