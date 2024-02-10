@@ -44,6 +44,10 @@ enum class NodeType {
     WHILE_LOOP,
     DO_WHILE_LOOP,
     
+    SWITCH_STATEMENT,
+    CASE_STATEMENT,
+    DEFAULT_STATEMENT,
+    
     TRUE_BRANCH,
     
     POINTER,

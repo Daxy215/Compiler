@@ -20,7 +20,7 @@ namespace LexerNameSpace {
   DO_WHILE_LOOP, // Bruhhhhhhhhhhhhhhhhhhhhhh im too lazy
   IF_STATEMENT,
   ELSE_STATEMENT,
-    
+  SWITCH_STATEMENT,
   // Logical operations
   LOGICAL_AND,
   LOGICAL_OR,

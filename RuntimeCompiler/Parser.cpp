@@ -802,6 +802,104 @@ ASTNode* Parser::parseStatement() {
             
             return parseElseStatement();
         }
+    case LexerNameSpace::SWITCH_STATEMENT: {
+            /*
+             * switch(something) {
+             *      case #:
+             *          break;
+             *      case #: {
+             *          break;
+             *      }
+             *      default: {
+             *          break;
+             *      }
+             * }
+             */
+
+            consumeToken(); // Consume 'switch'
+            
+            Token z = tokens[currentTokenIndex];
+            
+            if(!match(LexerNameSpace::LEFT_PAREN)) { // '('
+                Diagnoser::logError("Error in parser missing '(' after switch statement" ,currentToken());
+            }
+            
+            consumeToken(); // Consume '('
+            
+            ASTNode* conditionsNode = parseConditions();
+
+            Token x = tokens[currentTokenIndex];
+            
+            if(!match(LexerNameSpace::LEFT_BRACE)) { // '{'
+                Diagnoser::logError("Error in parser missing '{' after switch statement" ,currentToken());
+            }
+            
+            consumeToken(); // Consume '{'
+            
+            ASTNode* switchstatementNode = new ASTNode({}, NodeType::SWITCH_STATEMENT, "SWITCH STATEMENT");
+            switchstatementNode->addChild(conditionsNode);
+            
+            while(!match(LexerNameSpace::RIGHT_BRACE)) { // '}'
+                Token s = tokens[currentTokenIndex];
+                
+                NodeType type = NodeType::CASE_STATEMENT;
+                
+                if(match("default"))
+                    type = NodeType::DEFAULT_STATEMENT;
+                
+                ASTNode* statementNode = new ASTNode(currentToken(), type, "CASE_STATEMENT");
+                
+                consumeToken(); // Consume statement
+                
+                Token za = tokens[currentTokenIndex];
+                
+                // Condition: case #:
+                // Check if there isn't a condition
+                if(match(LexerNameSpace::COLON) && type != NodeType::DEFAULT_STATEMENT) {
+                    Diagnoser::logError("Error in parsing switch statement, missing condition after case statement", tokens[currentTokenIndex]);
+                }
+
+                if(type != NodeType::DEFAULT_STATEMENT)
+                    statementNode->addChild(expression());
+                
+                switchstatementNode->addChild(statementNode);
+                
+                if(!match(LexerNameSpace::COLON)) {
+                    Diagnoser::logError("Error in parsing switch statement, missing ':' after condition in case statement", tokens[currentTokenIndex - 1]);
+                }
+                
+                consumeToken(); // Consume ':'
+                
+                Token zca = tokens[currentTokenIndex];
+                
+                if(match(LexerNameSpace::LEFT_BRACE))
+                    consumeToken(); // Consume '{'
+                
+                // Keep going until next statement
+                while(!match(LexerNameSpace::IDENTIFIER)) {
+                    if(match(LexerNameSpace::SEMICOLON))
+                        consumeToken(); // Consume ';'
+                    
+                    if(match(LexerNameSpace::LEFT_BRACE)
+                        || type != NodeType::DEFAULT_STATEMENT && match(LexerNameSpace::RIGHT_BRACE))
+                        consumeToken(); // Consume '{' or '}'
+                    else if(type == NodeType::DEFAULT_STATEMENT && match(LexerNameSpace::RIGHT_BRACE))
+                        break;
+                    
+                    if(match(LexerNameSpace::IDENTIFIER))
+                        break;
+                    
+                    Token zasxs = tokens[currentTokenIndex];
+                    
+                    ASTNode* body = parseStatement();
+                    statementNode->addChild(body);
+                    
+                    Token zass = tokens[currentTokenIndex];
+                }
+            }
+            
+            break;
+        }
     }
     
     if(match(LexerNameSpace::TokenType::OPERATOR))

@@ -172,7 +172,7 @@ int main() {
             
             if(c == 4) {
                 int y = c;
-                                
+                
                 return c;
             } else if(c == 6) {
                 int total = 2 + 4 / 4 * 8;
@@ -388,13 +388,34 @@ int main() {
            getchar();
         }
     )";
-
+    
     std::string namespaceUsageTest = R"(
         #include <glm/vec3.hpp>
         
         int main() {
             glm::vec3 pos = glm::vec3(1, 2, 5);
-
+            
+            return 0;
+        }
+    )";
+    
+    std::string switchstatementTest = R"(
+        int main() {
+            int x = 5;
+            
+            switch(x) {
+                case 1:
+                    int domryijjhg = 564;
+                    break;
+                case 2: {
+                    
+                    break;
+                }
+                default: {
+                    break;
+                }
+            }            
+            
             return 0;
         }
     )";
@@ -413,7 +434,7 @@ int main() {
     //std::string path = "C:\\Users\\smsmk\\Documents\\Anix\\Anix\\glm\\";
     
     Compiler* compiler = new Compiler();
-    compiler->compileCode(helloworld);
+    compiler->compileCode(switchstatementTest);
     
     return 0;
     

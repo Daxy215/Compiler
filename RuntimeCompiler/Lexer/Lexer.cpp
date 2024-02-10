@@ -252,6 +252,8 @@ std::vector<Token> Lexer::generateTokens(std::string code) {
                 type = LexerNameSpace::TokenType::IF_STATEMENT;
             } else if(currentToken == "else") {
                 type = LexerNameSpace::TokenType::ELSE_STATEMENT;
+            } else if(currentToken == "switch") {
+              type = LexerNameSpace::TokenType::SWITCH_STATEMENT;  
             } else if(currentToken == "return") {
                 type = LexerNameSpace::TokenType::RETURN_STATEMENT;
             } else if(currentToken == "break") {
