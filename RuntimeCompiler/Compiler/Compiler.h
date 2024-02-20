@@ -2,6 +2,7 @@
 #include <filesystem>
 #include <string>
 
+#include "PreProcessor.h"
 #include "../AssemblyGenerator.h"
 #include "../IR/IntermediateRepresentation.h"
 #include "../Lexer/Lexer.h"
@@ -13,7 +14,8 @@
 class Compiler {
 public:
     Compiler();
-    
+
+    bool compile(std::string path);
     bool compileClass(std::string classPath);
     bool compileCode(std::string code);
 
@@ -66,4 +68,5 @@ private:
     IntermediateRepresentation* intermediateRepresentation = new IntermediateRepresentation();
     Evaluator* evaluator = new Evaluator();
     AssemblyGenerator* assemblyGenerator = new AssemblyGenerator();
+    PreProcessor* preProcessor = new PreProcessor();
 };

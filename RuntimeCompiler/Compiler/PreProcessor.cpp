@@ -9,8 +9,15 @@ std::string PreProcessor::proccess(std::string code, const std::string& currentP
     std::string line;
     
     while (std::getline(iss, line)) {
-        if (line.find("#include") != std::string::npos) {
-            std::string fileName = extractFileName(line, currentPath);
+        auto pos = line.find("#include");
+        if (pos != std::string::npos) {
+            char quote = line[pos +  9]; // Assuming "#include" is  8 characters long
+            std::string fileName;
+            if (quote == '\"') {
+                fileName = extractFileName(line, currentPath);
+            } else if (quote == '<') {
+                fileName = extractFileName(line, currentPath);
+            }
             
             if (includedFiles.count(fileName) > 0) {
                 continue;

@@ -8,9 +8,9 @@
 class PreProcessor {
 public:
     std::string proccess(std::string code, const std::string& currentPath);
+    std::string removeComments(const std::string& sourceCode);
 
 private:
-    std::string removeComments(const std::string& sourceCode);
     std::string processIncludeGuards(const std::string& code);
 
 private:

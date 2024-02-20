@@ -251,9 +251,15 @@ ASTNode* Parser::parseClassBody(std::string className) {
                 consumeToken();
             }
         }
-        
+
+        Token za = tokens[currentTokenIndex];
         // HERE !!!!!!!!!!!!!!!!
         ASTNode* member = parseMember(NodeType::MEMBER_VARIABLE); // Parse class members (functions, variables, etc.)
+
+        if(match(LexerNameSpace::SEMICOLON))
+            consumeToken(); // Consume ';'
+        
+        Token zass = tokens[currentTokenIndex];
         
         if (member) {
             classBodyNode->children.push_back(member);
@@ -277,8 +283,25 @@ ASTNode* Parser::parseConstructor() {
     consumeToken(); // Consume '('
     
     ASTNode* constructor = new ASTNode(curToken, NodeType::CONSTRUCTOR, constructorName);
+
+    std::vector<std::string> parameters = parseFunctionParameters(); 
     
-    while (!match(LexerNameSpace::TokenType::RIGHT_PAREN)) {
+    ASTNode* paramatersNode = new ASTNode({}, NodeType::PARAMETERS, "PARAMATERS");
+            
+    // Add parameters to the member function node
+    for (int i = 0; !parameters.empty() && i < parameters.size() - 1; i+=2) {
+        std::string paramName = parameters[i];
+        std::string paramType = parameters[i + 1];
+                
+        ASTNode* parameterNode = new ASTNode(currentToken(), NodeType::PARAMETER, paramName);
+        parameterNode->children.push_back(new ASTNode(currentToken(), NodeType::VARIABLE_TYPE, paramType));
+                
+        paramatersNode->children.push_back(parameterNode);
+    }
+
+    constructor->addChild(paramatersNode);
+    
+    /*while (!match(LexerNameSpace::TokenType::RIGHT_PAREN)) {
         // Parameters handling
         Token curToken = currentToken();
         std::string paramType = curToken.value;
@@ -287,16 +310,16 @@ ASTNode* Parser::parseConstructor() {
         std::string paramName = tokens[currentTokenIndex].value;
         constructor->children.push_back(new ASTNode(curToken, NodeType::PARAMETER_VARIABLE, paramType + " " + paramName));
         consumeToken();
-    }
-    
+    }*/
+
+    Token z = tokens[currentTokenIndex];
     consumeToken(); // Consume ')'
     
     // Circle(double r) -> this : radius(r) {}
     if (match(LexerNameSpace::TokenType::COLON)) {
         consumeToken(); // Consume ':'
         
-        while (!match(LexerNameSpace::TokenType::LEFT_BRACE)) {
-            // {
+        while (!match(LexerNameSpace::TokenType::LEFT_BRACE)) { // {
             //: radius(r), test(t)..
             
             // Skip comma
@@ -321,6 +344,24 @@ ASTNode* Parser::parseConstructor() {
     }
     
     consumeToken(); // Consume '{'
+
+    ASTNode* bodyNode = new ASTNode({}, NodeType::FUNCTION_BODY, "FUNCTION BODY");
+    
+    while(!match(LexerNameSpace::RIGHT_BRACE)) {
+        Token zasa = tokens[currentTokenIndex];
+        ASTNode* body = parseStatement();
+        bodyNode->addChild(body);
+
+        if(match(LexerNameSpace::SEMICOLON))
+            consumeToken();
+        
+        Token zasazz = tokens[currentTokenIndex];
+    }
+
+    consumeToken(); // Consume '}'
+    
+    constructor->addChild(bodyNode);
+    Token zasazz = tokens[currentTokenIndex];
     
     return constructor;
 }

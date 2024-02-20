@@ -8,7 +8,7 @@ SemanticAnalyzer::SemanticAnalyzer() {
 
 void SemanticAnalyzer::generateSymbolTable(ASTNode* node) {
     traverseNodes(node, "GLOBAL", nullptr);
-    performSemanticChecks();
+    //performSemanticChecks();
     printSymbolTable();
     
     if(errors.empty()) {

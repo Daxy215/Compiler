@@ -226,13 +226,15 @@ void AssemblyGenerator::generateCode(const std::vector<IR*>& instructions) {
     }
     
     outputFile.close();
+
+    std::cout << "\n\n";
     
     // Compile
-    int results = system("cd Compiling && build.bat");
+    /*int results = system("cd Compiling && build.bat");
     
     if(results == 0) {
         std::cout << "Compiled successfully!\n";
     } else {
         std::cerr << "Error while compiling: " << results << " \n";
-    }
+    }*/
 }

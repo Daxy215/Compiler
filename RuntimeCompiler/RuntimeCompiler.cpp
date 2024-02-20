@@ -399,6 +399,7 @@ int main() {
         }
     )";
     
+    //TODO; Need to finish parsing.
     std::string switchstatementTest = R"(
         int main() {
             int x = 5;
@@ -419,7 +420,45 @@ int main() {
             return 0;
         }
     )";
+    
+    std::string forLoopTest = R"(
+        int main() {
+            int x = 8;
+            
+            for(int i = 0; i < 50; i++) {
+                x += i;    
+            }
+        }
+    )";
 
+    std::string headerFiles = R"(
+        #include "TestProject.cpp"
+        
+        int main() {
+            TestProject* test = new TestProject();
+            test->someFunction();
+        }
+    )";
+
+    std::string classTest = R"(
+        class Point {
+            Point(float x, float y) {
+                this->x = x;
+                THIS_.y = y;
+            }
+        
+        public:
+            float x;
+            float y;
+        };
+        
+        int main() {
+            Point* point = new Point(2, 8);
+            
+            return 0;
+        }
+    )";
+    
     // Example usage:
     //symbolTable["GLM_MESSAGES"] = true;
     //symbolTable["GLM_ENABLE"] = true;
@@ -434,7 +473,8 @@ int main() {
     //std::string path = "C:\\Users\\smsmk\\Documents\\Anix\\Anix\\glm\\";
     
     Compiler* compiler = new Compiler();
-    compiler->compileCode(switchstatementTest);
+    //compiler->compileCode(helloworld);
+    compiler->compile("Projects/Project1/TestProject");
     
     return 0;
     

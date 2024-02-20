@@ -40,6 +40,7 @@ class IntermediateRepresentation {
 public:
     void generateIR(ASTNode* node, ASTNode* parent);
     void handleControlFlow(ASTNode* nod, ASTNode* parent);
+    void generatePointerIR(ASTNode* node, ASTNode* parent);
     
     std::string handleConditions(ASTNode* node, ASTNode* parent);
     

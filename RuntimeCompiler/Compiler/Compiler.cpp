@@ -3,10 +3,63 @@
 #include <fstream>
 #include <regex>
 
+#define _SILENCE_EXPERIMENTAL_FILESYSTEM_DEPRECATION_WARNING
+#include <experimental/filesystem>
+
+namespace fs = std::experimental::filesystem;
+std::vector<std::string> classesPaths;
+std::vector<std::string> classesCode;
+
 std::string Compiler::code = "";
 
 Compiler::Compiler() {
     
+}
+
+bool Compiler::compile(std::string path) {
+    for(const auto& entry : fs::directory_iterator(path)) {
+        fs::path p(entry.path());
+        
+        std::string extention = p.extension().generic_string();
+        
+        std::cout << p.filename() << " ; " << extention << std::endl;
+        
+        if(extention._Equal(".cpp") || extention._Equal(".c") || extention._Equal(".h") || extention._Equal(".hpp"))
+            classesPaths.push_back(entry.path().generic_string());
+    }
+    
+    for(const auto& entry : classesPaths) {
+        constexpr auto read_size = std::size_t(4096);
+        auto stream = std::ifstream(entry.data());
+        stream.exceptions(std::ios_base::badbit);
+        
+        if (not stream) {
+            throw std::ios_base::failure("file does not exist");
+        }
+        
+        auto out = std::string();
+        auto buf = std::string(read_size, '\0');
+        
+        while (stream.read(& buf[0], read_size)) {
+            out.append(buf, 0, stream.gcount());
+        }
+        
+        out.append(buf, 0, stream.gcount());
+
+        if(out.size() < 10)
+            continue;
+        
+        classesCode.push_back(out);
+    }
+    
+    for(auto& entry : classesCode) {
+        std::string code = entry;
+        code = preProcessor->proccess(code, path + "/");
+        
+        compileCode(code);
+    }
+    
+    return false;
 }
 
 bool Compiler::compileClass(std::string classPath) {
@@ -15,6 +68,7 @@ bool Compiler::compileClass(std::string classPath) {
 
 bool Compiler::compileCode(std::string code) {
     // TODO; Preproccess the code.
+    code = preProcessor->removeComments(code);
     
     Compiler::code = code;
     
@@ -23,7 +77,7 @@ bool Compiler::compileCode(std::string code) {
     std::cout << "Generated tokens: \n\n";
     
     for (const auto& token : tokens) {
-        std::cout << "Token Type: " << static_cast<int>(token.type) << ", Value: " << token.value << "\n";
+        std::cout << "Token Type: " << token.type << ", Value: " << token.value << "\n";
     }
     
     // TODO; Check make this a class.. Perhaps inside lexer
