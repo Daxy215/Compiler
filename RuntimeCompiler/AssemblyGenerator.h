@@ -50,7 +50,7 @@ struct Function {
                 return *it;
             }
         }
-
+        
         // Check if it's a parameter
         for(auto it = parameters.begin(); it != parameters.end(); it++) {
             if((*it)->name == temp) {
@@ -62,16 +62,39 @@ struct Function {
     }
 };
 
+class Class {
+public:
+    Class(std::string label) {
+        this->label = label;    
+    }
+    
+    std::string getName() {
+        return label;
+    }
+    
+    size_t getSize() {
+        return size;
+    }
+private:
+    std::string label;
+    
+    size_t size;
+    
+    Function* constructor;
+    std::vector<Function*> functions;
+    std::vector<Variable*> members;
+};
+
 class AssemblyGenerator : public IRVisitor {
 public:
-    //void visit(IRVariableDeclaration* node) override;
-
     void generateCode(const std::vector<IR*>& irCommands);
+    
 private:
     bool isNumber(const std::string& str) {
         for (char const &c : str) {
             if (!std::isdigit(c)) return false;
         }
+        
         return !str.empty();
     }
     
@@ -110,6 +133,9 @@ private:
     }
 
 private:
+    Class* currentClass = nullptr;
     Function* currentFunction = nullptr;
+    
+    std::map<std::string, Class*> classes;
     std::map<std::string, Function*> functions;
 };

@@ -3,5 +3,5 @@
 int main() {
     TestProject* testProject = new TestProject(4, 7);
     
-    return testProject->someFunction();
+    return 0;//testProject->someFunction();
 }

@@ -2,7 +2,7 @@
 
 #include <iostream>
 
-#include "../Compiler.h"
+#include "../Compiler/Compiler.h"
 #include "../Lexer/Lexer.h"
 
 std::string repeat(const std::string& str, int times) {

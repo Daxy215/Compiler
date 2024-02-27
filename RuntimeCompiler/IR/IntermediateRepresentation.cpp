@@ -5,8 +5,8 @@
 #include "../Compiler/Compiler.h"
 
 std::map<std::string, size_t> variablesSize = {
-  {"int", sizeof(int)},  
-  {"float", sizeof(float)},  
+  {"int", sizeof(int)},
+  {"float", sizeof(float)},
 };
 
 /*
@@ -50,47 +50,42 @@ void IntermediateRepresentation::generateIR(ASTNode* node, ASTNode* parent) {
     std::string parentValue = parent ? parent->value : "";
     
     switch (node->getType()) {
-    case NodeType::CLASS: {
-            /*
-            section .data
-            MyClass struc
-                member1 dword ?
-                member2 dword ?
-            MyClass ends
-
-            section .text
-            global _MyClassConstructor
-            _MyClassConstructor:
-                ; This is the constructor. It initializes the class members.
-                mov [rdi+MyClass.member1],  10 ; Set member1 to  10
-                mov [rdi+MyClass.member2],  20 ; Set member2 to  20
-                ret
-
-            global _MyClassFunction
-            _MyClassFunction:
-                ; This is a member function. It takes the address of the class instance as an argument.
-                mov eax, [rdi+MyClass.member1] ; Get the value of member1
-                add eax, [rdi+MyClass.member2] ; Add the value of member2
-                ret
-             */
+    case NodeType::INCLUDE_DIRECTIVE: {
+            addCommand("INCLUDE", node->value, node->children[0]->value, parentValue);
             
-            addCommand("Class Starts", node->value, parentValue);
+            break;
+    }
+    case NodeType::CLASS: {
+            addCommand("CLASS-START", node->value, parentValue);
             
             for (auto child : node->children) {
                 generateIR(child, node);
             }
             
-            addCommand("Class Ends", node->value, parentValue);
+            addCommand("CLASS-END", node->value, parentValue);
             
             break;
     }
     case NodeType::CONSTRUCTOR: {
+            addCommand("CONSTRUCTOR-START", node->value, parentValue);
+
+            ASTNode* parameters = node->getChildByType(NodeType::PARAMETERS);
             
+            for(auto& child : parameters->children) {
+                ASTNode* variableNodeType = child->getChildByType(NodeType::VARIABLE_TYPE);
+                
+                std::string name = child->value;
+                std::string type = variableNodeType->value;
+                const size_t variableSize = variablesSize[type];
+                
+                addCommand("PARAMETER", std::to_string(variableSize), type, name, node->value);
+            }
             
-            break;
-    }
-    case NodeType::INCLUDE_DIRECTIVE: {
-            addCommand("INCLUDE", node->value, node->children[0]->value, parentValue);
+            for (auto child : node->children) {
+                generateIR(child, node);
+            }
+            
+            addCommand("CONSTRUCTOR-END", node->value, parentValue);
             
             break;
     }
@@ -111,6 +106,7 @@ void IntermediateRepresentation::generateIR(ASTNode* node, ASTNode* parent) {
             }
             
             ASTNode* functionBody = node->getChildByType(NodeType::BLOCK);
+            
             if(functionBody)
                 for(auto child : functionBody->children) {
                     generateIR(child, node);
@@ -122,6 +118,17 @@ void IntermediateRepresentation::generateIR(ASTNode* node, ASTNode* parent) {
             if(node->token.type == LexerNameSpace::POINTER) {
                 return generatePointerIR(node, parent);
             }
+
+            // Special case for 'this' usage.
+            if(node->value == "this") {
+                ASTNode* variable = node->children[0]->getChildByType(NodeType::FUNCTION_CALL);
+
+                // TODO;
+                addCommand("STORE", variable->children[1]->value, variable->value, parentValue);
+
+                return;
+            }
+            
             /**
             * (FUNCTION_CALL, "std::cout")
             * (OPERATOR, "<<")
@@ -164,16 +171,6 @@ void IntermediateRepresentation::generateIR(ASTNode* node, ASTNode* parent) {
             
             break;
         }
-    case NodeType::IF_STATEMENT:
-    case NodeType::ELSEIF_STATEMENT:
-    case NodeType::ELSE_STATEMENT:
-    case NodeType::FOR_LOOP:
-    case NodeType::WHILE_LOOP:
-    case NodeType::DO_WHILE_LOOP: {
-            handleControlFlow(node, parent);
-            
-            break;
-        }
     case NodeType::MEMBER_VARIABLE:
     case NodeType::LOCAL_VARIABLE_DECLARATION: {
             /*
@@ -201,8 +198,18 @@ void IntermediateRepresentation::generateIR(ASTNode* node, ASTNode* parent) {
                     addCommand("STORE", assignment->children[0]->value, node->value, parentValue);
                 //}
             } else {
-                addCommand("STORE", "0",node->value, parentValue);
+                //addCommand("STORE", "0",node->value, parentValue);
             }
+            
+            break;
+        }
+    case NodeType::IF_STATEMENT:
+    case NodeType::ELSEIF_STATEMENT:
+    case NodeType::ELSE_STATEMENT:
+    case NodeType::FOR_LOOP:
+    case NodeType::WHILE_LOOP:
+    case NodeType::DO_WHILE_LOOP: {
+            handleControlFlow(node, parent);
             
             break;
         }
@@ -344,7 +351,7 @@ void IntermediateRepresentation::handleControlFlow(ASTNode* node, ASTNode* paren
 }
 
 void IntermediateRepresentation::generatePointerIR(ASTNode* node, ASTNode* parent) {
-    std::cout << "s" << std::endl;
+    std::cout << "No pointer generation just yet.." << std::endl;
 }
 
 std::string IntermediateRepresentation::handleConditions(ASTNode* node, ASTNode* parent) {

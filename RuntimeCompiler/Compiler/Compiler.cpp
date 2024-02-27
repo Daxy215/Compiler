@@ -6,6 +6,8 @@
 #define _SILENCE_EXPERIMENTAL_FILESYSTEM_DEPRECATION_WARNING
 #include <experimental/filesystem>
 
+#define DEBUG
+
 namespace fs = std::experimental::filesystem;
 std::vector<std::string> classesPaths;
 std::vector<std::string> classesCode;
@@ -27,6 +29,8 @@ bool Compiler::compile(std::string path) {
         if(extention._Equal(".cpp") || extention._Equal(".c") || extention._Equal(".h") || extention._Equal(".hpp"))
             classesPaths.push_back(entry.path().generic_string());
     }
+
+    std::cout << "\n";
     
     for(const auto& entry : classesPaths) {
         constexpr auto read_size = std::size_t(4096);
@@ -52,12 +56,12 @@ bool Compiler::compile(std::string path) {
         classesCode.push_back(out);
     }
     
-    for(auto& entry : classesCode) {
-        std::string code = entry;
+    //for(auto& entry : classesCode) {
+        std::string code = classesCode[0];
         code = preProcessor->proccess(code, path + "/");
         
         compileCode(code);
-    }
+    //}
     
     return false;
 }
@@ -73,12 +77,14 @@ bool Compiler::compileCode(std::string code) {
     Compiler::code = code;
     
     std::vector<Token> tokens = lexer->generateTokens(code);
-    
+
+#ifdef DEBUG
     std::cout << "Generated tokens: \n\n";
     
     for (const auto& token : tokens) {
         std::cout << "Token Type: " << token.type << ", Value: " << token.value << "\n";
     }
+#endif
     
     // TODO; Check make this a class.. Perhaps inside lexer
     /*if(checkCodeBalance(tokens)) {
@@ -90,21 +96,25 @@ bool Compiler::compileCode(std::string code) {
     }*/
     
     ASTNode* root = parser->parseCode(tokens);
-    
+
+#ifdef DEBUG
     std::cout << "\n\nAbstract Syntax Tree:" << "\n";
     parser->printAST(root);
+#endif
     
     //std::cout << "\n\nControl Flow Graph:" << "\n\n";
     //std::map<ASTNode*, CFGNode*> cfgNodes;
     
     //cfg->generateCFG(root, cfgNodes);
     //cfg->printCFG(cfgNodes[root], cfgNodes);
-    
+
+#ifdef DEBUG
     std::cout << "\n\n\nSemanticAnalyzer\n\n\n";
     
     semanticAnalyzer->generateSymbolTable(root);
     
     std::cout << "\n\nIR;\n\n";
+#endif
     
     intermediateRepresentation->generateIR(root, nullptr);
     //intermediateRepresentation->addCommand("FUNCTION_CALL", "main", "");

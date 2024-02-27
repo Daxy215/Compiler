@@ -68,6 +68,7 @@ std::string PreProcessor::removeComments(const std::string& sourceCode) {
     return oss.str();
 }
 
+//TODO; Evaluate this
 std::string PreProcessor::processIncludeGuards(const std::string& code) {
     std::istringstream iss(code);
     std::ostringstream oss;

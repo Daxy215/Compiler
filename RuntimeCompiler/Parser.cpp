@@ -1498,7 +1498,7 @@ ASTNode* Parser::factor() {
         return new ASTNode(currentToken, NodeType::EXPRESSION, currentToken.value);
     }
     
-    std::cout << "huh " << currentToken.value << '\n';
+    std::cout << "Parser expression unknown token; " << currentToken.value << '\n';
     
     // TODO; Handle parentheses or other factors
     

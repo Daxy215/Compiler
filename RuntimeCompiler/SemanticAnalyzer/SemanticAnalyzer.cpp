@@ -9,7 +9,10 @@ SemanticAnalyzer::SemanticAnalyzer() {
 void SemanticAnalyzer::generateSymbolTable(ASTNode* node) {
     traverseNodes(node, "GLOBAL", nullptr);
     //performSemanticChecks();
+
+#ifdef DEBUG
     printSymbolTable();
+#endif
     
     if(errors.empty()) {
         std::cout << "\nNo errors found!\n\n";
