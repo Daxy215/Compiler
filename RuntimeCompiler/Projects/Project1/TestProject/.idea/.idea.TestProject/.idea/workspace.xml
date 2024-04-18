@@ -9,15 +9,11 @@
   <component name="ChangeListManager">
     <list default="true" id="18a9d8de-73c9-4e5f-bad1-66738fe8882e" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/../../../AssemblyGenerator.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/../../../AssemblyGenerator.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../../Compiler/Compiler.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/../../../Compiler/Compiler.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../../Compiler/PreProcessor.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/../../../Compiler/PreProcessor.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../../Diagnosis/Diagnoser.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/../../../Diagnosis/Diagnoser.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../../AssemblyGenerator.h" beforeDir="false" afterPath="$PROJECT_DIR$/../../../AssemblyGenerator.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../../Compiling/main.asm" beforeDir="false" afterPath="$PROJECT_DIR$/../../../Compiling/main.asm" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../../../IR/IntermediateRepresentation.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/../../../IR/IntermediateRepresentation.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../../Parser.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/../../../Parser.cpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/.idea.TestProject/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.TestProject/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Core.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Core.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../../SemanticAnalyzer/SemanticAnalyzer.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/../../../SemanticAnalyzer/SemanticAnalyzer.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../../x64/Debug/RuntimeCompiler.Build.CppClean.log" beforeDir="false" afterPath="$PROJECT_DIR$/../../../x64/Debug/RuntimeCompiler.Build.CppClean.log" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/TestProject.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/TestProject.cpp" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -120,6 +116,8 @@
       <workItem from="1708092476735" duration="3343000" />
       <workItem from="1708167020087" duration="646000" />
       <workItem from="1708447943716" duration="2918000" />
+      <workItem from="1709079839664" duration="764000" />
+      <workItem from="1709152273149" duration="2000000" />
     </task>
     <servers />
   </component>

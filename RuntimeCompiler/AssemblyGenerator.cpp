@@ -39,7 +39,7 @@ void AssemblyGenerator::generateCode(const std::vector<IR*>& instructions) {
         mov [rdi+MyClass.member1],  10 ; Set member1 to  10
         mov [rdi+MyClass.member2],  20 ; Set member2 to  20
         ret
-
+    
     global _MyClassFunction
     _MyClassFunction:
         ; This is a member function. It takes the address of the class instance as an argument.
@@ -50,16 +50,22 @@ void AssemblyGenerator::generateCode(const std::vector<IR*>& instructions) {
     
     outputFile << "global _main\n";
     
+    // https://stackoverflow.com/questions/44860003/how-many-bytes-do-resb-resw-resd-resq-allocate-in-nasm
+    
     outputFile << "\nsection .data\n";
     for (const IR* ir : instructions) {
-        if (ir->command == "CLASS-START") {
-            outputFile << "\t" << ir->temp1 << " struc" << "\n";
+        /*if (ir->command == "CLASS-START") {
+            currentClass = new Class(ir->temp1);
+            classes.emplace(ir->temp1, currentClass);
+            outputFile << "\tstruc " << ir->temp1 << "\n";
         } else if(ir->command == "ALLOC") {
             // member1 dword ?
-            outputFile << "\t" << ir->temp1 << " dword ?" << "\n";
+            currentClass->addMember(ir->temp2, "", currentClass->getName() + "." + ir->temp2, std::stoi(ir->temp1));
+            outputFile << "\t\t" << ir->temp2 << " resb 4" << "\n";
         } else if (ir->command == "CLASS-END") {
-            outputFile << "\t" << ir->temp1 << " ends" << "\n";
-        }
+            currentClass = nullptr;
+            outputFile << "\tendstruc" << "\n";
+        }*/
     }
     
     outputFile << "\nsection .bss\n";
@@ -69,7 +75,7 @@ void AssemblyGenerator::generateCode(const std::vector<IR*>& instructions) {
         //    outputFile << "\t" << ir->temp2 << ": resd " << ir->temp1 << "\n";
         //}
     //}
-
+    
     /*
     global _MyClassConstructor
     _MyClassConstructor:
@@ -91,95 +97,57 @@ void AssemblyGenerator::generateCode(const std::vector<IR*>& instructions) {
     for (int i = 0; i < instructions.size(); i++) {
         const IR* ir = instructions[i];
         
-        if (ir->command == "CLASS-START") {
+        if (ir->command == CLASS_START) {
             isInClass = true;
-
             
+            currentClass = classes.find(ir->temp1)->second; 
             
             continue;
         }
         
-        if (ir->command == "CLASS-END") {
+        if (ir->command == CLASS_END) {
             isInClass = false;
-
+            
+            currentClass = nullptr;
+            
             continue;
         }
         
         if(!isInClass)
             continue;
         
-        if (ir->command == "CONSTRUCTOR-START") {
-            outputFile << "\t global _" << ir->temp1 << "-CONSTRUCTOR" << "\n";
-            
-            // rdi - Will be the instance of the class.
-            
-            int j = i + 1;
-            for(; j < instructions.size(); j++) {
-                ir = instructions[j];
-                
-                if(ir->command == "CONSTRUCTOR-END")
-                    break;
-                
-                /*
-                 * global _MyClassConstructor
-                 * _MyClassConstructor:
-                 *     ; This is the constructor. It initializes the class members.
-                 *     mov [rdi+MyClass.member1],  10 ; Set member1 to  10
-                 *     mov [rdi+MyClass.member2],  20 ; Set member2 to  20
-                 *     ret
-                 */
-
-                // Parameters handling
-                outputFile << "\t; Parameters\n";
-            
-                size_t sizeIndex = 8;
-                int k = j + 1;
-                for(; k < instructions.size(); k++) {
-                    // {command="PARAMETER", temp1="4", temp2="printHelloWorld", ...}
-                    IR* para = instructions[k];
-                    
-                    if(para->command == "PARAMETER") {
-                        // To keep track of the address
-                        size_t varSize = std::stoi(para->temp1);
-                    
-                        std::string address = "[ebp + " + std::to_string(sizeIndex) + "]";
-                    
-                        outputFile << "\t; Parameter " << para->temp2 << " " << para->temp3 << "\n";
-                    
-                        //TODO; Just make a simple list.. I'm too lazy
-                        if(k == 1)
-                            outputFile << "\tmov eax, " << address << "\n\n";
-                        else if(k == 2)
-                            outputFile << "\tmov ebx, " << address << "\n\n";
-                        else if(k == 3)
-                            outputFile << "\tmov ecx, " << address << "\n\n";
-                    
-                        currentFunction->addParamater(para->temp3, address, varSize);
-                    
-                        sizeIndex += varSize;
-                    } else
-                        break;
-                }
-                
-                // Update current index
-                j = k - 1;
-                ir = instructions[j];
-                
-                if(ir->command == "ALLOC") {
-                    outputFile << "\t mov [rdi+" << ir->temp1 << "], 6" << "\n";
-                }
-            }
-
-            i = j;
-        } else if (ir->command == "FUNCTION") {
-            outputFile << "\t global _" << ir->temp1 << "\n";
+        if (ir->command == CONSTRUCTOR_START) {
+            outputFile << "\tglobal _" << ir->temp1 << "CONSTRUCTOR" << "\n";
+        } else if (ir->command == FUNCTION) {
+            outputFile << "\tglobal _" << ir->temp1 << "\n";
         }
     }
+
+    outputFile << "\n";
     
     for (int i = 0; i < instructions.size(); i++) {
         IR* ir = instructions[i];
         
-        if (ir->command == "ALLOC") {
+        if (ir->command == CLASS_START) {
+            isInClass = true;
+            
+            currentClass = classes.find(ir->temp1)->second; 
+            
+            continue;
+        }
+        
+        if (ir->command == CLASS_END) {
+            isInClass = false;
+            
+            currentClass = nullptr;
+            
+            continue;
+        }
+        
+        if (ir->command == ALLOC) {
+            //if(classes.find(ir->parent)->second)
+            //    continue;
+            
             //  {command="ALLOC", temp1="4", temp2="temp1", ...}
             outputFile << "\t; Allocate space for " << ir->temp2 << "\n";
             outputFile << "\tsub esp, " << std::stoi(ir->temp1) << "\n";
@@ -193,9 +161,9 @@ void AssemblyGenerator::generateCode(const std::vector<IR*>& instructions) {
             
             outputFile << "\tmov dword " << address << ", 0\n\n";
             
-            currentFunction->size += std::stoi(ir->temp1);
-            currentFunction->addVariable(ir->temp2, address, std::stoi(ir->temp1));
-        } else if (ir->command == "STORE") {
+            //currentFunction->size += std::stoi(ir->temp1);
+            currentFunction->addVariable(ir->temp2, "", address, std::stoi(ir->temp1));
+        } else if (ir->command == STORE) {
             // int x = 5;
             outputFile << "\t; Store '" << ir->temp1 << "' into '" << ir->temp2 << "'\n";
             
@@ -212,16 +180,100 @@ void AssemblyGenerator::generateCode(const std::vector<IR*>& instructions) {
             }
             
             outputFile << "\tmov " << temp2->address << ", eax\n\n";
-        } else if (ir->command == "IF_STATEMENT" || ir->command == "ELSEIF_STATEMENT" || ir->command == "ELSE_STATEMENT") {
+        } else if (ir->command == IF_STATEMENT || ir->command == ELSEIF_STATEMENT || ir->command == ELSE_STATEMENT) {
             outputFile << "\t; " << ir->command << "\n";
             // if true go to true branch
             outputFile << "\tje START" << ir->temp3 << "\n";
             
             // If false go to false branch
             outputFile << "\tjmp END" << ir->temp3 << "\n";
-        } else if (ir->command == "LABEL") {
+        } else if (ir->command == LABEL) {
             outputFile << "\n" << ir->temp1 << ":\n";
-        } else if (ir->command == "FUNCTION") {
+        } else if(ir->command == CONSTRUCTOR_START) {
+            // Parent is class name
+            
+            Class& parent = *classes.find(ir->parent)->second;
+            outputFile << "; Constructor for " << ir->parent << "\n";
+            outputFile << "_" << ir->temp1 << "CONSTRUCTOR:" << "\n";
+            
+            // edi - Will be the instance of the class.
+            
+            int j = i + 1;
+            for(; j < instructions.size(); j++) {
+                ir = instructions[j];
+                
+                if(ir->command == CONSTRUCTOR_END) {
+                    currentFunction = nullptr;
+                    
+                    break;
+                } else if(ir->command == STORETHIS) {
+                    //this.x = x;
+                    //this.x = ir->temp2
+                    //x      = ir->temp1
+                    
+                    //Variable* member = currentClass->getMember(ir->temp2);
+                    Variable* var    = currentFunction->getVariable(ir->temp1);
+                    
+                    size_t address = currentClass->calculateMemberSizeAddress(ir->temp2);
+                    
+                    if(address <= 0)
+                        outputFile << "\tmov [edi], " << var->registry << "\n";
+                    else
+                        outputFile << "\tmov [edi+" << address << "], " << var->registry << "\n";
+                    
+                    continue;
+                }
+                
+                Function* constructor = new Function("Constructor", 0);
+                
+                // Parameters handling
+                outputFile << "\t; Parameters\n";
+                
+                size_t sizeIndex = 8;
+                int k = j;
+                for(; k < instructions.size(); k++) {
+                    // {command="PARAMETER", temp1="4", temp2="printHelloWorld", ...}
+                    IR* para = instructions[k];
+                    
+                    if(para->command == PARAMETER) {
+                        // To keep track of the address
+                        size_t varSize = std::stoi(para->temp1);
+                        
+                        std::string address   = "[ebp + " + std::to_string(sizeIndex) + "]";
+                        std::string registry = "eax"; 
+                        
+                        outputFile << "\t; Parameter " << para->temp2 << " " << para->temp3 << "\n";
+                        
+                        //TODO; Just make a simple list.. I'm too lazy
+                        if(k == 1)
+                            registry = "eax";
+                        else if(k == 2)
+                            registry = "ebx";
+                        else if(k == 3)
+                            registry = "ecx";
+                        else if(k == 4)
+                            registry = "edx";
+                        
+                        outputFile << "\tmov " << registry << ", " << address << "\n\n";
+                        // eax, ebx, ecx, edx, esi, edi, ebp and esp
+                        
+                        constructor->addParamater(para->temp3, registry, address, varSize);
+                        
+                        sizeIndex += varSize;
+                    } else
+                        break;
+                }
+                
+                // Update current index
+                j = k - 1; //y tf does it need to be -1????????????
+                ir = instructions[j];
+                
+                currentFunction = constructor;
+                currentClass->addConstructor(constructor);
+            }
+            
+            i = j;
+        } else if (ir->command == FUNCTION) {
             std::string functionName = ir->temp1;
             
             if(functionName == "main") {
@@ -250,23 +302,25 @@ void AssemblyGenerator::generateCode(const std::vector<IR*>& instructions) {
                 // {command="PARAMETER", temp1="4", temp2="printHelloWorld", ...}
                 IR* para = instructions[j];
                 
-                if(para->command == "PARAMETER") {
+                if(para->command == PARAMETER) {
                     // To keep track of the address
                     size_t varSize = std::stoi(para->temp1);
                     
-                    std::string address = "[ebp + " + std::to_string(sizeIndex) + "]";
+                    std::string address   = "[ebp + " + std::to_string(sizeIndex) + "]";
+                    std::string registery = "eax";
                     
                     outputFile << "\t; Parameter " << para->temp2 << " " << para->temp3 << "\n";
                     
                     //TODO; Just make a simple list.. I'm too lazy
                     if(j == 1)
-                        outputFile << "\tmov eax, " << address << "\n\n";
+                        registery = "eax";
                     else if(j == 2)
-                        outputFile << "\tmov ebx, " << address << "\n\n";
+                        registery = "ebx";
                     else if(j == 3)
-                        outputFile << "\tmov ecx, " << address << "\n\n";
+                        registery = "ecx";
                     
-                    currentFunction->addParamater(para->temp3, address, varSize);
+                    outputFile << "\tmov " << registery << ", " << address << "\n\n";
+                    currentFunction->addParamater(para->temp3, registery, address, varSize);
                     
                     sizeIndex += varSize;
                 } else
@@ -280,12 +334,12 @@ void AssemblyGenerator::generateCode(const std::vector<IR*>& instructions) {
             //function->size = sizeIndex - 8; // Start offset
             
             outputFile << "\t; Function body\n\n";
-        }else if (ir->command == "FUNCTION_CALL") {
+        }else if (ir->command == FUNCTION_CALL) {
             int j = i + 1;
             for(; j < instructions.size(); j++) {
                 IR* para = instructions[j];
                 
-                if(para->command == "PARAMETER") {
+                if(para->command == PARAMETER) {
                     outputFile << "\t; Parameter value " << para->temp1 << "\n";
                     outputFile << "\tpush " << para->temp1 << "\n";
                 } else
@@ -301,13 +355,13 @@ void AssemblyGenerator::generateCode(const std::vector<IR*>& instructions) {
             Function* function = functions.find(ir->temp1)->second;
             
             function->cleanUp(outputFile);
-        } else if (ir->command == "RETURN") {
+        } else if (ir->command == RETURN) {
             Variable* temp = getVariable(ir->temp1);
             
             if(currentFunction->label == mainFunction) {
                 outputFile << "\t; Exit Progam\n";
                 outputFile << "\tmov eax, " << temp->address << "\n";
-                outputFile << "\tadd esp, 4\t; clear the stack\n";
+                outputFile << "\tadd esp, 4\t; clear the stack\n"; //TODO; Find out why '4'??
             } else {
                 outputFile << "\tmov eax, " << temp->address << "\n";
             }
@@ -316,7 +370,7 @@ void AssemblyGenerator::generateCode(const std::vector<IR*>& instructions) {
             //outputFile << "\n\t; Function epilogue\n";
             //outputFile << "\tpop ebp\n\n";
             
-            outputFile << "\tret\t\t; return\n";
+            outputFile << "\tret\t\t; returns/leaves out of the function\n";
         } else if (ir->command == "==") {
             Variable* temp1 = getVariable(ir->temp1);
             Variable* temp2 = getVariable(ir->temp2);
@@ -355,7 +409,7 @@ void AssemblyGenerator::generateCode(const std::vector<IR*>& instructions) {
             outputFile << "\n\t; Store results in " << temp3->name << "\n";
             outputFile << "\tmov " << temp3->address << ", eax\n\n";
         } else {
-            //std::cout << "\n\t; couldn't find command: " << ir->command << "\n\n";
+            std::cout << "\n\t; couldn't find command: " << ir->command << "\n\n";
         }
     }
     
@@ -364,11 +418,11 @@ void AssemblyGenerator::generateCode(const std::vector<IR*>& instructions) {
     std::cout << "\n\n";
     
     // Compile
-    /*int results = system("cd Compiling && build.bat");
+    int results = system("cd Compiling && build.bat");
     
     if(results == 0) {
         std::cout << "Compiled successfully!\n";
     } else {
         std::cerr << "Error while compiling: " << results << " \n";
-    }*/
+    }
 }

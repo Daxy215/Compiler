@@ -4,12 +4,13 @@ public:
         this->x = x;
         this->y = y;
     }
-    
+
+private:
     int someFunction() {
         return 5;
     }
 
-public:
+private:
     float x;
     float y;
 };

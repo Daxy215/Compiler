@@ -4,6 +4,7 @@
 
 #include "../Compiler/Compiler.h"
 
+// In bytes
 std::map<std::string, size_t> variablesSize = {
   {"int", sizeof(int)},
   {"float", sizeof(float)},
@@ -51,24 +52,24 @@ void IntermediateRepresentation::generateIR(ASTNode* node, ASTNode* parent) {
     
     switch (node->getType()) {
     case NodeType::INCLUDE_DIRECTIVE: {
-            addCommand("INCLUDE", node->value, node->children[0]->value, parentValue);
+            addCommand(INCLUDE, node->value, node->children[0]->value, parentValue);
             
             break;
     }
     case NodeType::CLASS: {
-            addCommand("CLASS-START", node->value, parentValue);
+            addCommand(CLASS_START, node->value, parentValue);
             
             for (auto child : node->children) {
                 generateIR(child, node);
             }
             
-            addCommand("CLASS-END", node->value, parentValue);
+            addCommand(CLASS_END, node->value, parentValue);
             
             break;
     }
     case NodeType::CONSTRUCTOR: {
-            addCommand("CONSTRUCTOR-START", node->value, parentValue);
-
+            addCommand(CONSTRUCTOR_START, node->value, parentValue);
+            
             ASTNode* parameters = node->getChildByType(NodeType::PARAMETERS);
             
             for(auto& child : parameters->children) {
@@ -78,20 +79,20 @@ void IntermediateRepresentation::generateIR(ASTNode* node, ASTNode* parent) {
                 std::string type = variableNodeType->value;
                 const size_t variableSize = variablesSize[type];
                 
-                addCommand("PARAMETER", std::to_string(variableSize), type, name, node->value);
+                addCommand(PARAMETER, std::to_string(variableSize), type, name, node->value);
             }
             
             for (auto child : node->children) {
                 generateIR(child, node);
             }
             
-            addCommand("CONSTRUCTOR-END", node->value, parentValue);
+            addCommand(CONSTRUCTOR_END, node->value, parentValue);
             
             break;
     }
     case NodeType::MEMBER_FUNCTION: {
             ASTNode* returnType = node->getChildByType(NodeType::RETURN_TYPE);
-            addCommand("FUNCTION", node->value, returnType->value, parentValue);
+            addCommand(FUNCTION, node->value, returnType->value, parentValue);
             
             ASTNode* parameters = node->getChildByType(NodeType::PARAMETERS);
             
@@ -102,7 +103,7 @@ void IntermediateRepresentation::generateIR(ASTNode* node, ASTNode* parent) {
                 std::string type = variableNodeType->value;
                 const size_t variableSize = variablesSize[type];
                 
-                addCommand("PARAMETER", std::to_string(variableSize), type, name, node->value);
+                addCommand(PARAMETER, std::to_string(variableSize), type, name, node->value);
             }
             
             ASTNode* functionBody = node->getChildByType(NodeType::BLOCK);
@@ -122,10 +123,10 @@ void IntermediateRepresentation::generateIR(ASTNode* node, ASTNode* parent) {
             // Special case for 'this' usage.
             if(node->value == "this") {
                 ASTNode* variable = node->children[0]->getChildByType(NodeType::FUNCTION_CALL);
-
-                // TODO;
-                addCommand("STORE", variable->children[1]->value, variable->value, parentValue);
-
+                
+                // TODO; It's hardcoded.
+                addCommand(STORETHIS, variable->children[1]->value, variable->value, parentValue);
+                
                 return;
             }
             
@@ -141,12 +142,12 @@ void IntermediateRepresentation::generateIR(ASTNode* node, ASTNode* parent) {
             
             // ?????????
             if(accessType == nullptr) {
-                addCommand("FUNCTION_CALL", node->value, parentValue);
+                addCommand(FUNCTION_CALL, node->value, parentValue);
                 
                 ASTNode* parameters = node->getChildByType(NodeType::PARAMETERS);
                 
                 for(auto& child : parameters->children) {
-                    addCommand("PARAMETER", child->value, parentValue);
+                    addCommand(PARAMETER, child->value, parentValue);
                 }
                 
                 return;
@@ -167,7 +168,7 @@ void IntermediateRepresentation::generateIR(ASTNode* node, ASTNode* parent) {
                 }
             }
             
-            addCommand("FUNCTION_CALL", name, paramaters, parentValue);
+            addCommand(FUNCTION_CALL, name, paramaters, parentValue);
             
             break;
         }
@@ -185,7 +186,7 @@ void IntermediateRepresentation::generateIR(ASTNode* node, ASTNode* parent) {
             const size_t variableSize = variablesSize[varType->value];
             
             // (ALLOC, 4, x)
-            addCommand("ALLOC", std::to_string(variableSize), node->value, parentValue);
+            addCommand(ALLOC, std::to_string(variableSize), node->value, parentValue);
             
             ASTNode* assignment = node->getChildByType(NodeType::COMPOUND_ASSIGNMENT);
             
@@ -195,7 +196,7 @@ void IntermediateRepresentation::generateIR(ASTNode* node, ASTNode* parent) {
                     //addCommand("STORE", assignment->children[0]->value, node->value, parentValue);
                 //} else {
                     generateIR(assignment->children[0], parent);
-                    addCommand("STORE", assignment->children[0]->value, node->value, parentValue);
+                    addCommand(STORE, assignment->children[0]->value, node->value, parentValue);
                 //}
             } else {
                 //addCommand("STORE", "0",node->value, parentValue);
@@ -225,7 +226,7 @@ void IntermediateRepresentation::generateIR(ASTNode* node, ASTNode* parent) {
             //addCommand("FUNCTION_CALL", node->children[0]->value, "", parentValue);
             
             generateIR(node->children[0], parent);
-            addCommand("RETURN", node->children[0]->value, parentValue);
+            addCommand(RETURN, node->children[0]->value, parentValue);
             
             break;
         }
@@ -251,15 +252,17 @@ void IntermediateRepresentation::generateIR(ASTNode* node, ASTNode* parent) {
             std::string rightOperand = "temp" + std::to_string(tempCounter++);
             generateIR(node->children[1], parent);
             
-            //ASTNode* varType = node->getChildByType(NodeType::VARIABLE_TYPE);
+            //TODO; Store size for operators.
+            addCommand(ALLOC, std::to_string(4), leftOperand, parentValue);
+            addCommand(STORE, node->children[0]->value, leftOperand, parentValue);
             
-            addCommand("ALLOC", std::to_string(4), leftOperand, parentValue);
-            addCommand("STORE", node->children[0]->value, leftOperand, parentValue);
+            addCommand(ALLOC, std::to_string(4), rightOperand, parentValue);
+            addCommand(STORE, node->children[1]->value, rightOperand, parentValue);
+
+            // TODO; Variable size is hardcoded.
+            addCommand(ALLOC, std::to_string(4), "temp" + std::to_string(tempCounter), parentValue);
             
-            addCommand("ALLOC", std::to_string(4), rightOperand, parentValue);
-            addCommand("STORE", node->children[1]->value, rightOperand, parentValue);
-            
-            addCommand("ALLOC", std::to_string(4), "temp" + std::to_string(tempCounter), parentValue);
+            // node->value is the operator(+, -, *, /)
             addCommand(node->value,  leftOperand, rightOperand, "temp" + std::to_string(tempCounter), parentValue);
             node->value = "temp" + std::to_string(tempCounter);
             
@@ -272,7 +275,8 @@ void IntermediateRepresentation::generateIR(ASTNode* node, ASTNode* parent) {
             generateIR(assignment->children[0], node);
             // (ADD, temp1, temp5, total)
             // (INT, 1, X) <- Assign an integer value of 1 to x.
-            addCommand("INT", "temp" + std::to_string(tempCounter - 1), parentValue);
+            // TODO; Wtf is this???????????????
+            //addCommand("INT", "temp" + std::to_string(tempCounter - 1), parentValue);
             
             break;
         }
@@ -290,15 +294,15 @@ void IntermediateRepresentation::handleControlFlow(ASTNode* node, ASTNode* paren
             const ASTNode* trueBranch = node->getChildByType(NodeType::TRUE_BRANCH);
             
             std::string label = std::to_string(labelCounter++) + "LABEL";
-            addCommand("IF_STATEMENT", "if", combinedCondition, label, parent->value);
+            addCommand(IF_STATEMENT, "if", combinedCondition, label, parent->value);
             
-            addCommand("LABEL", "START" + label, node->value);
+            addCommand(LABEL, "START" + label, node->value);
             
             for(auto& child : trueBranch->children)
                 generateIR(child, node);
             
-            addCommand("LABEL", "END" + label, node->value);
-
+            addCommand(LABEL, "END" + label, node->value);
+            
             break;
         }
     case NodeType::ELSEIF_STATEMENT: {
@@ -307,14 +311,14 @@ void IntermediateRepresentation::handleControlFlow(ASTNode* node, ASTNode* paren
             const ASTNode* trueBranch = node->getChildByType(NodeType::TRUE_BRANCH);
             
             std::string label = std::to_string(labelCounter++) + "LABEL";
-            addCommand("ELSEIF_STATEMENT", "elseif", combinedCondition, label, parent->value);
+            addCommand(ELSEIF_STATEMENT, "elseif", combinedCondition, label, parent->value);
             
-            addCommand("LABEL", "START" + label, node->value);
+            addCommand(LABEL, "START" + label, node->value);
             
             for(auto& child : trueBranch->children)
                 generateIR(child, node);
             
-            addCommand("LABEL", "END" + label, node->value);
+            addCommand(LABEL, "END" + label, node->value);
             
             break;
         }
@@ -322,14 +326,14 @@ void IntermediateRepresentation::handleControlFlow(ASTNode* node, ASTNode* paren
              const ASTNode* trueBranch = node->getChildByType(NodeType::BLOCK);
             
             std::string label = std::to_string(labelCounter++) + "LABEL";
-            addCommand("ELSE_STATEMENT", "else", "", label, parent->value);
+            addCommand(ELSE_STATEMENT, "else", "", label, parent->value);
             
-            addCommand("LABEL", "START" + label, node->value);
+            addCommand(LABEL, "START" + label, node->value);
             
             for(auto& child : trueBranch->children)
                 generateIR(child, node);
             
-            addCommand("LABEL", "END" + label, node->value);
+            addCommand(LABEL, "END" + label, node->value);
             
             break;
     }
@@ -342,9 +346,13 @@ void IntermediateRepresentation::handleControlFlow(ASTNode* node, ASTNode* paren
             break;
         }
     case NodeType::WHILE_LOOP: {
+            
+            
             break;
         }
     case NodeType::DO_WHILE_LOOP: {
+            
+            
             break;
         }
     }

@@ -1,0 +1,8 @@
+﻿  TestSDL.cpp
+C:\Users\smsmk\RiderProjects\RuntimeCompiler\RuntimeCompiler\Projects\Project1\TestSDL\TestSDL\TestSDL.cpp(25,6): error C2337: 'poiuytrewsaqijuhgfdsa': attribute not found
+C:\Users\smsmk\RiderProjects\RuntimeCompiler\RuntimeCompiler\Projects\Project1\TestSDL\TestSDL\TestSDL.cpp(25,28): error C2143: syntax error: missing ']' before '-'
+C:\Users\smsmk\RiderProjects\RuntimeCompiler\RuntimeCompiler\Projects\Project1\TestSDL\TestSDL\TestSDL.cpp(25,28): error C2059: syntax error: '-'
+C:\Users\smsmk\RiderProjects\RuntimeCompiler\RuntimeCompiler\Projects\Project1\TestSDL\TestSDL\TestSDL.cpp(25,33): error C2065: 'P0LO9KIYJH5GTEVFRCDXSZAZsxdcfvgbhnjymuk': undeclared identifier
+C:\Users\smsmk\RiderProjects\RuntimeCompiler\RuntimeCompiler\Projects\Project1\TestSDL\TestSDL\TestSDL.cpp(25,74): error C2065: 'lo': undeclared identifier
+C:\Users\smsmk\RiderProjects\RuntimeCompiler\RuntimeCompiler\Projects\Project1\TestSDL\TestSDL\TestSDL.cpp(25,77): error C2059: syntax error: '.'
+C:\Users\smsmk\RiderProjects\RuntimeCompiler\RuntimeCompiler\Projects\Project1\TestSDL\TestSDL\TestSDL.cpp(25,113): error C2017: illegal escape sequence

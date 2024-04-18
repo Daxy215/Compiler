@@ -1,0 +1,37 @@
+{
+  "Version": 1,
+  "WorkspaceRootPath": "C:\\Users\\smsmk\\RiderProjects\\RuntimeCompiler\\RuntimeCompiler\\Projects\\Project1\\TestSDL\\",
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{BDA63556-2A37-4152-AF6D-55B472380F88}|TestSDL\\TestSDL.vcxproj|C:\\Users\\smsmk\\RiderProjects\\RuntimeCompiler\\RuntimeCompiler\\Projects\\Project1\\TestSDL\\TestSDL\\TestSDL.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
+      "RelativeMoniker": "D:0:0:{BDA63556-2A37-4152-AF6D-55B472380F88}|TestSDL\\TestSDL.vcxproj|solutionrelative:TestSDL\\TestSDL.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+    }
+  ],
+  "DocumentGroupContainers": [
+    {
+      "Orientation": 0,
+      "VerticalTabListWidth": 256,
+      "DocumentGroups": [
+        {
+          "DockedWidth": 200,
+          "SelectedChildIndex": 0,
+          "Children": [
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "TestSDL.cpp",
+              "DocumentMoniker": "C:\\Users\\smsmk\\RiderProjects\\RuntimeCompiler\\RuntimeCompiler\\Projects\\Project1\\TestSDL\\TestSDL\\TestSDL.cpp",
+              "RelativeDocumentMoniker": "TestSDL\\TestSDL.cpp",
+              "ToolTip": "C:\\Users\\smsmk\\RiderProjects\\RuntimeCompiler\\RuntimeCompiler\\Projects\\Project1\\TestSDL\\TestSDL\\TestSDL.cpp",
+              "RelativeToolTip": "TestSDL\\TestSDL.cpp",
+              "ViewState": "AQIAAAAAAAAAAAAAAAAAABgAAAAAAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
+              "WhenOpened": "2024-03-21T12:44:51.785Z",
+              "EditorCaption": ""
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
