@@ -258,12 +258,19 @@ void IntermediateRepresentation::generateIR(ASTNode* node, ASTNode* parent) {
             
             addCommand(ALLOC, std::to_string(4), rightOperand, parentValue);
             addCommand(STORE, node->children[1]->value, rightOperand, parentValue);
-
+            
             // TODO; Variable size is hardcoded.
             addCommand(ALLOC, std::to_string(4), "temp" + std::to_string(tempCounter), parentValue);
             
             // node->value is the operator(+, -, *, /)
-            addCommand(node->value,  leftOperand, rightOperand, "temp" + std::to_string(tempCounter), parentValue);
+            Command cmd;
+            
+            if(node->value._Equal("+")) cmd = PLUS;
+            if(node->value._Equal("-")) cmd = MINUS;
+            if(node->value._Equal("*")) cmd = MULITPLY;
+            if(node->value._Equal("/")) cmd = DIVIDE;
+            
+            addCommand(cmd,  leftOperand, rightOperand, "temp" + std::to_string(tempCounter), parentValue);
             node->value = "temp" + std::to_string(tempCounter);
             
             tempCounter++;

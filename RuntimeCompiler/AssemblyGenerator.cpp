@@ -371,7 +371,7 @@ void AssemblyGenerator::generateCode(const std::vector<IR*>& instructions) {
             //outputFile << "\tpop ebp\n\n";
             
             outputFile << "\tret\t\t; returns/leaves out of the function\n";
-        } else if (ir->command == "==") {
+        }/* else if (ir->command == "==") {
             Variable* temp1 = getVariable(ir->temp1);
             Variable* temp2 = getVariable(ir->temp2);
                         
@@ -385,7 +385,7 @@ void AssemblyGenerator::generateCode(const std::vector<IR*>& instructions) {
              * mov eax, 5        ; Operand 1
              * mov ebx, 3        ; Operand 2
              * add ebx           ; Add eax by ebx
-             */
+             #1#
             
             Variable* temp1 = getVariable(ir->temp1);
             Variable* temp2 = getVariable(ir->temp2);
@@ -408,7 +408,7 @@ void AssemblyGenerator::generateCode(const std::vector<IR*>& instructions) {
             
             outputFile << "\n\t; Store results in " << temp3->name << "\n";
             outputFile << "\tmov " << temp3->address << ", eax\n\n";
-        } else {
+        }*/ else {
             std::cout << "\n\t; couldn't find command: " << ir->command << "\n\n";
         }
     }

@@ -147,7 +147,7 @@ bool Compiler::compileCode(std::string code) {
     //TACEvaluation* evaluation = new TACEvaluation();
     //evaluation->interpretTAC(tac->tac);
     
-    assemblyGenerator->generateCode(intermediateRepresentation->commands);
+    //assemblyGenerator->generateCode(intermediateRepresentation->commands);
     
     //std::cout << "\n\n\n\n";
     

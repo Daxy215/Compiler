@@ -76,7 +76,7 @@ int Evaluator::Evaluate(const std::vector<IR*>& instructions) {
     
     FreeLibrary(hMod);
     
-    for(auto& instruction : instructions) {
+    /*for(auto& instruction : instructions) {
         // TODO; Make this as a map;
         if(instruction->command == "FUNCTION")
             pointers[instruction->temp1] = new Pointer();
@@ -220,7 +220,7 @@ int Evaluator::Evaluate(const std::vector<IR*>& instructions) {
         } else {
             std::cerr << "Couldn't find command; " << instruction->command << "\n";
         }
-    }
+    }*/
     
     return -1;
 }

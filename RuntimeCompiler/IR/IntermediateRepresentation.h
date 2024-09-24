@@ -10,7 +10,7 @@
 
 enum Command {
     INCLUDE,
-
+    
     // Class Commands
     CLASS_START,
     CLASS_END,
@@ -20,10 +20,10 @@ enum Command {
     
     CONSTRUCTOR_START,
     CONSTRUCTOR_END,
-
+    
     FUNCTION,
     FUNCTION_CALL,
-
+    
     // Variable Commands
     ALLOC,
     STORE,
@@ -33,17 +33,24 @@ enum Command {
     CONTINUE,
     BREAK,
     RETURN,
+
+    // Operators
+    EQUALS,
+    PLUS,
+    MINUS,
+    MULITPLY,
+    DIVIDE,
     
     // Conditional Statements Commands
     IF_STATEMENT,
     ELSE_STATEMENT,
     ELSEIF_STATEMENT,
-
+    
     FOR,
     FOREACH,
     WHILE,
     DO_WHILE,
-
+    
     // Other Commands
     LABEL,
 };
